@@ -13,6 +13,11 @@ numpy = "*"
 flask-wtf = "*"
 wtforms = "*"
 flask-sqlalchemy = "*"
+flask-mail = "*"
+xlrd = "*"
+openpyxl = "*"
+xlsxwriter = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.7"
