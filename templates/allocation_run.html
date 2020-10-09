@@ -1,0 +1,63 @@
+
+<!-- Ken wang, Oct, 2020 -->
+
+{% extends 'allocation_base.html' %}
+
+{% block content %}
+
+<div class="card container">
+    <ul class="nav nav-tabs">
+        <li class="active" style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
+        <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+        <li style="font-size: large"><a href="{{ url_for('allocation_about')}}" style="font-size: large"><strong>About</strong></a></li>
+    </ul>
+</div>
+
+
+<div class="container">
+    <form method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+
+    <table style="border-collapse:collapse; background-color: #eeeeee" border="0" cellspacing="0px" align="center">
+    	<tbody>
+    		<tr align="center">
+                <td width="60"></td>
+                <td width='500' align="left">
+                        <strong>Upload 3A4 backlog file (.csv):</strong>
+                        {{ form.file_3a4 }}
+                            <br><br><br>
+
+                        <strong>Upload supply file (.xlsx):</strong>
+                        {{ form.file_supply }}
+                            <br><br><br>
+                </td>
+
+                <td width="80">
+                </td>
+
+                <td width="500" align="left">
+                    <br>
+                    <div class="form-group">
+                    <strong>{{ form.org.label }}</strong><br>{{ form.org (class='form-control') }}<br>
+                    <strong>{{ form.bu.label }}</strong><br>{{ form.bu (class='form-control')}}<br>
+                    <strong>{{ form.ranking_logic.label }}</strong><br>{{ form.ranking_logic }}<br><br>                    </div>
+                	<br><br>
+                </td>
+                <td width="60"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td align="center">
+                    {{ form.submit_allocation(class='btn btn-default btn-lg')  }}
+                    <br><br>
+            	</td>
+                <td></td>
+                <td></td>
+        	</tr>
+    	</tbody>
+	</table>
+    </form>
+</div>
+
+{% endblock %}
