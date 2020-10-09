@@ -606,7 +606,18 @@ def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit):
 
     return df_3a4, df_oh, df_transit, df_scr
 
-def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,ranking_col,output_filename):
+def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
+    """
+    Limit BU based on user input for allocation
+    """
+    if bu_list!=['']:
+        df_3a4=df_3a4[df_3a4.BUSINESS_UNIT.isin(bu_list)]
+        df_scr=df_scr[df_scr.BU.isin(bu_list)]
+
+    return df_3a4, df_scr
+
+
+def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_list,ranking_col):
     """
     Main program to process the data and PCBA allocation.
     :param df_3a4:
@@ -644,12 +655,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,ran
     supply_dic_tan = created_supply_dict_per_scr(df_scr)
 
     # Offset 3A4 OSSD and FCD by transit time
-    df_3a4.loc[:, 'fcd_offset'] = df_3a4.apply(
-        lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.CURRENT_FCD_NBD_DATE, transit_time, pcba_site),
-        axis=1)
-    df_3a4.loc[:, 'ossd_offset'] = df_3a4.apply(
-        lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),
-        axis=1)
+    df_3a4.loc[:, 'fcd_offset'] = df_3a4.apply(lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.CURRENT_FCD_NBD_DATE, transit_time, pcba_site),axis=1)
+    df_3a4.loc[:, 'ossd_offset'] = df_3a4.apply(lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),axis=1)
 
     # Rank the orders
     df_3a4 = ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
@@ -680,5 +687,14 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,ran
     df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, pcba_site)
 
     # save the output file to excel
+    dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
+    if bu_list!=['']:
+        bu=' '.join(bu_list)
+        output_filename = pcba_site + ' SCR allocation (' + bu + ') ' + dt + '.xlsx'
+    else:
+        output_filename = pcba_site + ' SCR allocation (all BU) ' + dt + '.xlsx'
+
     df_scr.to_excel(output_filename)
+
+    return output_filename
 

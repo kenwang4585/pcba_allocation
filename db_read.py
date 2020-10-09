@@ -3,7 +3,8 @@ import pandas as pd
 import os
 
 
-engine = create_engine(os.getenv('DB_URI'))
+#engine = create_engine(os.getenv('DB_URI'))
+engine = create_engine('mysql+pymysql://kwang2:YiJun45852892!@171.68.216.98:3306/china_df')
 #print(engine.table_names())
 
 def read_table(table_name,columns='*',show_last=False,criteria_string=None,records_limit=None):
