@@ -168,8 +168,8 @@ def created_supply_dict_per_scr(df_scr):
 
 def created_oh_dict_per_df_oh(df_oh, pcba_site):
     """
-    create OH dict based on DF OH (excluding PCBA site and only consider OH>0 items)
-    supply_dic_tan={(FOC,'800-42373'):25,(FJZ,'800-42925'):100}
+    (Also used for transit eta close dict)create OH dict based on DF OH (excluding PCBA site and only consider OH>0 items)
+    oh_dic_tan={(FOC,'800-42373'):25,(FJZ,'800-42925'):100}
     """
     df_oh = df_oh[(df_oh.OH > 0)]
     df_oh.reset_index(inplace=True)
@@ -185,17 +185,38 @@ def created_oh_dict_per_df_oh(df_oh, pcba_site):
     return oh_dic_tan
 
 
+def create_transit_dict_per_df_transit(df_transit):
+    """
+    Create transit dict based on df_transit_eta_late.
+    transit_dict_tan={(FOC,'800-42373'):(15,2020-10-20)}
+    """
+    transit_dic_tan = {}
+
+    for org_tan in df_transit.index:
+        date_qty_list = []
+        for date in df_transit.columns:
+            if not math.isnan(df_transit.loc[(org_tan[0], org_tan[1]), date]):  # 判断数值是否为空
+                if df_transit.loc[(org_tan[0], org_tan[1]), date] > 0:  # 不取0值
+                    date_qty = {date: df_transit.loc[(org_tan[0], org_tan[1]), date]}
+                    date_qty_list.append(date_qty)
+        if len(date_qty_list) > 0:
+            transit_dic_tan[(org_tan[0], org_tan[1])] = date_qty_list
+
+    return transit_dic_tan
+
+
 def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan):
     """
     create backlog dict for selected tan list from the sorted 3a4 df (considered order prioity and rank)
+    blg_ic_tan={'800-42373':{'FJZ':(5,'1234567-1','2020-10-20')}}
     """
     blg_dic_tan = {}
     for pn in tan:
         dfm = df_3a4[df_3a4.BOM_PN == pn]
         org_qty_po = []
-        for org, qty, po in zip(dfm.ORGANIZATION_CODE, dfm.BOM_PN_QTY, dfm.PO_NUMBER):
+        for org, qty, po, ossd in zip(dfm.ORGANIZATION_CODE, dfm.BOM_PN_QTY, dfm.PO_NUMBER, dfm.ossd_offset):
             if qty > 0:
-                org_qty_po.append({org: (qty, po)})
+                org_qty_po.append({org: (qty, po, ossd.date())})
 
         blg_dic_tan[pn] = org_qty_po
 
@@ -323,7 +344,7 @@ def fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan):
     """
     Fulfill the backlog per DF site based on the DF site OH; deduct the backlog qty accordingly.
     examples:
-        blg_dic_tan={'800-42373': [{'FJZ': (5, ('110077267-1','2020-4-1'))},{'FJZ': (23, ('110011089-4','2020-4-4'))},...]}
+        blg_dic_tan={'800-42373': [{'FJZ': (5, '110077267-1','2020-4-1')},{'FJZ': (23, '110011089-4','2020-4-4')},...]}
         oh_dic_tan={('FJZ',800-42373'):25,('FCZ',800-42925'):10}
     return: blg_dic_tan
     """
@@ -341,6 +362,7 @@ def fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan):
                 po_org = list(org_po.keys())[0]
                 po_qty = list(org_po.values())[0][0]
                 po_number = list(org_po.values())[0][1]
+                po_ossd = list(org_po.values())[0][2]
 
                 if po_org == oh_org:
                     po_qty_new = po_qty - oh_qty
@@ -350,7 +372,7 @@ def fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan):
                         oh_qty = oh_qty_new
                     else:  # oh consumed
                         index = blg_dic_tan_list_copy.index(org_po)
-                        blg_dic_tan_list_copy[index] = {po_org: (po_qty_new, po_number)}
+                        blg_dic_tan_list_copy[index] = {po_org: (po_qty_new, po_number, po_ossd)}
 
                         break
             # 更新blg_dic_tan
@@ -410,7 +432,7 @@ def extract_bu_from_scr(df_scr):
     return tan_bu
 
 
-def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, pcba_site):
+def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site):
     """
     Add back the BU, backlog,oh, intransit info into the final SCR with allocation result; and add the related columns based on calculations.
     """
@@ -430,34 +452,46 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, pcba_site):
     df_oh.reset_index(inplace=True)
     df_oh = df_oh[df_oh.planningOrg != pcba_site]
     df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['planningOrg', 'TAN'], how='left')
-
     # drop the unneeded columns introduced by merge
     df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'planningOrg'], axis=1, inplace=True)
     # df_scr.rename(columns={'TAN_x':'TAN'},inplace=True)
 
+    # add df transit
+    df_transit.loc[:, 'In-transit'] = df_transit.sum(axis=1)
+    df_transit.reset_index(inplace=True)
+    df_scr = pd.merge(df_scr, df_transit[['planningOrg', 'TAN', 'In-transit']], left_on=['ORG', 'TAN'],
+                      right_on=['planningOrg', 'TAN'], how='left')
+    # drop the unneeded columns introduced by merge
+    df_scr.drop(['planningOrg'], axis=1, inplace=True)
+
     # ADD THE gap col and recovery date
+    df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
+    df_scr['oh+transit'].fillna(0, inplace=True)
     df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site,
-                                           np.where(df_scr.OH.isnull(),
-                                                    0 - df_scr.Backlog,
-                                                    df_scr.OH - df_scr.Backlog),
+                                           df_scr['oh+transit'] - df_scr.Backlog,
                                            None)
+    df_scr.drop('oh+transit', axis=1, inplace=True)
+
     df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site,
-                                           df_scr.iloc[:, 3:-4].sum(axis=1),
+                                           df_scr.iloc[:, 3:-5].sum(axis=1),  # [3:-5] refer to the right data columns
                                            None)
 
     df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site,
                                           df_scr.Gap_before + df_scr.Allocation,
                                           None)
 
-    df_scr.loc[:, 'Recovery'] = np.where(df_scr.Gap_before >= 0,
-                                         "No gap",
-                                         np.where(df_scr.Gap_after < 0,
-                                                  'No recovery',
-                                                  'TBD'))
+    df_scr.loc[:, 'Recovery'] = np.where((df_scr.ORG != pcba_site),
+                                         np.where(df_scr.Gap_before >= 0,
+                                                  'No gap',
+                                                  np.where(df_scr.Gap_after < 0,
+                                                           'No recovery',
+                                                           'TBD')),
+                                         None)
 
     # update with the correct recovery date for TBD
-    df_scr.set_index(['TAN', 'ORG', 'BU', 'Backlog', 'OH', 'Gap_before', 'Allocation', 'Gap_after', 'Recovery'],
-                     inplace=True)
+    df_scr.set_index(
+        ['TAN', 'ORG', 'BU', 'Backlog', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Recovery'],
+        inplace=True)
     df_scr.reset_index(inplace=True)
     dfx = df_scr[(df_scr.Recovery == 'TBD') & (df_scr.ORG != pcba_site)]
     dfx.set_index(['TAN', 'ORG'], inplace=True)
@@ -471,8 +505,9 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, pcba_site):
         df_scr.loc[ind, 'Recovery'] = last_allocation_date
 
     df_scr.reset_index(inplace=True)
-    df_scr.set_index(['TAN', 'ORG', 'BU', 'Backlog', 'OH', 'Gap_before', 'Allocation', 'Gap_after', 'Recovery'],
-                     inplace=True)
+    df_scr.set_index(
+        ['TAN', 'ORG', 'BU', 'Backlog', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Recovery'],
+        inplace=True)
 
     return df_scr
 
@@ -581,6 +616,64 @@ def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_o
 
     return df_3a4
 
+
+def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
+    """
+    Fulfill the backlog per DF site based on the DF site transit that is ETA far out; deduct the backlog qty accordingly.
+    examples:
+        blg_dic_tan={'800-42373': [{'FJZ': (5, '110077267-1','2020-4-1')},{'FJZ': (23, '110011089-4','2020-4-4')},...]}
+        transit_dic_tan={('FJZ',800-42373'):[{'2020-10-27':25},{'2020-10-29':10}]}
+    return: blg_dic_tan
+    """
+
+    for org_tan, date_qty_list in transit_dic_tan.items():
+        date_qty_list_copy = date_qty_list.copy()
+        transit_org = org_tan[0]
+        transit_tan = org_tan[1]
+        for date_qty in date_qty_list:
+            transit_eta = list(date_qty.keys())[0]
+            transit_qty = list(date_qty.values())[0]
+            # backward offset the eta so to cover more ossd earlier than ETA
+            eta_backward_offset = transit_eta - pd.Timedelta(days=eta_backward_offset_days)
+
+            if transit_tan in blg_dic_tan.keys():  # blg_dic_tan只包含scr中的tan，oh_tan可能不在其中，如不在，不予考虑
+                blg_dic_tan_list = blg_dic_tan[transit_tan]  # 对应tan下的内容
+                blg_dic_tan_list_copy = blg_dic_tan_list.copy()
+                # 按顺序对每一个po进行数量分配
+                for org_po in blg_dic_tan_list:
+                    po_org = list(org_po.keys())[0]
+                    po_qty = list(org_po.values())[0][0]
+                    po_number = list(org_po.values())[0][1]
+                    po_ossd = list(org_po.values())[0][2]
+
+                    if po_org == transit_org:
+                        if eta_backward_offset <= po_ossd or pd.isnull(po_ossd):  # 考虑ossd,forward consumption
+                            po_qty_new = po_qty - transit_qty
+
+                            if po_qty_new < 0:  # po已被transit cover完，移除po;更新transit qty
+                                blg_dic_tan_list_copy.remove(org_po)
+                                index = date_qty_list_copy.index({transit_eta: transit_qty})
+                                transit_qty = transit_qty - po_qty
+                                date_qty_list_copy[index] = {transit_eta: transit_qty}
+                            elif po_qty_new > 0:  # transit consumed by PO, 更新PO qty;移除transit
+                                index = blg_dic_tan_list_copy.index(org_po)
+                                blg_dic_tan_list_copy[index] = {po_org: (po_qty_new, po_number, po_ossd)}
+                                date_qty_list_copy.remove({transit_eta: transit_qty})
+                                break
+                            else:  # po = transit, both are consumed
+                                blg_dic_tan_list_copy.remove(org_po)
+                                date_qty_list_copy.remove({transit_eta: transit_qty})
+                                break
+
+                # 更新blg_dic_tan
+                blg_dic_tan[transit_tan] = blg_dic_tan_list_copy
+
+        # 更新transit_dic_tan
+        transit_dic_tan[org_tan] = date_qty_list_copy
+
+    return blg_dic_tan, transit_dic_tan
+
+
 def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit):
     """
     Read source data from excel files
@@ -617,6 +710,8 @@ def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     return df_3a4, df_scr
 
 
+
+
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_list,ranking_col):
     """
     Main program to process the data and PCBA allocation.
@@ -629,15 +724,6 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     :param output_filename:
     :return: None
     """
-    # pivot df_oh
-    df_oh = df_oh.pfor row in df_ohivot_table(index=['planningOrg', 'TAN'], values='OH', aggfunc=sum)
-
-    # versionless df_oh
-    df_oh = change_supply_to_versionless_and_addup_supply(df_oh, pn_col='TAN')
-
-    # 生成OH dict；
-    oh_dic_tan = created_oh_dict_per_df_oh(df_oh, pcba_site)
-
     # extract BU info for TAN from SCR
     tan_bu = extract_bu_from_scr(df_scr)
 
@@ -648,15 +734,19 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     # versionless df_scr
     df_scr = change_supply_to_versionless_and_addup_supply(df_scr, pn_col='TAN')
 
-    # simplify the index will make it much faster to get the dict
+    # simplify the index will make it much faster to get the dict - drop org and can add back later since know it's pcba_site
     df_scr.reset_index(inplace=True)
     df_scr.drop('planningOrg', axis=1, inplace=True)
     df_scr.set_index('TAN', inplace=True)
     supply_dic_tan = created_supply_dict_per_scr(df_scr)
 
     # Offset 3A4 OSSD and FCD by transit time
-    df_3a4.loc[:, 'fcd_offset'] = df_3a4.apply(lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.CURRENT_FCD_NBD_DATE, transit_time, pcba_site),axis=1)
-    df_3a4.loc[:, 'ossd_offset'] = df_3a4.apply(lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),axis=1)
+    df_3a4.loc[:, 'fcd_offset'] = df_3a4[['ORGANIZATION_CODE', 'CURRENT_FCD_NBD_DATE']].apply(
+        lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.CURRENT_FCD_NBD_DATE, transit_time, pcba_site),
+        axis=1)
+    df_3a4.loc[:, 'ossd_offset'] = df_3a4.apply(
+        lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),
+        axis=1)
 
     # Rank the orders
     df_3a4 = ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
@@ -668,14 +758,47 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     # create backlog dict for Tan exists in SCR
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys())
 
+    # pivot df_oh
+    df_oh = df_oh.pivot_table(index=['planningOrg', 'TAN'], values='OH', aggfunc=sum)
+
+    # versionless df_oh
+    df_oh = change_supply_to_versionless_and_addup_supply(df_oh, pn_col='TAN')
+
+    # 生成OH dict；
+    oh_dic_tan = created_oh_dict_per_df_oh(df_oh, pcba_site)
+
     # Oh to fulfill backlog per site. update blg_dic_tan accordingly
     blg_dic_tan = fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan)
 
-    # TODO: 按照org将in-transit分配给自己的订单（TBD: consider ETA or not - if new supply is considered to be availabe later than any intransit, then no need consider ETA but just total qty）
-    # - 更新blg_dic_tan
+    # pivot df_transit
+    df_transit = df_transit.pivot_table(index=['planningOrg', 'TAN'], columns='ETA_date', values='In-transit_quantity',
+                                        aggfunc=sum)
+    df_transit.columns = df_transit.columns.map(lambda x: x.date())
+
+    # versionless df_oh
+    df_transit = change_supply_to_versionless_and_addup_supply(df_transit, pn_col='TAN')
+
+    # split df_transit by threshhold of 15 days
+    close_eta_cutoff = pd.Timestamp.today().date() + pd.Timedelta(days=close_eta_cutoff_criteria)
+    col = df_transit.columns
+    df_transit_eta_early = df_transit.loc[:, col <= close_eta_cutoff].copy()
+    df_transit_eta_early.loc[:, 'OH'] = df_transit_eta_early.sum(axis=1)  # sum up as OH so can use the oh dict function
+    df_transit_eta_late = df_transit.loc[:, col > close_eta_cutoff].copy()
+
+    # 生成transit dict - for ETA close data use the OH dict function instead
+    transit_dic_tan_eta_early = created_oh_dict_per_df_oh(df_transit_eta_early, pcba_site)
+    transit_dic_tan_eta_late = create_transit_dict_per_df_transit(df_transit_eta_late)
+
+    # 按照org将in-transit分配给自己的订单（forward consumption considering ETA per OSSD - ETA consider backward offset）
+    # 并更新blg_dic_tan
+    blg_dic_tan = fulfill_backlog_by_oh(transit_dic_tan_eta_early, blg_dic_tan)
+    blg_dic_tan, transit_dic_tan_eta_late = fulfill_backlog_by_transit_eta_late(transit_dic_tan_eta_late, blg_dic_tan)
 
     # Allocate SCR and 生成allocated supply dict
     supply_dic_tan_allocated = allocate_supply_per_supply_and_blg_dic(supply_dic_tan, blg_dic_tan)
+
+    # TODO: (enhancement) if transit_dic_tan not consumed, come back to judge if the allocation is needed or not(per ETA) - if not, take it back and allocate to others
+    # currently using 7days (or 14days?) backward fulfillment for late ETA which partially covered this already.
 
     # 生成聚合的allocated supply dict
     supply_dic_tan_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated)
@@ -684,7 +807,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_site)
 
     # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
-    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, pcba_site)
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
 
     # save the output file to excel
     dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
@@ -694,7 +817,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     else:
         output_filename = pcba_site + ' SCR allocation (all BU) ' + dt + '.xlsx'
 
-    df_scr.to_excel(output_filename)
+    df_scr.to_excel(os.path.join(base_dir_output,output_filename))
 
     return output_filename
 
