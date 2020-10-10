@@ -29,7 +29,7 @@ transit_time={'FOL':{'FOC':1,
 # within below days transit ETA considered as OH
 close_eta_cutoff_criteria=15
 # Far ETA eligible to backward fulfill PO: offset OSSD by deducting below days
-eta_backward_offset_days=15
+eta_backward_offset_days=10
 
 
 
