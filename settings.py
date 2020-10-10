@@ -22,7 +22,7 @@ transit_time={'FOL':{'FOC':1,
                      'JPE':4,
                      'JPI':5,
                      'FSJ':6,
-                     'FE':9,
+                     'FVE':9,
                      'other':7},
             'JPE':{'JPE':1,'other':7}
            }
