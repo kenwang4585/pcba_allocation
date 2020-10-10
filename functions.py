@@ -522,6 +522,12 @@ def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_o
     :param new_col:'ss_overall_rank'
     :return: df_3a4
     """
+    # removed cancelled orders
+    df_3a4.loc[:, 'cancelled'] = np.where(df_3a4.ORDER_HOLDS.str.contains('cancel', case=False),
+                                          'YES',
+                                          'NO')
+    df_3a4 = df_3a4[df_3a4.cancelled != 'YES']
+
     # Below create a rev_rank for reference -  currently not used in overall ranking
     ### change non-rev orders unstaged $ to 0
     df_3a4.loc[:, 'C_UNSTAGED_DOLLARS'] = np.where(df_3a4.REVENUE_NON_REVENUE == 'NO',
