@@ -174,7 +174,7 @@ def created_oh_dict_per_df_oh(df_oh, pcba_site):
     df_oh = df_oh[(df_oh.OH > 0)]
     df_oh.reset_index(inplace=True)
     oh_dic_tan = {}
-    for row in df_oh[1:].itertuples(index=False):
+    for row in df_oh.itertuples(index=False):
         org = row.planningOrg
         tan = row.TAN
         oh = row.OH
@@ -630,7 +630,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     :return: None
     """
     # pivot df_oh
-    df_oh = df_oh.pivot_table(index=['planningOrg', 'TAN'], values='OH', aggfunc=sum)
+    df_oh = df_oh.pfor row in df_ohivot_table(index=['planningOrg', 'TAN'], values='OH', aggfunc=sum)
 
     # versionless df_oh
     df_oh = change_supply_to_versionless_and_addup_supply(df_oh, pn_col='TAN')
