@@ -522,9 +522,11 @@ def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_o
     :param new_col:'ss_overall_rank'
     :return: df_3a4
     """
-    # removed cancelled orders
-    df_3a4.loc[:, 'cancelled'] = np.where(df_3a4.ORDER_HOLDS.str.contains('cancel', case=False),
-                                          'YES',
+    # removed cancelled orders - this part is different from summary_3a4 automation
+    df_3a4.loc[:, 'cancelled'] = np.where(df_3a4.ORDER_HOLDS.notnull(),
+                                          np.where(df_3a4.ORDER_HOLDS.str.contains('cancel', case=False),
+                                                   'YES',
+                                                   'NO'),
                                           'NO')
     df_3a4 = df_3a4[df_3a4.cancelled != 'YES'].copy()
 
