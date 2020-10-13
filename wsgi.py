@@ -30,6 +30,7 @@ def allocation_run():
     time_details=[]
 
     if form.validate_on_submit():
+        print('Start run...')
         start_time_=pd.Timestamp.now()
         # 通过条件判断及邮件赋值，开始执行任务
         pcba_site=form.org.data
@@ -84,6 +85,7 @@ def allocation_run():
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
 
             flash('SCR allocation file created: {}! You can download accordingly.'.format(output_filename), 'success')
+            print('Finish run.')
         except Exception as e:
             try:
                 del df_scr, df_3a4, df_oh, df_transit

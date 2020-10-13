@@ -442,7 +442,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu[x])
 
     # add backlog qty
-    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='BOM_PN_QTY', aggfunc=sum)
+    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
     df_3a4_p.columns = ['Backlog']
     df_3a4_p.reset_index(inplace=True)
     df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
