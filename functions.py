@@ -214,7 +214,7 @@ def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan):
     for pn in tan:
         dfm = df_3a4[df_3a4.BOM_PN == pn]
         org_qty_po = []
-        for org, qty, po, ossd in zip(dfm.ORGANIZATION_CODE, dfm.BOM_PN_QTY, dfm.PO_NUMBER, dfm.ORIGINAL_FCD_NBD_DATE): # use ORIGINAL_FCD_NBD_DATE instead of ossd_ofset
+        for org, qty, po, ossd in zip(dfm.ORGANIZATION_CODE, dfm.C_UNSTAGED_QTY, dfm.PO_NUMBER, dfm.ORIGINAL_FCD_NBD_DATE): # use ORIGINAL_FCD_NBD_DATE instead of ossd_ofset
             if qty > 0:
                 org_qty_po.append({org: (qty, po, ossd.date())})
 

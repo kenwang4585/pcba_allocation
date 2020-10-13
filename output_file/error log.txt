@@ -510,3 +510,11 @@ Traceback (most recent call last):
   File "/Users/wangken/py/pcba_allocation/functions.py", line 782, in pcba_allocation_main_program
     close_eta_cutoff = pd.Timestamp.today().date() + pd.Timedelta(days=close_eta_cutoff_criteria)
 NameError: name 'close_eta_cutoff_criteria' is not defined
+
+[2020-10-13 14:13:12]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 84, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 830, in pcba_allocation_main_program
+    df_3a4.to_excel('3a4 finish.xlsx',inplace=True)
+TypeError: to_excel() got an unexpected keyword argument 'inplace'
