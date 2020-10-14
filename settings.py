@@ -41,3 +41,9 @@ else:
     base_dir_output = os.path.join(os.getcwd(),'output_file')
     base_dir_upload = os.path.join(os.getcwd(),'upload_file')
 
+
+output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','distinct_po_filter', 'PRODUCT_ID',
+           'TAN','BOM_PN','ADDRESSABLE_FLAG','priority_cat','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
+           'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','LT_TARGET_FCD','C_UNSTAGED_DOLLARS',
+            'ss_unstg_rev',
+            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','ss_overall_rank','FLB_TAN']

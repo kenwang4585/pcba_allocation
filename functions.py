@@ -536,7 +536,7 @@ def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_o
                                                    0,
                                                    df_3a4.C_UNSTAGED_DOLLARS)
 
-    #### 生成ss_unstg_rev并据此排序
+    #### 生成ss_unstg_rev - 在这里不参与排序
     # 计算ss_unstg_rev
     ss_unstg_rev = {}
     df_rev = df_3a4.pivot_table(index='SO_SS', values='C_UNSTAGED_DOLLARS', aggfunc=sum)
@@ -623,6 +623,24 @@ def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_o
     df_3a4.loc[:, new_col] = df_3a4[order_col].map(lambda x: rank[x])
 
     return df_3a4
+
+def write_excel_file(base_dir_output,output_filename, data_to_write):
+    '''
+    Write the df into excel files as different sheets
+    :param fname: fname of the output excel
+    :param data_to_write: a dict that contains {sheet_name:df}
+    :return: None
+    '''
+    output_path = os.path.join(base_dir_output, output_filename)
+
+    # engine='xlsxwriter' is used to avoid illegal character which lead to failure of saving the file
+    writer = pd.ExcelWriter(output_path, engine='xlsxwriter')
+
+    for sheet_name, df in data_to_write.items():
+        df.to_excel(writer, sheet_name=sheet_name)
+
+    writer.save()
+
 
 
 def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
@@ -817,7 +835,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
     df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
 
-    # save the output file to excel
+    # save the scr output file and 3a4 to excel
     dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     if bu_list!=['']:
         bu=' '.join(bu_list)
@@ -825,7 +843,12 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     else:
         output_filename = pcba_site + ' SCR allocation (all BU) ' + dt + '.xlsx'
 
-    df_scr.to_excel(os.path.join(base_dir_output,output_filename))
+    df_3a4=df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
+    df_3a4.set_index(['ORGANIZATION_CODE'],inplace=True)
+    data_to_write={'pcba_allocation':df_scr,
+                   '3a4_backlog':df_3a4}
+    write_excel_file(base_dir_output, output_filename, data_to_write)
+
 
     return output_filename
 
