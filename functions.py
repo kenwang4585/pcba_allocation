@@ -845,6 +845,9 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
 
     df_3a4=df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
     df_3a4.set_index(['ORGANIZATION_CODE'],inplace=True)
+    df_transit.set_index(['planningOrg','TAN','In-transit'],inplace=True)
+    df_transit.reset_index(inplace=True)
+    df_transit.set_index(['ORGANIZATION_CODE'],inplace=True)
     data_to_write={'pcba_allocation':df_scr,
                    '3a4_backlog':df_3a4,
                    'in-transit':df_transit}
