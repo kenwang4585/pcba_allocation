@@ -624,24 +624,45 @@ def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_o
 
     return df_3a4
 
-def write_excel_file(base_dir_output,output_filename, data_to_write):
+def write_data_to_excel(output_file,data_to_write):
     '''
     Write the df into excel files as different sheets
     :param fname: fname of the output excel
     :param data_to_write: a dict that contains {sheet_name:df}
     :return: None
     '''
-    output_path = os.path.join(base_dir_output, output_filename)
 
     # engine='xlsxwriter' is used to avoid illegal character which lead to failure of saving the file
-    writer = pd.ExcelWriter(output_path, engine='xlsxwriter')
+    writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
 
     for sheet_name, df in data_to_write.items():
         df.to_excel(writer, sheet_name=sheet_name)
 
     writer.save()
 
+def write_excel_output_file(bu_list,df_scr,df_3a4,df_transit):
+    # save the scr output file and 3a4 to excel
+    dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
+    if bu_list != ['']:
+        bu = ' '.join(bu_list)
+        output_filename = pcba_site + ' SCR allocation (' + bu + ') ' + dt + '.xlsx'
+    else:
+        output_filename = pcba_site + ' SCR allocation (all BU) ' + dt + '.xlsx'
+    output_path = os.path.join(base_dir_output, output_filename)
 
+    df_3a4 = df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
+    df_3a4.set_index(['ORGANIZATION_CODE'], inplace=True)
+    df_transit.set_index(['planningOrg', 'TAN', 'In-transit'], inplace=True)
+    df_transit.reset_index(inplace=True)
+    df_transit.set_index(['planningOrg'], inplace=True)
+    df_transit.rename(columns={'In-transit':'Total'},inplace=True)
+    data_to_write = {'pcba_allocation': df_scr,
+                     '3a4_backlog': df_3a4,
+                     'in-transit': df_transit}
+
+    write_data_to_excel(output_path, data_to_write)
+
+    return output_filename
 
 def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
     """
@@ -835,24 +856,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
     df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
 
-    # save the scr output file and 3a4 to excel
-    dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
-    if bu_list!=['']:
-        bu=' '.join(bu_list)
-        output_filename = pcba_site + ' SCR allocation (' + bu + ') ' + dt + '.xlsx'
-    else:
-        output_filename = pcba_site + ' SCR allocation (all BU) ' + dt + '.xlsx'
-
-    df_3a4=df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
-    df_3a4.set_index(['ORGANIZATION_CODE'],inplace=True)
-    df_transit.set_index(['planningOrg','TAN','In-transit'],inplace=True)
-    df_transit.reset_index(inplace=True)
-    df_transit.set_index(['ORGANIZATION_CODE'],inplace=True)
-    data_to_write={'pcba_allocation':df_scr,
-                   '3a4_backlog':df_3a4,
-                   'in-transit':df_transit}
-    write_excel_file(base_dir_output, output_filename, data_to_write)
-
+    # 存储文件
+    output_filename = write_excel_output_file(bu_list, df_scr, df_3a4, df_transit)
 
     return output_filename
 
