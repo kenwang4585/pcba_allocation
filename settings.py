@@ -6,7 +6,7 @@ f_3a4='backlog3a4-pcba_allocation.csv'
 f_supply='test_SCR+OH+Intransit_0924.xlsx'
 sheet_scr='scr'
 sheet_transit='in-transit'
-sheet_oh='OH & transit-time'
+sheet_oh='oh'
 pcba_site='FOL'
 
 ranking_col=['priority_rank', 'ossd_offset', 'fcd_offset','rev_non_rev_rank','C_UNSTAGED_QTY', 'SO_SS','PO_NUMBER']
@@ -47,3 +47,13 @@ output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS',
            'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','LT_TARGET_FCD','C_UNSTAGED_DOLLARS',
             'ss_unstg_rev',
             'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','ss_overall_rank','FLB_TAN']
+
+col_3a4_must_have=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','PRODUCT_ID',
+           'TAN','ADDRESSABLE_FLAG','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
+           'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','LT_TARGET_FCD','C_UNSTAGED_DOLLARS',
+            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN']
+col_transit_must_have=['planningOrg','TAN','BU','ETA_date','In-transit_quantity']
+col_oh_must_have=['planningOrg','TAN','BU','OH']
+col_scr_must_have=['planningOrg','TAN','BU','SCRDate','SCRQuantity']
+
+

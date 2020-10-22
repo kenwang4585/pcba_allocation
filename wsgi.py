@@ -42,14 +42,35 @@ def allocation_run():
         f_supply= form.file_supply.data
         ranking_logic=form.ranking_logic.data
 
+
         # 存储文件 - will save again with Org name in file name later
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
         #file_path_supply = os.path.join(app.config['UPLOAD_PATH'],'supply.xlsx')
         file_path_3a4 = os.path.join(base_dir_upload, '3a4.csv')
         file_path_supply = os.path.join(base_dir_upload, 'supply.xlsx')
 
+        # save the files to server
         f_3a4.save(file_path_3a4)
         f_supply.save(file_path_supply)
+
+        # check data format
+        sheet_name_msg, msg_3a4, msg_transit, msg_oh, msg_scr = check_input_file_format(file_path_3a4, file_path_supply,
+                                                                        col_3a4_must_have, col_transit_must_have,
+                                                                        col_oh_must_have, col_scr_must_have,
+                                                                        sheet_transit,sheet_oh,sheet_scr)
+        if sheet_name_msg!='':
+            flash(sheet_name_msg,'warning')
+        if msg_3a4!='':
+            flash(msg_3a4,'warning')
+        if msg_transit!='':
+            flash(msg_transit,'warning')
+        if msg_oh!='':
+            flash(msg_oh,'warning')
+        if msg_scr!='':
+            flash(msg_scr,'warning')
+
+        if sheet_name_msg!='' or msg_3a4!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
+            return render_template('allocation_run.html', form=form)
 
         if ranking_logic=='cus_sat':
             ranking_col=['priority_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','rev_non_rev_rank','C_UNSTAGED_QTY', 'SO_SS','PO_NUMBER']

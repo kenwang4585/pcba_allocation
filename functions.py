@@ -757,6 +757,38 @@ def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     return df_3a4, df_scr
 
 
+def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col_transit_must_have,col_oh_must_have,col_scr_must_have,sheet_transit,sheet_oh,sheet_scr):
+    """
+    Check if the input files contain the right columns
+    """
+    sheet_name_msg,msg_3a4, msg_transit, msg_oh, msg_scr = '', '', '', '',''
+    df_3a4=pd.read_csv(file_path_3a4,nrows=2,encoding='iso-8859-1')
+    try:
+        df_transit=pd.read_excel(file_path_supply,sheet_name=sheet_transit,nrows=2)
+        df_oh=pd.read_excel(file_path_supply,sheet_name=sheet_oh,nrows=2)
+        df_scr=pd.read_excel(file_path_supply,sheet_name=sheet_scr,nrows=2)
+
+        # 检查文件是否包含需要的列：
+        if not np.all(np.in1d(col_3a4_must_have, df_3a4.columns)):
+            msg_3a4='3A4 file format error! Following required columns not found in 3a4 data: {}'.format(
+                str(np.setdiff1d(col_3a4_must_have, df_3a4.columns)))
+
+        if not np.all(np.in1d(col_transit_must_have, df_transit.columns)):
+            msg_transit = 'In-transit data format error! Following required columns not found in transit data: {}'.format(
+                str(np.setdiff1d(col_transit_must_have, df_transit.columns)))
+
+        if not np.all(np.in1d(col_oh_must_have, df_oh.columns)):
+            msg_oh = 'OH data format error! Following required columns not found in OH data: {}'.format(
+                str(np.setdiff1d(col_oh_must_have, df_oh.columns)))
+
+        if not np.all(np.in1d(col_scr_must_have, df_scr.columns)):
+            msg_scr = 'SCR data format error! Following required columns not found in SCR data: {}'.format(
+                str(np.setdiff1d(col_scr_must_have, df_scr.columns)))
+    except:
+        print('sheet name error!')
+        sheet_name_msg = 'Supply file format error! Ensure the correct sheet names are: {}, {}, {}'.format(sheet_transit,sheet_oh,sheet_scr)
+
+    return sheet_name_msg, msg_3a4,msg_transit,msg_oh,msg_scr
 
 
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_list,ranking_col):

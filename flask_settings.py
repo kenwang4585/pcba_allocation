@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired,FileAllowed
 from flask_wtf import FlaskForm
 from wtforms.validators import Email, DataRequired,input_required
 from wtforms import SubmitField, BooleanField, StringField,IntegerField,SelectField,PasswordField,TextAreaField,RadioField
@@ -27,8 +27,8 @@ class UploadForm(FlaskForm):
                              default='cus_sat',
                              validators=[DataRequired()])
 
-    file_3a4 = FileField('Upload 3A4 file (.csv):',validators=[DataRequired()])
-    file_supply=FileField('Upload supply file (.csv/.xlsx):',validators=[DataRequired()])
+    file_3a4 = FileField('Upload 3A4 file (.csv):',validators=[FileRequired(),FileAllowed(['csv'],'Only CSV file is allowed!')])
+    file_supply=FileField('Upload supply file (.xlsx):',validators=[FileRequired(),FileAllowed(['xlsx'],'Oly XLSX file is allowed!')])
     submit_allocation=SubmitField(' Make Allocation ')
 
 class FileDownloadForm(FlaskForm):
