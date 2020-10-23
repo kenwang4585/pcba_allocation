@@ -6,7 +6,7 @@ import numpy as np
 import math
 from settings import *
 from smartsheet_handler import SmartSheetClient
-import smartsheet
+#import smartsheet
 
 
 def read_backlog_priority_from_smartsheet(smartsheet_client,sheet_id):
