@@ -121,7 +121,7 @@ def allocation_run():
             traceback.print_exc()
             flash('Error encountered in module : {} - {}'.format(module,e),'warning')
             #summarize time
-            error_log_file = os.path.join(base_dir_output, 'error log.txt')
+            error_log_file = os.path.join(base_dir_output, 'log.txt')
 
             error_heading = '\n['+ pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S') + ']\n'
             with open(error_log_file, 'a+') as file_object:
@@ -148,7 +148,7 @@ def allocation_download():
     file_list = os.listdir(base_dir_output)
     files = []
     for file in file_list:
-        if file[:1] != '.' and file[:1] != '~':
+        if file[:1] != '.' and file[:1] != '~' and file!='log.txt':
             #m_time = os.stat(os.path.join(f_path, file)).st_mtime
             files.append(file)
     files.sort(key=lambda x:x[-17:-5]) # 排序
