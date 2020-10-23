@@ -19,6 +19,7 @@ openpyxl = "*"
 xlsxwriter = "*"
 gunicorn = "*"
 pymysql = "*"
+smartsheet-python-sdk = "*"
 
 [requires]
 python_version = "3.7"

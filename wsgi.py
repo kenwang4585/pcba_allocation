@@ -29,6 +29,9 @@ def allocation_run():
     user_selection = []
     time_details=[]
 
+
+
+
     if form.validate_on_submit():
         print('Start run:',(pd.Timestamp.now()).strftime('%Y-%m-%d %H:%M:%S'))
         start_time_=pd.Timestamp.now()
@@ -101,7 +104,7 @@ def allocation_run():
                 flash('The SCR data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
                 return render_template('allocation_run.html', form=form)
 
-            # main program
+            #### main program
             module='Main program for allocation'
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
 

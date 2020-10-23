@@ -5,6 +5,28 @@ import re
 import numpy as np
 import math
 from settings import *
+from smartsheet_handler import SmartSheetClient
+import smartsheet
+
+
+def read_backlog_priority_from_smartsheet(smartsheet_client,sheet_id):
+    '''
+    Read backlog priorities from smartsheet
+    :return:
+    '''
+    # 从smartsheet读取backlog
+    df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
+
+    df_smart.drop_duplicates('SO_SS', keep='last', inplace=True)
+    df_smart = df_smart[(df_smart.SO_SS.notnull()) & (df_smart.Ranking.notnull())]
+    ss_priority = {}
+    for row in df_smart.itertuples():
+        try: # in case error input of non-num ranking
+            ss_priority[row.SO_SS] = float(row.Ranking)
+        except:
+            print('{} has a wrong ranking#: {}.'.format(row.SO_SS,row.Ranking) )
+
+    return ss_priority
 
 
 def change_supply_to_versionless_and_addup_supply(df, org_col='planningOrg', pn_col='TAN'):
@@ -512,10 +534,11 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     return df_scr
 
 
-def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
+def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
     """
     根据priority_cat,OSSD,FCD, REVENUE_NON_REVENUE,C_UNSTAGED_QTY,按照ranking_col的顺序对SS进行排序。最后放MFG_HOLD订单.
     :param df_3a4:
+    :param ss_priority: manual priority set for backlog through smartsheet
     :param ranking_col:e.g. ['priority_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','rev_non_rev_rank',
                         'C_UNSTAGED_QTY', 'SO_SS','PO_NUMBER']
     :param order_col:'SO_SS'
@@ -608,14 +631,22 @@ def ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_o
     ##### Step2: Give revenue/non-revenue a rank
     df_3a4.loc[:, 'rev_non_rev_rank'] = np.where(df_3a4.REVENUE_NON_REVENUE == 'YES', 0, 1)
 
-    ##### Step3: sort the SS per ranking columns and Put MFG hold orders at the back
+    #### Step3: Integrate ranking from smartsheet
+    df_3a4.loc[:, 'priority_rank'] = np.where(df_3a4.SO_SS.isin(ss_priority.keys()),
+                                              df_3a4.SO_SS.map(lambda x: ss_priority.get(x)),
+                                              df_3a4.priority_rank)
+
+    #df_3a4.loc[:,'priority_rank']=df_3a4.SO_SS.map(lambda x: ss_priority.get(x))
+    #df_3a4.loc[:, 'priority_rank_temp'] = df_3a4.SO_SS.map(lambda x: ss_priority.get(x))
+
+    ##### Step4: sort the SS per ranking columns and Put MFG hold orders at the back
     df_3a4.sort_values(by=ranking_col, ascending=True, inplace=True)
-    # Put MFG hold orders at the back
+    # Put MFG hold orders at the back - the 3a4 here has no option so can use mfg_hold directly
     df_hold = df_3a4[df_3a4.MFG_HOLD == 'Y'].copy()
     df_3a4 = df_3a4[df_3a4.MFG_HOLD != 'Y'].copy()
     df_3a4 = pd.concat([df_3a4, df_hold], sort=False)
 
-    ##### Step3: create rank# and put in 3a4
+    ##### Step5: create rank# and put in 3a4
     rank = {}
     order_list = df_3a4[order_col].unique()
     for order, rk in zip(order_list, range(1, len(order_list) + 1)):
@@ -827,8 +858,15 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
         lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),
         axis=1)
 
+    # read smartsheet priorities
+    token = '70gpccd8gj4qgg4ja8hzjahehq'
+    sheet_id = '2792641373988740'
+    proxies = None  # for proxy server
+    smartsheet_client = SmartSheetClient(token, proxies)
+    ss_priority=read_backlog_priority_from_smartsheet(smartsheet_client, sheet_id)
+
     # Rank the orders
-    df_3a4 = ss_ranking_overall_new(df_3a4, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
+    df_3a4 = ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
 
     # (do below after ranking) Process 3a4 BOM base on FLB_TAN col
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan.keys())

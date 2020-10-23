@@ -1,0 +1,85 @@
+
+[2020-10-23 14:27:00]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 109, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 860, in pcba_allocation_main_program
+    ss_priority=read_backlog_priority_from_smartsheet(smartsheet_client, sheet_id)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 22, in read_backlog_priority_from_smartsheet
+    df_smart.Ranking=df_smart.Ranking.astype(int)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 5546, in astype
+    new_data = self._mgr.astype(dtype=dtype, copy=copy, errors=errors,)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/internals/managers.py", line 595, in astype
+    return self.apply("astype", dtype=dtype, copy=copy, errors=errors)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/internals/managers.py", line 406, in apply
+    applied = getattr(b, f)(**kwargs)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/internals/blocks.py", line 595, in astype
+    values = astype_nansafe(vals1d, dtype, copy=True)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/dtypes/cast.py", line 972, in astype_nansafe
+    return lib.astype_intsafe(arr.ravel(), dtype).reshape(arr.shape)
+  File "pandas/_libs/lib.pyx", line 614, in pandas._libs.lib.astype_intsafe
+ValueError: invalid literal for int() with base 10: '1.6'
+
+[2020-10-23 14:31:43]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 109, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 860, in pcba_allocation_main_program
+    ss_priority=read_backlog_priority_from_smartsheet(smartsheet_client, sheet_id)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 22, in read_backlog_priority_from_smartsheet
+    df_smart.Ranking=df_smart.Ranking.astype(float)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 5546, in astype
+    new_data = self._mgr.astype(dtype=dtype, copy=copy, errors=errors,)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/internals/managers.py", line 595, in astype
+    return self.apply("astype", dtype=dtype, copy=copy, errors=errors)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/internals/managers.py", line 406, in apply
+    applied = getattr(b, f)(**kwargs)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/internals/blocks.py", line 595, in astype
+    values = astype_nansafe(vals1d, dtype, copy=True)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/dtypes/cast.py", line 995, in astype_nansafe
+    return arr.astype(dtype, copy=True)
+ValueError: could not convert string to float: 'a'
+
+[2020-10-23 14:41:44]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 109, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 926, in pcba_allocation_main_program
+    output_filename = write_excel_output_file(bu_list, df_scr, df_3a4, df_transit)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 680, in write_excel_output_file
+    df_3a4 = df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/frame.py", line 2908, in __getitem__
+    indexer = self.loc._get_listlike_indexer(key, axis=1, raise_missing=True)[1]
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1254, in _get_listlike_indexer
+    self._validate_read_indexer(keyarr, indexer, axis, raise_missing=raise_missing)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1304, in _validate_read_indexer
+    raise KeyError(f"{not_found} not in index")
+KeyError: "['priority_ranking_temp'] not in index"
+
+[2020-10-23 14:51:21]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 109, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 869, in pcba_allocation_main_program
+    df_3a4 = ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 636, in ss_ranking_overall_new
+    ss_priority[df_3a4.SO_SS],
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 1669, in __hash__
+    f"{repr(type(self).__name__)} objects are mutable, "
+TypeError: 'Series' objects are mutable, thus they cannot be hashed
+
+[2020-10-23 14:55:56]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 109, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 930, in pcba_allocation_main_program
+    output_filename = write_excel_output_file(bu_list, df_scr, df_3a4, df_transit)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 684, in write_excel_output_file
+    df_3a4 = df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/frame.py", line 2908, in __getitem__
+    indexer = self.loc._get_listlike_indexer(key, axis=1, raise_missing=True)[1]
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1254, in _get_listlike_indexer
+    self._validate_read_indexer(keyarr, indexer, axis, raise_missing=raise_missing)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1304, in _validate_read_indexer
+    raise KeyError(f"{not_found} not in index")
+KeyError: "['priority_rank_temp'] not in index"
