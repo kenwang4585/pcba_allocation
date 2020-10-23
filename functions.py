@@ -6,7 +6,6 @@ import numpy as np
 import math
 from settings import *
 from smartsheet_handler import SmartSheetClient
-#import smartsheet
 
 
 def read_backlog_priority_from_smartsheet(smartsheet_client,sheet_id):
@@ -859,8 +858,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
         axis=1)
 
     # read smartsheet priorities
-    token = '70gpccd8gj4qgg4ja8hzjahehq'
-    sheet_id = '2792641373988740'
+    token=os.getenv('SMARTSHEET_TOKEN')
+    sheet_id=os.getenv('SMARTSHEET_ID')
     proxies = None  # for proxy server
     smartsheet_client = SmartSheetClient(token, proxies)
     ss_priority=read_backlog_priority_from_smartsheet(smartsheet_client, sheet_id)
