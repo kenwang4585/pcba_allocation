@@ -8,12 +8,16 @@ from settings import *
 from smartsheet_handler import SmartSheetClient
 
 
-def read_backlog_priority_from_smartsheet(smartsheet_client,sheet_id):
+def read_backlog_priority_from_smartsheet():
     '''
     Read backlog priorities from smartsheet
     :return:
     '''
     # 从smartsheet读取backlog
+    token = os.getenv('PRIORITY_TOKEN')
+    sheet_id = os.getenv('PRIORITY_ID')
+    proxies = None  # for proxy server
+    smartsheet_client = SmartSheetClient(token, proxies)
     df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
     df_smart.drop_duplicates('SO_SS', keep='last', inplace=True)
@@ -820,6 +824,50 @@ def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col
 
     return sheet_name_msg, msg_3a4,msg_transit,msg_oh,msg_scr
 
+def redefine_addressable_flag_main_pip_version(df_3a4):
+    '''
+    Updated on Oct 27, 2020 to leveraging existing addressable definition of Y, and redefine the NO to MFG_HOLD,
+    UNSCHEDULED,PACKED,PO_CANCELLED,NON_REVENUE
+    :param df_3a4:
+    :return:
+    '''
+
+    # Convert YES to ADDRESSABLE
+    df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(df_3a4.ADDRESSABLE_FLAG=='YES',
+                                                 'ADDRESSABLE',
+                                                 df_3a4.ADDRESSABLE_FLAG)
+
+
+    # 如果没有LT_TARGET_FCD/TARGET_SSD/CURRENT_FCD_NBD_DATE,则作如下处理 - 可能是没有schedule或缺失Target LT date or Target SSD
+    df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(df_3a4.CURRENT_FCD_NBD_DATE.isnull(),
+                                                'UNSCHEDULED',
+                                                df_3a4.ADDRESSABLE_FLAG)
+
+    # Non_revenue orders
+    df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(df_3a4.REVENUE_NON_REVENUE=='NO',
+                                                  'NON_REVENUE',
+                                                df_3a4.ADDRESSABLE_FLAG)
+
+    # redefine cancellation order to PO_CANCELLED - put this as the last
+    df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(
+        (df_3a4.ORDER_HOLDS.str.contains('Cancellation', case=False)) & (df_3a4.ORDER_HOLDS.notnull()),
+        'PO_CANCELLED',
+        df_3a4.ADDRESSABLE_FLAG)
+
+    #  mfg-hold
+    df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(df_3a4.MFG_HOLD=='Y',
+                                                 'MFG_HOLD',
+                                                 df_3a4.ADDRESSABLE_FLAG)
+
+
+    #df_3a4[(df_3a4.OPTION_NUMBER==0)&(df_3a4.ORGANIZATION_CODE=='FOC')][['PO_NUMBER','ADDRESSABLE_FLAG_redefined','ADDRESSABLE_FLAG','MFG_HOLD','ORDER_HOLDS','TARGET_SSD','LT_TARGET_FCD','CURRENT_FCD_NBD_DATE']].to_excel('3a4 processed-2.xlsx',index=False)
+    # OTHER non-addressable
+    df_3a4.loc[:, 'ADDRESSABLE_FLAG']=np.where(df_3a4.ADDRESSABLE_FLAG=='NO',
+                                               'NOT_ADDRESSABLE',
+                                               df_3a4.ADDRESSABLE_FLAG)
+
+    return df_3a4
+
 
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_list,ranking_col):
     """
@@ -857,12 +905,13 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
         lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),
         axis=1)
 
+    # redefine addressable flag
+    df_3a4=redefine_addressable_flag_main_pip_version(df_3a4)
+    # remove cancelled orders
+    df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')]
+
     # read smartsheet priorities
-    token=os.getenv('SMARTSHEET_TOKEN')
-    sheet_id=os.getenv('SMARTSHEET_ID')
-    proxies = None  # for proxy server
-    smartsheet_client = SmartSheetClient(token, proxies)
-    ss_priority=read_backlog_priority_from_smartsheet(smartsheet_client, sheet_id)
+    ss_priority=read_backlog_priority_from_smartsheet()
 
     # Rank the orders
     df_3a4 = ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')

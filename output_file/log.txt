@@ -83,3 +83,17 @@ Traceback (most recent call last):
   File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1304, in _validate_read_indexer
     raise KeyError(f"{not_found} not in index")
 KeyError: "['priority_rank_temp'] not in index"
+
+[2020-10-27 10:58:35]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 109, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 914, in pcba_allocation_main_program
+    ss_priority=read_backlog_priority_from_smartsheet()
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 20, in read_backlog_priority_from_smartsheet
+    smartsheet_client = SmartSheetClient(token, proxies)
+  File "/Users/wangken/py/pcba_allocation/smartsheet_handler.py", line 12, in __init__
+    self.smartsheet_client = smartsheet.Smartsheet(access_token=access_token, proxies=proxies)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/smartsheet/smartsheet.py", line 145, in __init__
+    raise ValueError('Access Token must be set in the environment '
+ValueError: Access Token must be set in the environment or passed to smartsheet.Smartsheet() as a parameter.
