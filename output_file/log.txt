@@ -97,3 +97,27 @@ Traceback (most recent call last):
   File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/smartsheet/smartsheet.py", line 145, in __init__
     raise ValueError('Access Token must be set in the environment '
 ValueError: Access Token must be set in the environment or passed to smartsheet.Smartsheet() as a parameter.
+
+[2020-10-28 11:51:58]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 103, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 973, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 497, in process_final_allocated_output
+    df_scr['oh+transit'] - df_scr.Backlog,
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 5139, in __getattr__
+    return object.__getattribute__(self, name)
+AttributeError: 'DataFrame' object has no attribute 'Backlog'
+
+[2020-10-28 11:58:19]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 103, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 973, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 497, in process_final_allocated_output
+    df_scr['oh+transit'] - df_scr.Unpacked_blg,
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 5139, in __getattr__
+    return object.__getattribute__(self, name)
+AttributeError: 'DataFrame' object has no attribute 'Unpacked_blg'

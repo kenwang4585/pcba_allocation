@@ -22,7 +22,7 @@ class UploadForm(FlaskForm):
     bu=StringField('Business units (e.g. PABU/ERBU; leave blank for all BU): ',default='')
 
     ranking_logic=SelectField('Select order ranking logic:',
-                             choices=[('cus_sat','Customer focus: Top priority->OSSD->FCD->Rev/non-rev->Qty'),
+                             choices=[('cus_sat','Customer focus: Top priority->OSSD->FCD->Qty->Rev/non-rev'),
                                       ('max_rev','Revenue maximization: N/A')],
                              default='cus_sat',
                              validators=[DataRequired()])

@@ -7,7 +7,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import time
-#from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename
 from flask import flash,send_from_directory,render_template
 from flask_settings import *
 from functions import *
@@ -49,15 +49,15 @@ def allocation_run():
         # 存储文件 - will save again with Org name in file name later
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
         #file_path_supply = os.path.join(app.config['UPLOAD_PATH'],'supply.xlsx')
-        file_path_3a4 = os.path.join(base_dir_upload, '3a4.csv')
-        file_path_supply = os.path.join(base_dir_upload, 'supply.xlsx')
+        file_path_3a4 = os.path.join(base_dir_upload, secure_filename(f_3a4.filename))
+        file_path_supply = os.path.join(base_dir_upload, secure_filename(f_supply.filename))
 
         # save the files to server
         f_3a4.save(file_path_3a4)
         f_supply.save(file_path_supply)
 
         # check data format
-        sheet_name_msg, msg_3a4, msg_transit, msg_oh, msg_scr = check_input_file_format(file_path_3a4, file_path_supply,
+        sheet_name_msg, msg_3a4, msg_3a4_option, msg_transit, msg_oh, msg_scr = check_input_file_format(file_path_3a4, file_path_supply,
                                                                         col_3a4_must_have, col_transit_must_have,
                                                                         col_oh_must_have, col_scr_must_have,
                                                                         sheet_transit,sheet_oh,sheet_scr)
@@ -65,6 +65,8 @@ def allocation_run():
             flash(sheet_name_msg,'warning')
         if msg_3a4!='':
             flash(msg_3a4,'warning')
+        if msg_3a4_option!='':
+            flash(msg_3a4_option,'warning')
         if msg_transit!='':
             flash(msg_transit,'warning')
         if msg_oh!='':
@@ -72,24 +74,16 @@ def allocation_run():
         if msg_scr!='':
             flash(msg_scr,'warning')
 
-        if sheet_name_msg!='' or msg_3a4!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
+        if sheet_name_msg!='' or msg_3a4!='' or msg_3a4_option!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
             return render_template('allocation_run.html', form=form)
 
         if ranking_logic=='cus_sat':
-            ranking_col=['priority_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','rev_non_rev_rank','C_UNSTAGED_QTY', 'SO_SS','PO_NUMBER']
+            ranking_col=['priority_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','C_UNSTAGED_QTY','rev_non_rev_rank', 'SO_SS','PO_NUMBER']
         elif ranking_logic=='max_rev':
             ranking_col = ['priority_rank', 'ss_rev_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
 
 
         try:
-            # check file format by reading headers
-            """
-            module='checking file format'
-            missing_3a4_col, missing_supply_col = check_input_file_format(supply_source,file_path_supply,file_path_3a4)
-            if len(missing_3a4_col) + len(missing_supply_col) >0:
-                flash('Check your files! Missing columns in the file you updated, you might have uploaded wrong files. 3A4: {}. Kinaxis supply: {}'.format(missing_3a4_col,missing_supply_col),'warning')
-                return render_template('ctb_run.html', form=form)
-            """
             # 读取数据
             module='Reading input data'
             df_3a4, df_oh, df_transit, df_scr=read_data(file_path_3a4, file_path_supply, sheet_scr, sheet_oh, sheet_transit)
@@ -147,25 +141,47 @@ def allocation_download():
     # output files
     file_list = os.listdir(base_dir_output)
     files = []
+    creation_time = []
+    file_size = []
     for file in file_list:
         if file[:1] != '.' and file[:1] != '~' and file!='log.txt':
-            #m_time = os.stat(os.path.join(f_path, file)).st_mtime
+            c_time = os.stat(os.path.join(base_dir_output, file)).st_ctime
+            c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
+            file_s = os.path.getsize(os.path.join(base_dir_output, file))
+            if file_s > 1024 * 1024:
+                file_s = str(round(file_s/(1024*1024),1)) + 'M'
+            else:
+                file_s = str(int(file_s / 1024)) + 'K'
+
             files.append(file)
-    files.sort(key=lambda x:x[-17:-5]) # 排序
-    files_output=files[::-1]
+            creation_time.append(c_time)
+            file_size.append(file_s)
+    df_output=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size})
+    df_output.sort_values(by='Creation_time',ascending=False,inplace=True)
+    #files.sort(key=lambda x:x[-17:-5]) # 排序
+    #files_output=files[::-1]
 
     # files upload
     file_list = os.listdir(base_dir_upload)
     files = []
+    creation_time = []
+    file_size = []
     for file in file_list:
         if file[:1] != '.' and file[:1] != '~':
-            # m_time = os.stat(os.path.join(f_path, file)).st_mtime
-            #c_time=time.ctime(os.path.getctime(file))
+            c_time = os.stat(os.path.join(base_dir_upload, file)).st_ctime
+            c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
+            file_s = os.path.getsize(os.path.join(base_dir_upload, file))
+            if file_s > 1024 * 1024:
+                file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
+            else:
+                file_s = str(int(file_s / 1024)) + 'K'
+
             files.append(file)
+            creation_time.append(c_time)
+            file_size.append(file_s)
 
-
-    files_uploaded = files
-
+    df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size})
+    df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
 
     if form.validate_on_submit():
         submit_download_output=form.submit_download_output.data
@@ -190,12 +206,23 @@ def allocation_download():
             fname=fname_uploaded
 
         try:
-            return send_from_directory(f_path, filename=fname, as_attachment=True)
+            if fname[-7:] == '-delete': # 删除文件
+                os.remove(os.path.join(f_path, fname[:-7]))
+                flash('This file has been delted: {}'.format(fname[:-7]),'success')
+                return render_template('allocation_download.html', form=form,
+                                       data_header=['File_name', 'Creation_time', 'File_size'],
+                                       files_output=df_output.values,
+                                       files_uploaded=df_upload.values)
+            else:
+                return send_from_directory(f_path, filename=fname, as_attachment=True)
         except Exception as e:
             msg = 'File not found! Check filename you input! ' + str(e)
             flash(msg, 'warning')
 
-    return render_template('allocation_download.html',form=form,files_output=files_output,files_uploaded=files_uploaded)
+    return render_template('allocation_download.html',form=form,
+                           data_header=['File_name','Creation_time','File_size'],
+                           files_output=df_output.values,
+                           files_uploaded=df_upload.values)
 
 
 @app.route('/about', methods=['GET'])

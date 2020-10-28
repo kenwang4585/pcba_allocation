@@ -236,8 +236,9 @@ def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan):
     blg_ic_tan={'800-42373':{'FJZ':(5,'1234567-1','2020-10-20')}}
     """
     blg_dic_tan = {}
+    dfx = df_3a4[(df_3a4.PACKOUT_QUANTITY != 'Packout Completed') & (df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')]
     for pn in tan:
-        dfm = df_3a4[df_3a4.BOM_PN == pn]
+        dfm = dfx[dfx.BOM_PN == pn]
         org_qty_po = []
         for org, qty, po, ossd in zip(dfm.ORGANIZATION_CODE, dfm.C_UNSTAGED_QTY, dfm.PO_NUMBER, dfm.ORIGINAL_FCD_NBD_DATE): # use ORIGINAL_FCD_NBD_DATE instead of ossd_ofset
             if qty > 0:
@@ -468,7 +469,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
 
     # add backlog qty
     df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
-    df_3a4_p.columns = ['Backlog']
+    df_3a4_p.columns = ['Unpacked_blg']
     df_3a4_p.reset_index(inplace=True)
     df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
 
@@ -489,11 +490,11 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     # drop the unneeded columns introduced by merge
     df_scr.drop(['planningOrg'], axis=1, inplace=True)
 
-    # ADD THE gap col and recovery date
+    # ADD THE gap col and Blg_recovery date
     df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
     df_scr['oh+transit'].fillna(0, inplace=True)
     df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site,
-                                           df_scr['oh+transit'] - df_scr.Backlog,
+                                           df_scr['oh+transit'] - df_scr.Unpacked_blg,
                                            None)
     df_scr.drop('oh+transit', axis=1, inplace=True)
 
@@ -505,7 +506,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
                                           df_scr.Gap_before + df_scr.Allocation,
                                           None)
 
-    df_scr.loc[:, 'Recovery'] = np.where((df_scr.ORG != pcba_site),
+    df_scr.loc[:, 'Blg_recovery'] = np.where((df_scr.ORG != pcba_site),
                                          np.where(df_scr.Gap_before >= 0,
                                                   'No gap',
                                                   np.where(df_scr.Gap_after < 0,
@@ -513,12 +514,12 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
                                                            'TBD')),
                                          None)
 
-    # update with the correct recovery date for TBD
+    # update with the correct Blg_recovery date for TBD
     df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'Backlog', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Recovery'],
+        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
         inplace=True)
     df_scr.reset_index(inplace=True)
-    dfx = df_scr[(df_scr.Recovery == 'TBD') & (df_scr.ORG != pcba_site)]
+    dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site)]
     dfx.set_index(['TAN', 'ORG'], inplace=True)
     df_scr.set_index(['TAN', 'ORG'], inplace=True)
 
@@ -527,11 +528,11 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
         dfy = dfy[dfy.notnull()]
 
         last_allocation_date = dfy.index[-1]
-        df_scr.loc[ind, 'Recovery'] = last_allocation_date
+        df_scr.loc[ind, 'Blg_recovery'] = last_allocation_date
 
     df_scr.reset_index(inplace=True)
     df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'Backlog', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Recovery'],
+        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
         inplace=True)
 
     return df_scr
@@ -548,13 +549,6 @@ def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', 
     :param new_col:'ss_overall_rank'
     :return: df_3a4
     """
-    # removed cancelled orders - this part is different from summary_3a4 automation
-    df_3a4.loc[:, 'cancelled'] = np.where(df_3a4.ORDER_HOLDS.notnull(),
-                                          np.where(df_3a4.ORDER_HOLDS.str.contains('cancel', case=False),
-                                                   'YES',
-                                                   'NO'),
-                                          'NO')
-    df_3a4 = df_3a4[df_3a4.cancelled != 'YES'].copy()
 
     # Below create a rev_rank for reference -  currently not used in overall ranking
     ### change non-rev orders unstaged $ to 0
@@ -645,8 +639,9 @@ def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', 
     ##### Step4: sort the SS per ranking columns and Put MFG hold orders at the back
     df_3a4.sort_values(by=ranking_col, ascending=True, inplace=True)
     # Put MFG hold orders at the back - the 3a4 here has no option so can use mfg_hold directly
-    df_hold = df_3a4[df_3a4.MFG_HOLD == 'Y'].copy()
-    df_3a4 = df_3a4[df_3a4.MFG_HOLD != 'Y'].copy()
+
+    df_hold = df_3a4[df_3a4.ADDRESSABLE_FLAG == 'MFG_HOLD'].copy()
+    df_3a4 = df_3a4[df_3a4.ADDRESSABLE_FLAG == 'MFG_HOLD'].copy()
     df_3a4 = pd.concat([df_3a4, df_hold], sort=False)
 
     ##### Step5: create rank# and put in 3a4
@@ -676,7 +671,9 @@ def write_data_to_excel(output_file,data_to_write):
 
 def write_excel_output_file(bu_list,df_scr,df_3a4,df_transit):
     # save the scr output file and 3a4 to excel
-    dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
+    #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
+    dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
+
     if bu_list != ['']:
         bu = ' '.join(bu_list)
         output_filename = pcba_site + ' SCR allocation (' + bu + ') ' + dt + '.xlsx'
@@ -795,7 +792,7 @@ def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col
     """
     Check if the input files contain the right columns
     """
-    sheet_name_msg,msg_3a4, msg_transit, msg_oh, msg_scr = '', '', '', '',''
+    sheet_name_msg,msg_3a4, msg_3a4_option, msg_transit, msg_oh, msg_scr = '', '', '', '','',''
     df_3a4=pd.read_csv(file_path_3a4,nrows=2,encoding='iso-8859-1')
     try:
         df_transit=pd.read_excel(file_path_supply,sheet_name=sheet_transit,nrows=2)
@@ -806,6 +803,8 @@ def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col
         if not np.all(np.in1d(col_3a4_must_have, df_3a4.columns)):
             msg_3a4='3A4 file format error! Following required columns not found in 3a4 data: {}'.format(
                 str(np.setdiff1d(col_3a4_must_have, df_3a4.columns)))
+        if 'OPTION_NUMBER' in df_3a4.columns:
+            msg_3a4_option='3A4 file format error! Pls download 3A4 without option PIDs!'
 
         if not np.all(np.in1d(col_transit_must_have, df_transit.columns)):
             msg_transit = 'In-transit data format error! Following required columns not found in transit data: {}'.format(
@@ -822,7 +821,7 @@ def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col
         print('sheet name error!')
         sheet_name_msg = 'Supply file format error! Ensure the correct sheet names are: {}, {}, {}'.format(sheet_transit,sheet_oh,sheet_scr)
 
-    return sheet_name_msg, msg_3a4,msg_transit,msg_oh,msg_scr
+    return sheet_name_msg, msg_3a4, msg_3a4_option, msg_transit,msg_oh,msg_scr
 
 def redefine_addressable_flag_main_pip_version(df_3a4):
     '''
@@ -848,17 +847,17 @@ def redefine_addressable_flag_main_pip_version(df_3a4):
                                                   'NON_REVENUE',
                                                 df_3a4.ADDRESSABLE_FLAG)
 
-    # redefine cancellation order to PO_CANCELLED - put this as the last
-    df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(
-        (df_3a4.ORDER_HOLDS.str.contains('Cancellation', case=False)) & (df_3a4.ORDER_HOLDS.notnull()),
-        'PO_CANCELLED',
-        df_3a4.ADDRESSABLE_FLAG)
 
     #  mfg-hold
     df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(df_3a4.MFG_HOLD=='Y',
                                                  'MFG_HOLD',
                                                  df_3a4.ADDRESSABLE_FLAG)
 
+    # redefine cancellation order to PO_CANCELLED - put this after MFG_HOLD so it won't get replaced by MFG_HOLD
+    df_3a4.loc[:, 'ADDRESSABLE_FLAG'] = np.where(
+        (df_3a4.ORDER_HOLDS.str.contains('Cancellation', case=False)) & (df_3a4.ORDER_HOLDS.notnull()),
+        'PO_CANCELLED',
+        df_3a4.ADDRESSABLE_FLAG)
 
     #df_3a4[(df_3a4.OPTION_NUMBER==0)&(df_3a4.ORGANIZATION_CODE=='FOC')][['PO_NUMBER','ADDRESSABLE_FLAG_redefined','ADDRESSABLE_FLAG','MFG_HOLD','ORDER_HOLDS','TARGET_SSD','LT_TARGET_FCD','CURRENT_FCD_NBD_DATE']].to_excel('3a4 processed-2.xlsx',index=False)
     # OTHER non-addressable
@@ -907,10 +906,10 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
 
     # redefine addressable flag
     df_3a4=redefine_addressable_flag_main_pip_version(df_3a4)
-    # remove cancelled orders
-    df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')]
+    # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
+    df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
 
-    # read smartsheet priorities
+    # read smartsheet for exceptional priority ss
     ss_priority=read_backlog_priority_from_smartsheet()
 
     # Rank the orders

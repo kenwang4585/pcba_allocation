@@ -35,23 +35,56 @@
             </tbody>
         </table>
 
-        <br>
-        {{ form.fname_output.label }}
-        {{ form.fname_output (class='form-control')}}{{ form.submit_download_output (class='btn btn-default')}}
-        <br><br>
-        <p>List of the files you can download (latest on the top):</p>
-        {% for file in files_output %}
-            <li> {{ file }} </li>
-        {% endfor %}
-        <br><br>
+           <br>
+            {{ form.fname_output.label }}
+            {{ form.fname_output (class='form-control')}}
+            {{ form.submit_download_output (class='btn btn-default')}}
+            <br><br>
+                {% if files_output|length>0 %}
+                    <table border="1" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                        <tbody>
+                            <tr>
+                                <td width="400"><span style="font-size: large;">Allocation files</span></td>
+                                <td width="200"><span style="font-size: large">Creation time</span></td>
+                                <td width="200"><span style="font-size: large">File size</span></td>
+                            </tr>
+                            {% for row in files_output %}
+                                <tr>
+                                    {% for col in row %}
+                                        <td><span style="font-size: small">{{col}}</span></td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
 
-        {{ form.fname_uploaded.label }}
-        {{ form.fname_uploaded (class='form-control')}}{{ form.submit_download_uploaded (class='btn btn-default')}}
-        <br><br>
-        <p>List of the files you can download:</p>
-        {% for file in files_uploaded %}
-            <li> {{ file }} </li>
-        {% endfor %}
+            <!-- why br below does not work here??? -->
+            <br>
+            <span style="color: #f8f9fa"> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+            <br><br>
+            {{ form.fname_uploaded.label }}
+            {{ form.fname_uploaded (class='form-control')}}
+            {{ form.submit_download_uploaded (class='btn btn-default')}}
+            <br><br>
+                    {% if files_uploaded|length>0 %}
+                        <table style="border-collapse:collapse" border="1" cellspacing="0px" align="left">
+                            <tbody>
+                                <tr>
+                                    <td width="400"><span style="font-size: large">Uploaded files</span></td>
+                                    <td width="200"><span style="font-size: large">Creation time</span></td>
+                                    <td width="200"><span style="font-size: large">File size</span></td>
+                                </tr>
+                                {% for row in files_uploaded %}
+                                    <tr>
+                                        {% for col in row %}
+                                            <td><span style="font-size: small">{{col}}</span></td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
 
     </form>
 </div>
