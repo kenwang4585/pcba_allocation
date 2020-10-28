@@ -56,4 +56,8 @@ col_transit_must_have=['planningOrg','TAN','BU','ETA_date','In-transit_quantity'
 col_oh_must_have=['planningOrg','TAN','BU','OH']
 col_scr_must_have=['planningOrg','TAN','BU','SCRDate','SCRQuantity']
 
-
+# Revenue rank
+ranking_col_cust = ['priority_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE',
+                           'C_UNSTAGED_QTY', 'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
+ranking_col_rev = ['priority_rank', 'ss_rev_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE',
+                           'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']

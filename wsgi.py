@@ -77,11 +77,11 @@ def allocation_run():
         if sheet_name_msg!='' or msg_3a4!='' or msg_3a4_option!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
             return render_template('allocation_run.html', form=form)
 
-        if ranking_logic=='cus_sat':
-            ranking_col=['priority_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','C_UNSTAGED_QTY','rev_non_rev_rank', 'SO_SS','PO_NUMBER']
-        elif ranking_logic=='max_rev':
-            ranking_col = ['priority_rank', 'ss_rev_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
-
+       # 判断并定义ranking_col
+        if ranking_logic == 'cus_sat':
+            ranking_col = ranking_col_cust
+        elif ranking_logic == 'max_rev':
+            ranking_col = ranking_col_rev
 
         try:
             # 读取数据
