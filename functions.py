@@ -638,10 +638,9 @@ def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', 
 
     ##### Step4: sort the SS per ranking columns and Put MFG hold orders at the back
     df_3a4.sort_values(by=ranking_col, ascending=True, inplace=True)
-    # Put MFG hold orders at the back - the 3a4 here has no option so can use mfg_hold directly
-
+    # Put MFG hold orders at the back - the 3a4 here has no option so can also use mfg_hold directly alternatively
     df_hold = df_3a4[df_3a4.ADDRESSABLE_FLAG == 'MFG_HOLD'].copy()
-    df_3a4 = df_3a4[df_3a4.ADDRESSABLE_FLAG == 'MFG_HOLD'].copy()
+    df_3a4 = df_3a4[df_3a4.ADDRESSABLE_FLAG != 'MFG_HOLD'].copy()
     df_3a4 = pd.concat([df_3a4, df_hold], sort=False)
 
     ##### Step5: create rank# and put in 3a4
