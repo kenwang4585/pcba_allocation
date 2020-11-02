@@ -234,6 +234,7 @@ def allocation_download():
         log_msg = '\n'.join(log_msg)
         with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
             file_object.write(log_msg)
+        print(log_msg)
 
         # download/delete file
         try:
