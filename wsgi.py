@@ -8,7 +8,7 @@ matplotlib.use('Agg')
 
 import time
 from werkzeug.utils import secure_filename
-from flask import flash,send_from_directory,render_template
+from flask import flash,send_from_directory,render_template, request
 from flask_settings import *
 from functions import *
 from settings import *
@@ -25,32 +25,46 @@ def allocation_run():
     # as these email valiable are redefined below in email_to_only check, thus have to use global to define here in advance
     # otherwise can't be used. (as we create new vaiables with _ suffix thus no need to set global variable)
     # global backlog_dashboard_emails
-    program_log = []
-    user_selection = []
-    time_details=[]
-
-
-
 
     if form.validate_on_submit():
-        print('Start run:',(pd.Timestamp.now()).strftime('%Y-%m-%d %H:%M:%S'))
-        start_time_=pd.Timestamp.now()
+        log_msg = []
+        log_msg.append('\n\n[Making allocation] - ' + pd.Timestamp.now().strftime('%Y-%m-%d'))
+        log_msg.append('User info: ' + request.headers.get('User-agent'))
+
+        start_time=pd.Timestamp.now().strftime('%H:%M:%S')
+        print('Start time:', start_time)
+        log_msg.append('Start time: ' + start_time)
+
         # 通过条件判断及邮件赋值，开始执行任务
         pcba_site=form.org.data
-
         bu=form.bu.data
         bu_list=bu.strip().upper().split('/')
+        log_msg.append('PCBA_SITE: ' + pcba_site)
+        log_msg.append('BU: ' + bu.strip().upper())
 
         f_3a4 = form.file_3a4.data
         f_supply= form.file_supply.data
         ranking_logic=form.ranking_logic.data
-
 
         # 存储文件 - will save again with Org name in file name later
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
         #file_path_supply = os.path.join(app.config['UPLOAD_PATH'],'supply.xlsx')
         file_path_3a4 = os.path.join(base_dir_upload, secure_filename(f_3a4.filename))
         file_path_supply = os.path.join(base_dir_upload, secure_filename(f_supply.filename))
+
+        # check and store file size
+        size_3a4=os.path.getsize(file_path_3a4)
+        if size_3a4/1024>1:
+            size_3a4=str(round(size_3a4/(1024*1024),1)) + 'Mb'
+        else:
+            size_3a4 = str(int(size_3a4 / 1024)) + 'Kb'
+        size_supply=os.path.getsize(file_path_supply)
+        if size_supply/1024>1:
+            size_supply=str(round(size_supply/(1024*1024),1)) + 'Mb'
+        else:
+            size_supply = str(int(size_supply / 1024)) + 'Kb'
+        log_msg.append('File 3a4: ' + f_3a4.filename + '(size: ' + size_3a4 + ')')
+        log_msg.append('File supply: ' + f_supply.filename + '(size: ' + size_supply + ')')
 
         # save the files to server
         f_3a4.save(file_path_3a4)
@@ -103,7 +117,15 @@ def allocation_run():
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
 
             flash('SCR allocation file created: {}! You can download accordingly.'.format(output_filename), 'success')
-            print('Finish run:',(pd.Timestamp.now()).strftime('%Y-%m-%d %H:%M:%S'))
+            finish_time=pd.Timestamp.now().strftime('%H:%M:%S')
+            print('Finish run:',finish_time)
+            log_msg.append('Finish time: ' + finish_time)
+
+            # Write the log file
+            log_msg='\n'.join(log_msg)
+            with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
+                file_object.write(log_msg)
+
         except Exception as e:
             try:
                 del df_scr, df_3a4, df_oh, df_transit
@@ -114,13 +136,12 @@ def allocation_run():
             print(module,': ', e)
             traceback.print_exc()
             flash('Error encountered in module : {} - {}'.format(module,e),'warning')
-            #summarize time
-            error_log_file = os.path.join(base_dir_output, 'log.txt')
-
-            error_heading = '\n['+ pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S') + ']\n'
-            with open(error_log_file, 'a+') as file_object:
-                file_object.write(error_heading)
-            traceback.print_exc(file=open(error_log_file, 'a+'))
+            #Write the log file
+            log_msg.append('ERROR!!!!' + pd.Timestamp.now().strftime('%H:%M:%S'))
+            log_msg='\n'.join(log_msg)
+            with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
+                file_object.write(log_msg)
+            traceback.print_exc(file=open(os.path.join(base_dir_output, 'log.txt'), 'a+'))
 
         # clear memory
         try:
@@ -184,6 +205,10 @@ def allocation_download():
     df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
 
     if form.validate_on_submit():
+        log_msg = []
+        log_msg.append('\n\n[Download/delete file] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
+        log_msg.append('User info: ' + request.headers.get('User-agent'))
+
         submit_download_output=form.submit_download_output.data
         submit_download_uploaded=form.submit_download_uploaded.data
 
@@ -204,7 +229,13 @@ def allocation_download():
         elif submit_download_uploaded:
             f_path=base_dir_upload
             fname=fname_uploaded
+        log_msg.append('File name: ' + fname)
+        # Write the log file
+        log_msg = '\n'.join(log_msg)
+        with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
+            file_object.write(log_msg)
 
+        # download/delete file
         try:
             if fname[-7:] == '-delete': # 删除文件
                 os.remove(os.path.join(f_path, fname[:-7]))

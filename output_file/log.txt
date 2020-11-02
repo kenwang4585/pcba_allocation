@@ -121,3 +121,99 @@ Traceback (most recent call last):
   File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 5139, in __getattr__
     return object.__getattribute__(self, name)
 AttributeError: 'DataFrame' object has no attribute 'Unpacked_blg'
+
+[2020-10-29 09:07:47]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 103, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 912, in pcba_allocation_main_program
+    ss_priority=read_backlog_priority_from_smartsheet()
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 20, in read_backlog_priority_from_smartsheet
+    smartsheet_client = SmartSheetClient(token, proxies)
+  File "/Users/wangken/py/pcba_allocation/smartsheet_handler.py", line 12, in __init__
+    self.smartsheet_client = smartsheet.Smartsheet(access_token=access_token, proxies=proxies)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/smartsheet/smartsheet.py", line 145, in __init__
+    raise ValueError('Access Token must be set in the environment '
+ValueError: Access Token must be set in the environment or passed to smartsheet.Smartsheet() as a parameter.
+
+[2020-11-02 14:08:47]
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 101, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 912, in pcba_allocation_main_program
+    ss_priority=read_backlog_priority_from_smartsheet()
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 20, in read_backlog_priority_from_smartsheet
+    smartsheet_client = SmartSheetClient(token, proxies)
+  File "/Users/wangken/py/pcba_allocation/smartsheet_handler.py", line 12, in __init__
+    self.smartsheet_client = smartsheet.Smartsheet(access_token=access_token, proxies=proxies)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/smartsheet/smartsheet.py", line 145, in __init__
+    raise ValueError('Access Token must be set in the environment '
+ValueError: Access Token must be set in the environment or passed to smartsheet.Smartsheet() as a parameter.
+
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+2020-11-02 14:26:36
+PCBA_SITE: FOL
+BU: ERBU
+BU: ERBU
+File 3a4: 3a4 (2).csv
+File supply: supply (3).xlsx
+Finish time: 2020-11-02 14:27:13[2020-11-02 14:32:47]
+
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+Start time: 14:32:47
+PCBA_SITE: FOL
+BU: ERBU/SRGBU
+File 3a4: 3a4 (2).csv
+File supply: supply (4).xlsx
+Finish time: 14:33:34[2020-11-02 14:35:46]
+
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+Start time: 14:35:46
+PCBA_SITE: FOL
+BU: ERBU/SRGBU
+File 3a4: 3a4 (2).csv
+File supply: supply (4).xlsx
+Finish time: 14:36:34
+[2020-11-02 14:37:57]
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+Start time: 14:37:57
+PCBA_SITE: FOL
+BU: ERBU/SRGBU
+File 3a4: 3a4 (2).csv
+File supply: supply (4).xlsx
+Finish time: 14:38:44
+
+[2020-11-02]
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+Start time: 14:40:18
+PCBA_SITE: FOL
+BU: ERBU/SRGBU
+File 3a4: 3a4 (2).csv
+File supply: supply (4).xlsx
+Finish time: 14:41:07
+
+[2020-11-02] - making allocation
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+Start time: 14:46:49
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: 3a4 (2).csv(size: 89270876)
+File supply: supply (3).xlsx(size: 1536987)
+Finish time: 14:47:25
+
+[2020-11-02] - making allocation
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+Start time: 14:53:42
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: 3a4 (2).csv(size: 85.1Mb)
+File supply: supply (3).xlsx(size: 1.5Mb)
+Finish time: 14:54:20
+
+[2020-11-02] - download file
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+File name: FOL SCR allocation (all BU) 10-23 22h37m.xlsx
+
+[2020-11-02] - download file
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
+File name: 3a4.csv-delete
