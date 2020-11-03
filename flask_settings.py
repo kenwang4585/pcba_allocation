@@ -5,8 +5,11 @@ from wtforms.validators import Email, DataRequired,input_required
 from wtforms import SubmitField, BooleanField, StringField,IntegerField,SelectField,PasswordField,TextAreaField,RadioField
 import os
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
+
 app.secret_key = os.getenv('SECRET_KEY', 'secret string')
 #app.config['UPLOAD_PATH'] = os.path.join(app.root_path, 'upload_file')
 

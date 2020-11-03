@@ -259,5 +259,7 @@ def allocation_download():
 
 @app.route('/about', methods=['GET'])
 def allocation_about():
+    ip = request.remote_addr
+    print(ip)
+    #print(request.headers)
     return render_template('allocation_about.html')
-
