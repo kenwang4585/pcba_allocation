@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app)
+app.wsgi_app = ProxyFix(app.wsgi_app) # usethis inorder for request.remote_addr to show the real user IP
 
 app.secret_key = os.getenv('SECRET_KEY', 'secret string')
 #app.config['UPLOAD_PATH'] = os.path.join(app.root_path, 'upload_file')
@@ -35,10 +35,10 @@ class UploadForm(FlaskForm):
     submit_allocation=SubmitField(' Make Allocation ')
 
 class FileDownloadForm(FlaskForm):
-    fname_output=StringField('Download output data file - input filename to download:')
+    fname_output=StringField('Download output data file:')
     submit_download_output=SubmitField('Download')
 
-    fname_uploaded = StringField('Download uploaded data file - input filename to download:')
+    fname_uploaded = StringField('Download input data file:')
     submit_download_uploaded=SubmitField('Download')
 
 

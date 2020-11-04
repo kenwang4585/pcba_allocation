@@ -51,6 +51,9 @@ def allocation_run():
         #file_path_supply = os.path.join(app.config['UPLOAD_PATH'],'supply.xlsx')
         file_path_3a4 = os.path.join(base_dir_upload, secure_filename(f_3a4.filename))
         file_path_supply = os.path.join(base_dir_upload, secure_filename(f_supply.filename))
+        # save the files to server
+        f_3a4.save(file_path_3a4)
+        f_supply.save(file_path_supply)
 
         # check and store file size
         size_3a4=os.path.getsize(file_path_3a4)
@@ -65,10 +68,6 @@ def allocation_run():
             size_supply = str(int(size_supply / 1024)) + 'Kb'
         log_msg.append('File 3a4: ' + f_3a4.filename + '(size: ' + size_3a4 + ')')
         log_msg.append('File supply: ' + f_supply.filename + '(size: ' + size_supply + ')')
-
-        # save the files to server
-        f_3a4.save(file_path_3a4)
-        f_supply.save(file_path_supply)
 
         # check data format
         sheet_name_msg, msg_3a4, msg_3a4_option, msg_transit, msg_oh, msg_scr = check_input_file_format(file_path_3a4, file_path_supply,
