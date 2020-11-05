@@ -35,10 +35,10 @@ class UploadForm(FlaskForm):
     submit_allocation=SubmitField(' Make Allocation ')
 
 class FileDownloadForm(FlaskForm):
-    fname_output=StringField('Download output data file:')
+    fname_output=StringField('Download output data file (put in file name below):')
     submit_download_output=SubmitField('Download')
 
-    fname_uploaded = StringField('Download input data file:')
+    fname_uploaded = StringField('Download input data file (put in file name below):')
     submit_download_uploaded=SubmitField('Download')
 
 
