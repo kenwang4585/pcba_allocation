@@ -55,7 +55,7 @@ def allocation_run():
         f_3a4.save(file_path_3a4)
         f_supply.save(file_path_supply)
 
-        # check and store file size
+        # check and store file size - after file is saved
         size_3a4=os.path.getsize(file_path_3a4)
         if size_3a4/1024>1:
             size_3a4=str(round(size_3a4/(1024*1024),1)) + 'Mb'

@@ -23,9 +23,12 @@ transit_time={'FOL':{'FOC':1,
                      'JPI':5,
                      'FSJ':6,
                      'FVE':9,
+                     'FDO':4,
+                     'SHK':2,
                      'other':7},
-            'JPE':{'JPE':1,'other':7}
-           }
+                'JPE':{'JPE':1,
+                       'other':7}
+                }
 # within below days transit ETA considered as OH
 close_eta_cutoff_criteria=15
 # Far ETA eligible to backward fulfill PO: offset OSSD by deducting below days
