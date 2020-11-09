@@ -217,3 +217,159 @@ File name: FOL SCR allocation (all BU) 10-23 22h37m.xlsx
 [2020-11-02] - download file
 User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36
 File name: 3a4.csv-delete
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 10:49:46
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+ERROR!!!!10:50:41Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 2895, in get_loc
+    return self._engine.get_loc(casted_key)
+  File "pandas/_libs/index.pyx", line 70, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 101, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 1675, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 1683, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'planningOrg'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 116, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1012, in pcba_allocation_main_program
+    df_oh=add_up_supply_by_pn(df_oh,org_col='planningOrg',pn_col='TAN')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 125, in add_up_supply_by_pn
+    df.loc[:, 'org_pn'] = df[org_col] + '_' + df[pn_col]
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/frame.py", line 2902, in __getitem__
+    indexer = self.columns.get_loc(key)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 2897, in get_loc
+    raise KeyError(key) from err
+KeyError: 'planningOrg'
+
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 10:53:45
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+Finish time: 10:55:35
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 11:16:36
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+ERROR!!!!11:17:42Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 2895, in get_loc
+    return self._engine.get_loc(casted_key)
+  File "pandas/_libs/index.pyx", line 70, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 101, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 1675, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 1683, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'TAN'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 116, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1047, in pcba_allocation_main_program
+    df_oh=change_pn_to_group_number(df_oh,tan_group,pn_col='TAN')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 127, in change_pn_to_group_number
+    df.loc[:,pn_col]=df[pn_col].map(lambda x: tan_group[x] if x in tan_group.keys() else x)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/frame.py", line 2902, in __getitem__
+    indexer = self.columns.get_loc(key)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 2897, in get_loc
+    raise KeyError(key) from err
+KeyError: 'TAN'
+
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 11:19:49
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+ERROR!!!!11:21:03Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 116, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1081, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 560, in process_final_allocated_output
+    df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu[x])
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/series.py", line 3970, in map
+    new_values = super()._map_values(arg, na_action=na_action)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/base.py", line 1160, in _map_values
+    new_values = map_f(values, mapper)
+  File "pandas/_libs/lib.pyx", line 2402, in pandas._libs.lib.map_infer
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 560, in <lambda>
+    df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu[x])
+KeyError: 'WNBU_group_1'
+
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 11:29:47
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+ERROR!!!!11:30:07Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 116, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1011, in pcba_allocation_main_program
+    tan_bu,df_scr = extract_bu_from_scr(df_scr)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 561, in extract_bu_from_scr
+    tan_bu[tan] = row.BU
+AttributeError: 'Pandas' object has no attribute 'BU'
+
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 11:40:39
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+ERROR!!!!11:40:52Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 116, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 978, in pcba_allocation_main_program
+    tan_bu = extract_bu_from_scr(df_scr)
+TypeError: extract_bu_from_scr() missing 1 required positional argument: 'tan_group'
+
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 11:45:34
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+Finish time: 11:47:11
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 13:35:08
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail2.csv(size: 90.6Mb)
+File supply: Copy_of_test_SCROHIntransit_1104.xlsx(size: 1.2Mb)
+Finish time: 13:37:13
+
+[Making allocation] - 2020-11-09
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Start time: 20:06:58
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail3.csv(size: 86.1Mb)
+File supply: test_SCROHIntransit_1109.xlsx(size: 1.4Mb)
+Finish time: 20:08:59

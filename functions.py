@@ -14,7 +14,7 @@ def read_backlog_priority_from_smartsheet():
     :return:
     '''
     # 从smartsheet读取backlog
-    token = os.getenv('PRIORITY_TOKEN')
+    token = os.getenv('ALLOCATION_TOKEN')
     sheet_id = os.getenv('PRIORITY_ID')
     proxies = None  # for proxy server
     smartsheet_client = SmartSheetClient(token, proxies)
@@ -30,6 +30,31 @@ def read_backlog_priority_from_smartsheet():
             print('{} has a wrong ranking#: {}.'.format(row.SO_SS,row.Ranking) )
 
     return ss_priority
+
+def read_tan_group_mapping_from_smartsheet():
+    '''
+    Read TAN group mapping from smartsheet; change to version during processing.
+    :return:
+    '''
+    # 从smartsheet读取backlog
+    token = os.getenv('ALLOCATION_TOKEN')
+    sheet_id = os.getenv('TAN_GROUP_ID')
+    proxies = None  # for proxy server
+    smartsheet_client = SmartSheetClient(token, proxies)
+    df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
+
+    df_smart = df_smart[(df_smart.Group_name.notnull()) & (df_smart.TAN.notnull())]
+
+    #  chagne to versionless
+    df_smart=change_pn_to_versionless(df_smart, pn_col='TAN')
+
+    tan_group = {}
+    for row in df_smart.itertuples():
+        tan_group[row.TAN] = row.Group_name
+
+    return tan_group
+
+
 
 
 def change_supply_to_versionless_and_addup_supply(df, org_col='planningOrg', pn_col='TAN'):
@@ -75,6 +100,73 @@ def change_supply_to_versionless_and_addup_supply(df, org_col='planningOrg', pn_
     return df
 
 
+def change_pn_to_versionless(df, pn_col='TAN'):
+    """
+    Change PN to versionless.
+    :param df: the supply df or oh df
+    :param pn_col: name of the PN col. In Cm supply file it's PN, in Kinaxis file it's TAN.
+    :return:
+    """
+
+    regex = re.compile(r'\d{2,3}-\d{4,7}')
+
+    df.reset_index(inplace=True)
+
+    # convert to versionless and add temp col
+    df.loc[:, pn_col] = df[pn_col].map(lambda x: regex.search(x).group())
+
+    return df
+
+
+
+def change_pn_to_group_number(df,tan_group,pn_col='TAN'):
+    """
+    Change PN to group for those with a group mapping
+    """
+
+    df.loc[:,pn_col]=df[pn_col].map(lambda x: tan_group[x] if x in tan_group.keys() else x)
+
+    return df
+
+
+
+def add_up_supply_by_pn(df,org_col='planningOrg', pn_col='TAN'):
+    """
+    Add up qty (in pivoted format) for supply, OH, transit, etc.
+    Param df: the datafram
+    Param corg_col: col for org
+    Param pn_col: col for PN
+    """
+    df.loc[:, 'org_pn'] = df[org_col] + '_' + df[pn_col]
+
+    # add up the duplicate PN (due to multiple versions)
+    df.sort_values(by=['org_pn'], inplace=True)
+    dup_pn = df[df.duplicated(['org_pn'])]['org_pn'].unique()
+    df_sum = pd.DataFrame(columns=df.columns)
+
+    df_sum.set_index([org_col, pn_col, 'org_pn'], inplace=True)
+    df.set_index([org_col, pn_col, 'org_pn'], inplace=True)
+
+    for org_pn in dup_pn:
+        # print(df_supply[df_supply.PN==pn].sum(axis=1).sum())
+        df_sum.loc[(org_pn[:3], org_pn[4:], org_pn), :] = df.loc[(org_pn[:3], org_pn[4:], org_pn), :].sum(axis=0)
+
+    df.reset_index(inplace=True)
+    df.set_index('org_pn', inplace=True)
+    df.drop(dup_pn, axis=0, inplace=True)
+    df.reset_index(inplace=True)
+    df.set_index([org_col, pn_col, 'org_pn'], inplace=True)
+    # print(df.columns)
+    # df.drop(['level_0','index'],axis=1,inplace=True)
+    df = pd.concat([df, df_sum])
+    df.reset_index(inplace=True)
+    df.drop(['org_pn'], axis=1, inplace=True)
+    df.set_index([org_col, pn_col], inplace=True)
+
+    return df
+
+
+
 def update_date_with_transit_pad(x, y, transit_time, pcba_site):
     """
     offset transit time to a given date column
@@ -85,7 +177,7 @@ def update_date_with_transit_pad(x, y, transit_time, pcba_site):
         return y - pd.Timedelta(days=transit_time[pcba_site]['other'])
 
 
-def generate_df_order_bom_from_flb_tan_col(df_3a4, pcba):
+def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
     """
     Generate the BOM usage file from the FLB_TAN col
     :param df_3a4:
@@ -112,7 +204,12 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, pcba):
                 usage = regex_usage.search(item).group()
                 usage = float(usage[1:-1])
 
-                if pn in pcba:
+                if pn in tan_group.keys():
+                    pn = tan_group[pn]
+                    po_list.append(po)
+                    pn_list.append(pn)
+                    usage_list.append(usage)
+                elif pn in supply_dic_tan.keys():
                     po_list.append(po)
                     pn_list.append(pn)
                     usage_list.append(usage)
@@ -444,7 +541,7 @@ def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_sit
     return df_scr
 
 
-def extract_bu_from_scr(df_scr):
+def extract_bu_from_scr(df_scr,tan_group):
     """
     Versionless the PN and extract the BU info from original scr before pivoting
     """
@@ -453,9 +550,12 @@ def extract_bu_from_scr(df_scr):
     tan_bu = {}
     for row in df_scr.itertuples(index=False):
         tan = regex_pn.search(row.TAN).group()
+        if tan in tan_group.keys():#替换成group
+            tan=tan_group[tan]
         tan_bu[tan] = row.BU
 
     return tan_bu
+
 
 
 def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site):
@@ -879,15 +979,22 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     :param output_filename:
     :return: None
     """
-    # extract BU info for TAN from SCR
-    tan_bu = extract_bu_from_scr(df_scr)
+    # Read TAN group mapping from smartsheet
+    tan_group = read_tan_group_mapping_from_smartsheet()
 
-    # Pivot df_scr 并处理日期格式
+    # extract BU info for TAN from SCR for final report processing use
+    tan_bu = extract_bu_from_scr(df_scr,tan_group)
+
+    # Pivot df_scr 并处理日期格式; change to versionless
     df_scr = df_scr.pivot_table(index=['planningOrg', 'TAN'], columns='SCRDate', values='SCRQuantity', aggfunc=sum)
     df_scr.columns = df_scr.columns.map(lambda x: x.date())
+    df_scr=change_pn_to_versionless(df_scr,pn_col='TAN')
 
-    # versionless df_scr
-    df_scr = change_supply_to_versionless_and_addup_supply(df_scr, pn_col='TAN')
+    # change TAN to group number based on group mapping
+    df_scr=change_pn_to_group_number(df_scr,tan_group,pn_col='TAN')
+
+    # Add up supply based on pivoted df
+    df_scr=add_up_supply_by_pn(df_scr,org_col='planningOrg',pn_col='TAN')
 
     # simplify the index will make it much faster to get the dict - drop org and can add back later since know it's pcba_site
     df_scr.reset_index(inplace=True)
@@ -910,22 +1017,25 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
 
     # read smartsheet for exceptional priority ss
     ss_priority=read_backlog_priority_from_smartsheet()
-
     # Rank the orders
     df_3a4 = ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
 
-    # (do below after ranking) Process 3a4 BOM base on FLB_TAN col
-    df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan.keys())
+    # (do below after ranking) Process 3a4 BOM base on FLB_TAN col. BOM_PN refers to tan_group if exist, or SCR Tan if not.
+    df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
 
     # create backlog dict for Tan exists in SCR
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys())
 
-    # pivot df_oh
+    # pivot df_oh and versionless the TAN
     df_oh = df_oh.pivot_table(index=['planningOrg', 'TAN'], values='OH', aggfunc=sum)
+    df_oh=change_pn_to_versionless(df_oh,pn_col='TAN')
 
-    # versionless df_oh
-    df_oh = change_supply_to_versionless_and_addup_supply(df_oh, pn_col='TAN')
+    # change TAN to group number based on group mapping
+    df_oh=change_pn_to_group_number(df_oh,tan_group,pn_col='TAN')
+
+    # add up supply by versionless TAN
+    df_oh=add_up_supply_by_pn(df_oh,org_col='planningOrg',pn_col='TAN')
 
     # 生成OH dict；
     oh_dic_tan = created_oh_dict_per_df_oh(df_oh, pcba_site)
@@ -933,13 +1043,17 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     # Oh to fulfill backlog per site. update blg_dic_tan accordingly
     blg_dic_tan = fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan)
 
-    # pivot df_transit
+    # pivot df_transit and change to versionless
     df_transit = df_transit.pivot_table(index=['planningOrg', 'TAN'], columns='ETA_date', values='In-transit_quantity',
                                         aggfunc=sum)
     df_transit.columns = df_transit.columns.map(lambda x: x.date())
+    df_transit=change_pn_to_versionless(df_transit,pn_col='TAN')
 
-    # versionless df_oh
-    df_transit = change_supply_to_versionless_and_addup_supply(df_transit, pn_col='TAN')
+    # change TAN to group number based on group mapping
+    df_transit=change_pn_to_group_number(df_transit,tan_group,pn_col='TAN')
+
+    # add up supply by versionless TAN
+    df_transit=add_up_supply_by_pn(df_transit,org_col='planningOrg',pn_col='TAN')
 
     # split df_transit by threshhold of 15 days
     close_eta_cutoff = pd.Timestamp.today().date() + pd.Timedelta(days=close_eta_cutoff_criteria)
