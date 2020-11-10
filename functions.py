@@ -7,7 +7,6 @@ import math
 from settings import *
 from smartsheet_handler import SmartSheetClient
 
-
 def read_backlog_priority_from_smartsheet():
     '''
     Read backlog priorities from smartsheet

@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 from flask import flash,send_from_directory,render_template, request
 from flask_settings import *
 from functions import *
+from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
 from settings import *
 #from db_add import add_user_log
 #from db_read import read_table
@@ -157,7 +158,6 @@ def allocation_run():
 def allocation_download():
     form = FileDownloadForm()
 
-    now = time.time()
     # output files
     file_list = os.listdir(base_dir_output)
     files = []
@@ -208,6 +208,7 @@ def allocation_download():
         log_msg.append('\n\n[Download/delete file] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
         log_msg.append('User info: ' + request.headers.get('User-agent'))
 
+        submit_download_supply=form.submit_download_supply.data
         submit_download_output=form.submit_download_output.data
         submit_download_uploaded=form.submit_download_uploaded.data
 
@@ -225,10 +226,20 @@ def allocation_download():
         if submit_download_output:
             f_path=base_dir_output
             fname=fname_output
+            log_msg.append('File name: ' + fname)
+            download_db=False
         elif submit_download_uploaded:
             f_path=base_dir_upload
             fname=fname_uploaded
-        log_msg.append('File name: ' + fname)
+            log_msg.append('File name: ' + fname)
+            download_db = False
+        elif submit_download_supply:
+            now = pd.Timestamp.now()
+            f_path=base_dir_supply
+            fname='SCR_OH_Intransit_' + now.strftime('%m-%d %H:%M') + '.xlsx'
+            log_msg.append('Download supply from DB')
+            download_db = True
+
         # Write the log file
         log_msg = '\n'.join(log_msg)
         with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
@@ -236,19 +247,33 @@ def allocation_download():
         print(log_msg)
 
         # download/delete file
-        try:
-            if fname[-7:] == '-delete': # 删除文件
-                os.remove(os.path.join(f_path, fname[:-7]))
-                flash('This file has been delted: {}'.format(fname[:-7]),'success')
-                return render_template('allocation_download.html', form=form,
-                                       data_header=['File_name', 'Creation_time', 'File_size'],
-                                       files_output=df_output.values,
-                                       files_uploaded=df_upload.values)
-            else:
+        if download_db==False:
+            try:
+                if fname[-7:] == '-delete': # 删除文件
+                    os.remove(os.path.join(f_path, fname[:-7]))
+                    flash('This file has been delted: {}'.format(fname[:-7]),'success')
+                    return render_template('allocation_download.html', form=form,
+                                               data_header=['File_name', 'Creation_time', 'File_size'],
+                                               files_output=df_output.values,
+                                               files_uploaded=df_upload.values)
+                else:
+                    return send_from_directory(f_path, filename=fname, as_attachment=True)
+            except Exception as e:
+                msg = 'File not found! Check filename you input! ' + str(e)
+                flash(msg, 'warning')
+        else:
+            try:
+                df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx()
+                data_to_write = {'scr': df_scr,
+                                 'oh': df_oh,
+                                 'in-transit': df_intransit,
+                                 'sourcing_rule':df_sourcing_rule}
+
+                write_data_to_excel(os.path.join(f_path,fname), data_to_write)
                 return send_from_directory(f_path, filename=fname, as_attachment=True)
-        except Exception as e:
-            msg = 'File not found! Check filename you input! ' + str(e)
-            flash(msg, 'warning')
+            except Exception as e:
+                msg = 'Error downloading supply data from database! ' + str(e)
+                flash(msg, 'warning')
 
     return render_template('allocation_download.html',form=form,
                            data_header=['File_name','Creation_time','File_size'],

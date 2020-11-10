@@ -20,6 +20,7 @@ xlsxwriter = "*"
 gunicorn = "*"
 pymysql = "*"
 smartsheet-python-sdk = "*"
+pymongo = "*"
 
 [requires]
 python_version = "3.7"

@@ -40,9 +40,11 @@ eta_backward_offset_days=10
 if getpass.getuser()=='ubuntu': # if it's on crate server
     base_dir_output = '/home/ubuntu/output_file'
     base_dir_upload='/home/ubuntu/upload_file'
+    base_dir_supply='/home/ubuntu/supply_file'
 else:
     base_dir_output = os.path.join(os.getcwd(),'output_file')
     base_dir_upload = os.path.join(os.getcwd(),'upload_file')
+    base_dir_supply = os.path.join(os.getcwd(), 'supply_file')
 
 
 output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','distinct_po_filter', 'PRODUCT_ID',

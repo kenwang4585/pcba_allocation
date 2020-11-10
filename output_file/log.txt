@@ -373,3 +373,15 @@ BU:
 File 3a4: backlog3a4-detail3.csv(size: 86.1Mb)
 File supply: test_SCROHIntransit_1109.xlsx(size: 1.4Mb)
 Finish time: 20:08:59
+
+[Download/delete file] - 2020-11-10 10:27:37
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+File name: 
+
+[Download/delete file] - 2020-11-10 10:28:37
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+File name: 
+
+[Download/delete file] - 2020-11-10 11:51:21
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
+Download supply from DB
