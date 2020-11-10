@@ -7,7 +7,7 @@ def collect_scr_oh_transit_from_scdx():
     # %% connect to SCDx
 
     client = MongoClient(
-        "mongodb://pmocref:PmoCR3f@ims-mngdb-rtp-d-06:37600/admin?connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-1")
+        "mongodb://pmocref:PmoCR3f@ims-mngdb-rtp-d-06:37600/admin?connectTimeoutMS=100000&authSource=admin&authMechanism=SCRAM-SHA-1")
     database = client["pmocscdb"]
     collection = database["commonVersion"]
 
