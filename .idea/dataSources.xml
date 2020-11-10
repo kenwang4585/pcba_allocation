@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="@ims-mngdb-rtp-d-06" uuid="1417fdc5-60ea-448d-addc-6ce45a017764">
+    <data-source source="LOCAL" name="pmocscdb@ims-mngdb-rtp-d-06" uuid="1417fdc5-60ea-448d-addc-6ce45a017764">
       <driver-ref>mongo</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.dbschema.MongoJdbcDriver</jdbc-driver>
-      <jdbc-url>mongodb://ims-mngdb-rtp-d-06:37600/</jdbc-url>
+      <jdbc-url>mongodb://ims-mngdb-rtp-d-06:37600/pmocscdb</jdbc-url>
     </data-source>
   </component>
 </project>
