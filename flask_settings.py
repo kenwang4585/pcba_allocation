@@ -39,7 +39,7 @@ class UploadForm(FlaskForm):
 
 
 class FileDownloadForm(FlaskForm):
-    fname_download_supply = StringField('Download supply data file from SCDx:')
+    fname_download_supply = StringField('Download supply data file from SCDx (currently not available due to firewall issue):')
     submit_download_supply=SubmitField('Download') # download from db
 
     fname_output=StringField('Download the allocation data file:',default='paste the file name here and click the download button')
