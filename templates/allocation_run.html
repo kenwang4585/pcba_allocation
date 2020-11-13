@@ -31,8 +31,7 @@
                         {{ form.file_supply }}
                             <br><br><br>
                 </td>
-
-                <td width="80">
+                <td width="100">
                 </td>
 
                 <td width="500" align="left">
@@ -43,17 +42,16 @@
                     <strong>{{ form.ranking_logic.label }}</strong><br>{{ form.ranking_logic }}<br><br>                    </div>
                 	<br><br>
                 </td>
-                <td width="60"></td>
+                <td width="100"></td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td align="right">
+                <td align="center">
                     {{ form.submit_allocation(class='btn btn-default btn-lg')  }}
+                    {{ form.email_option }} &nbsp;<span style="font-size: small"> Notify users by email</span>
                     <br><br>
             	</td>
-                <td></td>
-                <td></td>
         	</tr>
     	</tbody>
 	</table>

@@ -14,7 +14,7 @@ def read_db():
     database = client["pmocscdb"]
     collection = database["commonVersion"]
     org='FOL'
-    result=collection.find({'planningOrg':org},{'_id':0,'planningOrg':1,'version':1}).limit(1)
+    result=collection.find({'planningOrg':org},{'_id':0,'planningOrg':1,'version':1}).limit(100)
     for x in result:
         print(x)
 

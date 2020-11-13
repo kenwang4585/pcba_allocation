@@ -32,10 +32,14 @@ class UploadForm(FlaskForm):
 
     file_3a4 = FileField('Upload 3A4 file (.csv):',validators=[FileRequired(),FileAllowed(['csv'],'Only CSV file is allowed!')])
     file_supply=FileField('Upload supply file (.xlsx):',validators=[FileRequired(),FileAllowed(['xlsx'],'Oly XLSX file is allowed!')])
+    use_blg_server=BooleanField('Use latest backlog loaded onto server')
+    use_supply_server = BooleanField('Use latest supply loaded onto server')
     submit_allocation=SubmitField(' Make Allocation ')
+    email_option=BooleanField('Notify users by email')
+
 
 class FileDownloadForm(FlaskForm):
-    fname_download_supply = StringField('Download supply data file from database:')
+    fname_download_supply = StringField('Download supply data file from SCDx:')
     submit_download_supply=SubmitField('Download') # download from db
 
     fname_output=StringField('Download the allocation data file:',default='paste the file name here and click the download button')
