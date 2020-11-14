@@ -287,3 +287,9 @@ def allocation_about():
     print(ip)
     #print(request.headers)
     return render_template('allocation_about.html')
+
+# Below is a dummy one
+@app.route('/config',methods=['GET','POST'])
+def config():
+    form = ConfigForm()
+    return render_template('config_control_panel_new.html', form=form)

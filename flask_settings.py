@@ -49,6 +49,28 @@ class FileDownloadForm(FlaskForm):
     submit_download_uploaded=SubmitField('Download')
 
 
+# dummy form for config - temp
+class ConfigForm(FlaskForm):
+    # Below for ML control panel
+    data_source=RadioField('Choose backlog data source:',
+                           choices=[('db','3A4 backlog from Database(N/A)'),('file','3A4 backlog from file upload')],
+                           validators=[DataRequired()],
+                           default='file')
+
+    file=FileField('Upload 3A4 file (.xlsx, .csv)',validators=[FileAllowed(['csv','xlsx']),DataRequired()])
+    org_selection=StringField("Input ORGs (sep by '/'):",validators=[DataRequired()])
+
+    email_to=SelectField('Config result sharing options:',
+                        choices=[('test_run','Test: No email & no DB update'),
+                                ('to_me','Email result to me only'),
+                                ('to_all','Email result to default group')],
+
+                        default='to_all')
+    user_id=StringField('UserID:',validators=[DataRequired()])
+    submit=SubmitField('RUN CONFIG TOOL')
+    to_feedback=SubmitField('Input validation/ Report error') # redirect to the CM feedback page
+
+
 # Database tables
 class UserLog(db.Model):
     '''
