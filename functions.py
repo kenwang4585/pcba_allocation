@@ -1020,14 +1020,14 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     tan_allocation_wk3 = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk3')
 
     df_scr.loc[:,'Target_SSD_7']=df_scr.index.map(lambda x: backlog_target_ssd_7[x] if x in backlog_target_ssd_7.keys() else None )
-    df_scr.loc[:, 'Alloc_by_wk0'] = df_scr.index.map(lambda x: tan_allocation_wk1[x] if x in tan_allocation_wk1.keys() else None)
-    df_scr.loc[:,'Delta_0']=df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk0 - df_scr.Target_SSD_7
+    df_scr.loc[:, 'Alloc_by_wk1'] = df_scr.index.map(lambda x: tan_allocation_wk1[x] if x in tan_allocation_wk1.keys() else None)
+    df_scr.loc[:,'Delta_1']=df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk1 - df_scr.Target_SSD_7
     df_scr.loc[:,'Target_SSD_14']=df_scr.index.map(lambda x: backlog_target_ssd_14[x] if x in backlog_target_ssd_14.keys() else None )
-    df_scr.loc[:, 'Alloc_by_wk1'] = df_scr.index.map(lambda x: tan_allocation_wk2[x] if x in tan_allocation_wk2.keys() else None)
-    df_scr.loc[:, 'Delta_1'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk1 - df_scr.Target_SSD_14
+    df_scr.loc[:, 'Alloc_by_wk2'] = df_scr.index.map(lambda x: tan_allocation_wk2[x] if x in tan_allocation_wk2.keys() else None)
+    df_scr.loc[:, 'Delta_2'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk2 - df_scr.Target_SSD_14
     df_scr.loc[:,'Target_SSD_21']=df_scr.index.map(lambda x: backlog_target_ssd_21[x] if x in backlog_target_ssd_21.keys() else None )
-    df_scr.loc[:, 'Alloc_by_wk2'] = df_scr.index.map(lambda x: tan_allocation_wk3[x] if x in tan_allocation_wk3.keys() else None)
-    df_scr.loc[:, 'Delta_2'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk2 - df_scr.Target_SSD_21
+    df_scr.loc[:, 'Alloc_by_wk3'] = df_scr.index.map(lambda x: tan_allocation_wk3[x] if x in tan_allocation_wk3.keys() else None)
+    df_scr.loc[:, 'Delta_3'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk3 - df_scr.Target_SSD_21
 
     # update with the correct Blg_recovery date for TBD
     df_scr.reset_index(inplace=True)
