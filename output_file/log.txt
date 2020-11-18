@@ -409,3 +409,643 @@ Download supply from DB
 [Download/delete file] - 2020-11-10 15:14:22
 User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36
 Download supply from DB
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 08:41:41
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!08:42:01Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 982, in pcba_allocation_main_program
+    tan_group = read_tan_group_mapping_from_smartsheet()
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 42, in read_tan_group_mapping_from_smartsheet
+    smartsheet_client = SmartSheetClient(token, proxies)
+  File "/Users/wangken/py/pcba_allocation/smartsheet_handler.py", line 12, in __init__
+    self.smartsheet_client = smartsheet.Smartsheet(access_token=access_token, proxies=proxies)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/smartsheet/smartsheet.py", line 145, in __init__
+    raise ValueError('Access Token must be set in the environment '
+ValueError: Access Token must be set in the environment or passed to smartsheet.Smartsheet() as a parameter.
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 08:43:38
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 08:45:59
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 10:24:22
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!10:25:07Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1120, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 636, in process_final_allocated_output
+    backlog_target_ssd=calculate_x_days_target_ssd_backlog(df_3a4, days=7)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 991, in calculate_x_days_target_ssd_backlog
+    dfx=df_3a4[(df_3a4.TARGET_SSD<=days_cutoff)&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')]
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/ops/common.py", line 65, in new_method
+    return method(self, other)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/ops/__init__.py", line 370, in wrapper
+    res_values = comparison_op(lvalues, rvalues, op)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/ops/array_ops.py", line 244, in comparison_op
+    res_values = comp_method_OBJECT_ARRAY(op, lvalues, rvalues)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/ops/array_ops.py", line 56, in comp_method_OBJECT_ARRAY
+    result = libops.scalar_compare(x.ravel(), y, op)
+  File "pandas/_libs/ops.pyx", line 103, in pandas._libs.ops.scalar_compare
+TypeError: '<=' not supported between instances of 'str' and 'Timestamp'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 10:40:37
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 10:41:31
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 14:56:20
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!14:57:09Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1179, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1007, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 933, in calculate_x_weeks_allocation
+    dfx=df_scr[df_scr.ORG!=pcba_site]
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 5139, in __getattr__
+    return object.__getattribute__(self, name)
+AttributeError: 'DataFrame' object has no attribute 'ORG'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:04:56
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:05:51Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1178, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 998, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 938, in calculate_x_weeks_allocation
+    if date>supply_cut_off:
+TypeError: '>' not supported between instances of 'str' and 'datetime.date'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:08:29
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:09:15Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 941, in calculate_x_weeks_allocation
+    if date>supply_cut_off:
+TypeError: '>' not supported between instances of 'str' and 'datetime.date'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:24:11
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:25:03Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 941, in calculate_x_weeks_allocation
+    if date>supply_cut_off:
+TypeError: '>' not supported between instances of 'str' and 'datetime.date'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:26:05
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:26:57Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 941, in calculate_x_weeks_allocation
+    if date>supply_cut_off:
+TypeError: '>' not supported between instances of 'str' and 'datetime.date'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:29:28
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:30:19Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 942, in calculate_x_weeks_allocation
+    ind=dfx.columns.index(date)-1
+AttributeError: 'Index' object has no attribute 'index'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:31:56
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:32:51Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 942, in calculate_x_weeks_allocation
+    ind=dfx.columns.index(date)-1
+AttributeError: 'Index' object has no attribute 'index'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:50:08
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:50:52Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 942, in calculate_x_weeks_allocation
+    ind=dfx.columns.index(date)-1
+AttributeError: 'Index' object has no attribute 'index'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:53:11
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:54:00Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 949, in calculate_x_weeks_allocation
+    key=(row.BOM_PN,row.ORGANIZATION_CODE,row.BUSINESS_UNIT)
+AttributeError: 'Pandas' object has no attribute 'BOM_PN'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 15:57:11
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!15:57:56Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 949, in calculate_x_weeks_allocation
+    key=(row.TAN,row.ORG,row.BU)
+AttributeError: 'Pandas' object has no attribute 'TAN'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:00:12
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!16:00:57Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1180, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1000, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 948, in calculate_x_weeks_allocation
+    key=(row.index[0],row.index[1],row.index[2])
+TypeError: 'builtin_function_or_method' object is not subscriptable
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:01:47
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!16:02:31Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1001, in process_final_allocated_output
+    tan_allocation_wk=calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 949, in calculate_x_weeks_allocation
+    key=(row.index[0],row.index[1],row.index[2])
+TypeError: 'builtin_function_or_method' object is not subscriptable
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:03:51
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!16:04:45Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 666, in astype
+    casted = self._values.astype(dtype, copy=copy)
+ValueError: Error parsing datetime string "index" at position 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1181, in pcba_allocation_main_program
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1004, in process_final_allocated_output
+    tan_allocation_wk = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk1')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 936, in calculate_x_weeks_allocation
+    date_col=dfx.iloc[:,:-6].columns.astype('datetime64[ns]').tolist()
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 670, in astype
+    ) from err
+TypeError: Cannot cast Index to dtype datetime64[ns]
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:09:17
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!16:10:11Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 666, in astype
+    casted = self._values.astype(dtype, copy=copy)
+ValueError: Error parsing datetime string "Unpacked_blg" at position 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1176, in pcba_allocation_main_program
+    # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1000, in process_final_allocated_output
+    lambda x: tan_allocation_wk[x] if x in tan_allocation_wk.keys() else None)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 933, in calculate_x_weeks_allocation
+    # find out the col of cutoff
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 670, in astype
+    ) from err
+TypeError: Cannot cast Index to dtype datetime64[ns]
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:11:39
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!16:12:23Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 666, in astype
+    casted = self._values.astype(dtype, copy=copy)
+ValueError: Error parsing datetime string "Unpacked_blg" at position 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1178, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1002, in process_final_allocated_output
+    tan_allocation_wk = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk1')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 935, in calculate_x_weeks_allocation
+    date_col=df_scr.iloc[:,:-6].columns.astype('datetime64[ns]').tolist()
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 670, in astype
+    ) from err
+TypeError: Cannot cast Index to dtype datetime64[ns]
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:13:25
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!16:14:10Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 666, in astype
+    casted = self._values.astype(dtype, copy=copy)
+ValueError: Error parsing datetime string "Unpacked_blg" at position 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1178, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1005, in process_final_allocated_output
+    tan_allocation_wk = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk2')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 935, in calculate_x_weeks_allocation
+    date_col=df_scr.iloc[:,:-7].columns.astype('datetime64[ns]').tolist()
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 670, in astype
+    ) from err
+TypeError: Cannot cast Index to dtype datetime64[ns]
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:17:51
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!16:18:35Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1177, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1011, in process_final_allocated_output
+    df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site,
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/generic.py", line 5139, in __getattr__
+    return object.__getattribute__(self, name)
+AttributeError: 'DataFrame' object has no attribute 'ORG'
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:20:28
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 16:21:16
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 16:29:02
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 16:29:52
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 17:00:09
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 17:01:05
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 17:26:16
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!17:27:09Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 666, in astype
+    casted = self._values.astype(dtype, copy=copy)
+ValueError: Error parsing datetime string "index" at position 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1174, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1020, in process_final_allocated_output
+    tan_allocation_wk0 = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 934, in calculate_x_weeks_allocation
+    date_col=df_scr.iloc[:,:-10].columns.astype('datetime64[ns]').tolist()
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 670, in astype
+    ) from err
+TypeError: Cannot cast Index to dtype datetime64[ns]
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 17:28:01
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!17:28:56Traceback (most recent call last):
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 666, in astype
+    casted = self._values.astype(dtype, copy=copy)
+ValueError: Error parsing datetime string "index" at position 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1174, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1020, in process_final_allocated_output
+    tan_allocation_wk0 = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk0')
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 934, in calculate_x_weeks_allocation
+    date_col=df_scr.iloc[:,:-10].columns.astype('datetime64[ns]').tolist()
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 670, in astype
+    ) from err
+TypeError: Cannot cast Index to dtype datetime64[ns]
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 17:30:49
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!17:31:42Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1172, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1032, in process_final_allocated_output
+    inplace=True)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/frame.py", line 4551, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['TAN', 'ORG', 'BU'] are in the columns"
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 17:33:12
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 17:34:06
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 17:39:23
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 17:40:18
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 17:51:14
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 17:52:14
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 18:03:37
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+ERROR!!!!18:04:39Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 117, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1177, in pcba_allocation_main_program
+    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1044, in process_final_allocated_output
+    dfy = dfx.loc[ind, :-9] # -9 to excluded the last added columns
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 873, in __getitem__
+    return self._getitem_tuple(key)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1044, in _getitem_tuple
+    return self._getitem_lowerdim(tup)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 766, in _getitem_lowerdim
+    return self._getitem_nested_tuple(tup)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 847, in _getitem_nested_tuple
+    obj = getattr(obj, self.name)._getitem_axis(key, axis=axis)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1088, in _getitem_axis
+    return self._get_slice_axis(key, axis=axis)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexing.py", line 1123, in _get_slice_axis
+    slice_obj.start, slice_obj.stop, slice_obj.step, kind="loc"
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 4966, in slice_indexer
+    start_slice, end_slice = self.slice_locs(start, end, step=step, kind=kind)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 5173, in slice_locs
+    end_slice = self.get_slice_bound(end, "right", kind)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 5079, in get_slice_bound
+    label = self._maybe_cast_slice_bound(label, side, kind)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 5031, in _maybe_cast_slice_bound
+    self._invalid_indexer("slice", label)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 3268, in _invalid_indexer
+    f"cannot do {form} indexing on {type(self).__name__} with these "
+TypeError: cannot do slice indexing on Index with these indexers [-9] of type int
+
+
+[Making allocation] - 2020-11-17
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36
+Start time: 18:06:31
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit 11-10 1514.xlsx(size: 1.6Mb)
+Finish time: 18:07:26
+
+[Making allocation] - 2020-11-18
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+Start time: 08:24:11
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 08:26:48
+
+[Making allocation] - 2020-11-18
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+Start time: 08:38:57
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 08:41:14
+
+[Making allocation] - 2020-11-18
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+Start time: 08:46:27
+PCBA_SITE: FOL
+BU: ERBU
+File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 08:47:14
+
+[Making allocation] - 2020-11-18
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+Start time: 08:49:02
+PCBA_SITE: FOL
+BU: 
+File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 08:51:10

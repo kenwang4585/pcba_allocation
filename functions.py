@@ -557,86 +557,6 @@ def extract_bu_from_scr(df_scr,tan_group):
 
 
 
-def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site):
-    """
-    Add back the BU, backlog,oh, intransit info into the final SCR with allocation result; and add the related columns based on calculations.
-    """
-    df_scr.reset_index(inplace=True)
-
-    # add BU info
-    df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu[x])
-
-    # add backlog qty
-    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
-    df_3a4_p.columns = ['Unpacked_blg']
-    df_3a4_p.reset_index(inplace=True)
-    df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
-
-    # add df OH
-    df_oh.columns = ['OH']
-    df_oh.reset_index(inplace=True)
-    df_oh = df_oh[df_oh.planningOrg != pcba_site]
-    df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['planningOrg', 'TAN'], how='left')
-    # drop the unneeded columns introduced by merge
-    df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'planningOrg'], axis=1, inplace=True)
-    # df_scr.rename(columns={'TAN_x':'TAN'},inplace=True)
-
-    # add df transit
-    df_transit.loc[:, 'In-transit'] = df_transit.sum(axis=1)
-    df_transit.reset_index(inplace=True)
-    df_scr = pd.merge(df_scr, df_transit[['planningOrg', 'TAN', 'In-transit']], left_on=['ORG', 'TAN'],
-                      right_on=['planningOrg', 'TAN'], how='left')
-    # drop the unneeded columns introduced by merge
-    df_scr.drop(['planningOrg'], axis=1, inplace=True)
-
-    # ADD THE gap col and Blg_recovery date
-    df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
-    df_scr['oh+transit'].fillna(0, inplace=True)
-    df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site,
-                                           df_scr['oh+transit'] - df_scr.Unpacked_blg,
-                                           None)
-    df_scr.drop('oh+transit', axis=1, inplace=True)
-
-    df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site,
-                                           df_scr.iloc[:, 3:-5].sum(axis=1),  # [3:-5] refer to the right data columns
-                                           None)
-
-    df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site,
-                                          df_scr.Gap_before + df_scr.Allocation,
-                                          None)
-
-    df_scr.loc[:, 'Blg_recovery'] = np.where((df_scr.ORG != pcba_site),
-                                         np.where(df_scr.Gap_before >= 0,
-                                                  'No gap',
-                                                  np.where(df_scr.Gap_after < 0,
-                                                           'No recovery',
-                                                           'TBD')),
-                                         None)
-
-    # update with the correct Blg_recovery date for TBD
-    df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
-        inplace=True)
-    df_scr.reset_index(inplace=True)
-    dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site)]
-    dfx.set_index(['TAN', 'ORG'], inplace=True)
-    df_scr.set_index(['TAN', 'ORG'], inplace=True)
-
-    for ind in dfx.index:
-        dfy = dfx.loc[ind, :]
-        dfy = dfy[dfy.notnull()]
-
-        last_allocation_date = dfy.index[-1]
-        df_scr.loc[ind, 'Blg_recovery'] = last_allocation_date
-
-    df_scr.reset_index(inplace=True)
-    df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
-        inplace=True)
-
-    return df_scr
-
-
 def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
     """
     根据priority_cat,OSSD,FCD, REVENUE_NON_REVENUE,C_UNSTAGED_QTY,按照ranking_col的顺序对SS进行排序。最后放MFG_HOLD订单.
@@ -861,7 +781,7 @@ def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit):
     :return:
     """
     # read 3a4
-    df_3a4 = pd.read_csv(f_3a4, encoding='ISO-8859-1', parse_dates=['CURRENT_FCD_NBD_DATE', 'ORIGINAL_FCD_NBD_DATE'],
+    df_3a4 = pd.read_csv(f_3a4, encoding='ISO-8859-1', parse_dates=['CURRENT_FCD_NBD_DATE', 'ORIGINAL_FCD_NBD_DATE','TARGET_SSD'],
                          low_memory=False)
 
     # read scr
@@ -964,6 +884,177 @@ def redefine_addressable_flag_main_pip_version(df_3a4):
                                                df_3a4.ADDRESSABLE_FLAG)
 
     return df_3a4
+
+
+
+def calculate_x_days_target_ssd_backlog(df_3a4,days=7):
+    """
+    Calculate the backlog per target SSD by 7/14/21 days as needed.
+    Return a dict {(tan,org,bu}:qty}
+    """
+    days_cutoff=pd.Timestamp.today()+pd.Timedelta(days=days)
+
+    dfx=df_3a4[(df_3a4.TARGET_SSD<=days_cutoff)&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')]
+    dfx_p=dfx.pivot_table(index=['BOM_PN','ORGANIZATION_CODE'],values='C_UNSTAGED_QTY',aggfunc=sum)
+    dfx_p.reset_index(inplace=True)
+    backlog_target_ssd={}
+    for row in dfx_p.itertuples():
+        key=(row.BOM_PN,row.ORGANIZATION_CODE)
+        value=row.C_UNSTAGED_QTY
+        backlog_target_ssd[key]=value
+
+    return backlog_target_ssd
+
+
+def calculate_x_weeks_allocation(df_scr,pcba_site, wk='wk1'):
+    """
+    Summaryize the supply allocation by week. wk1 includes current wk and pastdue.
+    """
+    today = pd.Timestamp.now().date()
+    today_name = pd.Timestamp.today().day_name()
+
+    if today_name == 'Monday':
+        sun_cutoff = 6 + (int(wk[2:])-1) * 7
+    elif today_name == 'Tuesday':
+        sun_cutoff = 5 + (int(wk[2:])-1) * 7
+    elif today_name == 'Wednesday':
+        sun_cutoff = 4 + (int(wk[2:])-1) * 7
+    elif today_name == 'Thursday':
+        sun_cutoff = 3 + (int(wk[2:])-1) * 7
+    elif today_name == 'Friday':
+        sun_cutoff = 2 + (int(wk[2:])-1) * 7
+    elif today_name == 'Saturday':
+        sun_cutoff = 1 + (int(wk[2:])-1) * 7
+    elif today_name == 'Sunday':
+        sun_cutoff = 0 + (int(wk[2:])-1) * 7
+    # Sunday of the cutoff week
+    supply_cut_off = today + pd.Timedelta(sun_cutoff, 'd')
+
+    # find out the col of cutoff :-10 with buffer to ensure too exclude all the newly added col which are not dates
+    date_col=df_scr.iloc[:,:-10].columns.astype('datetime64[ns]').tolist()
+    for date in date_col:
+        if date>supply_cut_off:
+            ind=date_col.index(date)-1
+            break
+    if ind==None:
+        print('Error in program to find the right cut off date in scr')
+    dfx=df_scr.iloc[:,:ind].copy()
+    dfx.loc[:,'total']=dfx.sum(axis=1)
+
+    tan_allocation_wk={}
+    for row in dfx.itertuples(index=True):
+        if row.Index[1]!=pcba_site:
+            key=(row.Index[0],row.Index[1])
+            value=row.total
+            tan_allocation_wk[key]=value
+
+    return tan_allocation_wk
+    
+def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site):
+    """
+    Add back the BU, backlog,oh, intransit info into the final SCR with allocation result; and add the related columns based on calculations.
+    """
+    df_scr.reset_index(inplace=True)
+
+    # add BU info
+    df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu[x])
+
+
+
+    # add backlog qty
+    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
+    df_3a4_p.columns = ['Unpacked_blg']
+    df_3a4_p.reset_index(inplace=True)
+    df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
+
+    # add df OH
+    df_oh.columns = ['OH']
+    df_oh.reset_index(inplace=True)
+    df_oh = df_oh[df_oh.planningOrg != pcba_site]
+    df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['planningOrg', 'TAN'], how='left')
+    # drop the unneeded columns introduced by merge
+    df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'planningOrg'], axis=1, inplace=True)
+    # df_scr.rename(columns={'TAN_x':'TAN'},inplace=True)
+
+    # add df transit
+    df_transit.loc[:, 'In-transit'] = df_transit.sum(axis=1)
+    df_transit.reset_index(inplace=True)
+    df_scr = pd.merge(df_scr, df_transit[['planningOrg', 'TAN', 'In-transit']], left_on=['ORG', 'TAN'],
+                      right_on=['planningOrg', 'TAN'], how='left')
+    # drop the unneeded columns introduced by merge
+    df_scr.drop(['planningOrg'], axis=1, inplace=True)
+
+   # ADD temp col oh+transit to calculate gap before
+    df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
+    df_scr['oh+transit'].fillna(0, inplace=True)
+    df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site,
+                                           df_scr['oh+transit'] - df_scr.Unpacked_blg,
+                                           None)
+    df_scr.drop('oh+transit', axis=1, inplace=True)
+
+    # calculate and add in total allocation and recovery date
+    df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site,
+                                           df_scr.iloc[:, 2:-5].sum(axis=1),  # [3:-5] refer to the right data columns
+                                           None)
+
+    df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site,
+                                          df_scr.Gap_before + df_scr.Allocation,
+                                          None)
+
+    df_scr.loc[:, 'Blg_recovery'] = np.where((df_scr.ORG != pcba_site),
+                                         np.where(df_scr.Gap_before >= 0,
+                                                  'No gap',
+                                                  np.where(df_scr.Gap_after < 0,
+                                                           'No recovery',
+                                                           'TBD')),
+                                         None)
+
+
+    # add in 7/14/21 days target_ssd backlog and wk0/wk1/wk2 allocation qty
+    df_scr.set_index(['TAN','ORG'],inplace=True)
+    backlog_target_ssd_7=calculate_x_days_target_ssd_backlog(df_3a4, days=7)
+    backlog_target_ssd_14=calculate_x_days_target_ssd_backlog(df_3a4, days=14)
+    backlog_target_ssd_21=calculate_x_days_target_ssd_backlog(df_3a4, days=21)
+    tan_allocation_wk1 = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk1')
+    tan_allocation_wk2 = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk2')
+    tan_allocation_wk3 = calculate_x_weeks_allocation(df_scr, pcba_site, wk='wk3')
+
+    df_scr.loc[:,'Target_SSD_7']=df_scr.index.map(lambda x: backlog_target_ssd_7[x] if x in backlog_target_ssd_7.keys() else None )
+    df_scr.loc[:, 'Alloc_by_wk0'] = df_scr.index.map(lambda x: tan_allocation_wk1[x] if x in tan_allocation_wk1.keys() else None)
+    df_scr.loc[:,'Delta_0']=df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk0 - df_scr.Target_SSD_7
+    df_scr.loc[:,'Target_SSD_14']=df_scr.index.map(lambda x: backlog_target_ssd_14[x] if x in backlog_target_ssd_14.keys() else None )
+    df_scr.loc[:, 'Alloc_by_wk1'] = df_scr.index.map(lambda x: tan_allocation_wk2[x] if x in tan_allocation_wk2.keys() else None)
+    df_scr.loc[:, 'Delta_1'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk1 - df_scr.Target_SSD_14
+    df_scr.loc[:,'Target_SSD_21']=df_scr.index.map(lambda x: backlog_target_ssd_21[x] if x in backlog_target_ssd_21.keys() else None )
+    df_scr.loc[:, 'Alloc_by_wk2'] = df_scr.index.map(lambda x: tan_allocation_wk3[x] if x in tan_allocation_wk3.keys() else None)
+    df_scr.loc[:, 'Delta_2'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0) + df_scr.Alloc_by_wk2 - df_scr.Target_SSD_21
+
+    # update with the correct Blg_recovery date for TBD
+    df_scr.reset_index(inplace=True)
+    df_scr.set_index(
+        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
+        inplace=True)
+    df_scr.reset_index(inplace=True)
+    dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site)]
+    dfx=dfx.iloc[:,:-9].copy() # -9 to excluded the last added columns
+    dfx.set_index(['TAN', 'ORG'], inplace=True)
+    df_scr.set_index(['TAN', 'ORG'], inplace=True)
+
+    for ind in dfx.index:
+        dfy = dfx.loc[ind, :]
+        dfy = dfy[dfy.notnull()]
+
+        last_allocation_date = dfy.index[-1]
+        df_scr.loc[ind, 'Blg_recovery'] = last_allocation_date
+
+    # set final index
+    df_scr.reset_index(inplace=True)
+    df_scr.set_index(
+        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
+        inplace=True)
+
+    return df_scr
+
 
 
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_list,ranking_col):
