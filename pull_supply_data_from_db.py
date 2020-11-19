@@ -3,10 +3,10 @@ import pandas as pd
 from datetime import datetime
 import os
 
-def collect_scr_oh_transit_from_scdx():
+def collect_scr_oh_transit_from_scdx(pcba_site):
     # %% connect to SCDx
     client = MongoClient(
-        "mongodb://pmocref:PmoCR3f@ims-mngdb-rtp-d-06:37600/admin?connectTimeoutMS=3000000&authSource=admin&authMechanism=SCRAM-SHA-1")
+        "mongodb://pmocref:PmoCR3f@ims-mngdb-rtp-d-06:37600/admin?connectTimeoutMS=300000&authSource=admin&authMechanism=SCRAM-SHA-1")
 
     # somehow when this run on the openstack it shows timeout
     #client = MongoClient(
@@ -14,8 +14,8 @@ def collect_scr_oh_transit_from_scdx():
     database = client["pmocscdb"]
     collection = database["commonVersion"]
 
+    
     # %% got query from MongoDB
-
     pipeline_df_sourcing_rule = [
         {
             "$match": {
@@ -52,7 +52,7 @@ def collect_scr_oh_transit_from_scdx():
                         "cond": {
                             "$eq": [
                                 "$$this.sourceName",
-                                "FOL"
+                                pcba_site
                                 # user input, to identify which DF sites it supports, backlog data filter by this way too.
                             ]
                         }
@@ -112,7 +112,7 @@ def collect_scr_oh_transit_from_scdx():
         {
             "$match": {
                 "archived": False,
-                "planningOrg": "FOL",
+                "planningOrg": pcba_site,
                 "attributes.cisco.gsmGroup": {"$in": ["OEM/ODM", "GTM"]}
             }},
         {
@@ -153,7 +153,7 @@ def collect_scr_oh_transit_from_scdx():
                         "cond": {
                             "$eq": [
                                 "$$this.sourceName",
-                                "FOL"
+                                pcba_site
                             ]
                         }
                     }
@@ -238,7 +238,8 @@ def collect_scr_oh_transit_from_scdx():
 
 
 if __name__=='__main__':
-    df_scr, df_oh, df_intransit, df_sourcing_rule=collect_scr_oh_transit_from_scdx()
+    pcba_site='FOL'
+    df_scr, df_oh, df_intransit, df_sourcing_rule=collect_scr_oh_transit_from_scdx(pcba_site)
 
     today = datetime.today()
     outPath = os.path.join(os.getcwd(), 'SCR_OH_Intransit_' + today.strftime('%m%d') + '.xlsx')

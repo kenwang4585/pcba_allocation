@@ -212,9 +212,17 @@ def allocation_download():
         submit_download_output=form.submit_download_output.data
         submit_download_uploaded=form.submit_download_uploaded.data
 
+        pcba_site=form.pcba_site.data.strip().upper()
         fname_output = form.fname_output.data.strip()
         fname_uploaded=form.fname_uploaded.data.strip()
 
+        if pcba_site not in ['FOL','FDO','JPE','FJZ']:
+            msg="'{}' seems not a PCBA org??".format(pcba_site)
+            flash(msg, 'warning')
+            return render_template('allocation_download.html', form=form,
+                                   data_header=['File_name', 'Creation_time', 'File_size'],
+                                   files_output=df_output.values,
+                                   files_uploaded=df_upload.values)
         """
         try:
             start_time = pd.Timestamp.now().strftime('%H:%M')
@@ -227,18 +235,18 @@ def allocation_download():
             f_path=base_dir_output
             fname=fname_output
             log_msg.append('File name: ' + fname)
-            download_db=False
+            download_supply_from_db=False
         elif submit_download_uploaded:
             f_path=base_dir_upload
             fname=fname_uploaded
             log_msg.append('File name: ' + fname)
-            download_db = False
+            download_supply_from_db = False
         elif submit_download_supply:
             now = pd.Timestamp.now()
             f_path=base_dir_supply
-            fname='SCR_OH_Intransit ' + now.strftime('%m-%d %H%M') + '.xlsx'
+            fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %H%M') + '.xlsx'
             log_msg.append('Download supply from DB')
-            download_db = True
+            download_supply_from_db = True
 
         # Write the log file
         log_msg = '\n'.join(log_msg)
@@ -247,7 +255,7 @@ def allocation_download():
         print(log_msg)
 
         # download/delete file
-        if download_db==False:
+        if download_supply_from_db==False:
             try:
                 if fname[-7:] == '-delete': # 删除文件
                     os.remove(os.path.join(f_path, fname[:-7]))
@@ -263,7 +271,7 @@ def allocation_download():
                 flash(msg, 'warning')
         else:
             try:
-                df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx()
+                df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
                 data_to_write = {'scr': df_scr,
                                  'oh': df_oh,
                                  'in-transit': df_intransit,
