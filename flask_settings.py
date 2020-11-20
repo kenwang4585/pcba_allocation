@@ -39,7 +39,7 @@ class UploadForm(FlaskForm):
 
 
 class FileDownloadForm(FlaskForm):
-    pcba_site = StringField('Download supply data file from SCDx (currently not available due to firewall issue):',
+    pcba_site = StringField('Download supply data file from SCDx:',
                             default='put in PCBA org here (e.g. FOL)')
     submit_download_supply=SubmitField('Download') # download from db
 

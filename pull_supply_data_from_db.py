@@ -5,12 +5,8 @@ import os
 
 def collect_scr_oh_transit_from_scdx(pcba_site):
     # %% connect to SCDx
-    client = MongoClient(
-        "mongodb://pmocref:PmoCR3f@ims-mngdb-rtp-d-06:37600/admin?connectTimeoutMS=300000&authSource=admin&authMechanism=SCRAM-SHA-1")
-
-    # somehow when this run on the openstack it shows timeout
-    #client = MongoClient(
-    #    "mongodb://pmocref:PmoCR3f@ims-mngdb-rtp-d-06:37600/")
+    SCDX_URI=os.getenv('SCDX_URI') + 'admin?connectTimeoutMS=300000&authSource=admin&authMechanism=SCRAM-SHA-1'
+    client = MongoClient(SCDX_URI)
     database = client["pmocscdb"]
     collection = database["commonVersion"]
 

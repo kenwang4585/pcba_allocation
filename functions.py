@@ -54,6 +54,27 @@ def read_tan_group_mapping_from_smartsheet():
     return tan_group
 
 
+def read_exceptional_intransit_from_smartsheet():
+    '''
+    Read the exceptional in transit data from smartsheet for TAN shipping to other partner (like FOL to FGU)
+    which is missing from the SCDx .
+    :return:
+    '''
+    # 从smartsheet读取backlog
+    token = os.getenv('ALLOCATION_TOKEN')
+    sheet_id = os.getenv('INTRANSIT_ID')
+    proxies = None  # for proxy server
+    smartsheet_client = SmartSheetClient(token, proxies)
+    df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
+
+    df_smart = df_smart[(df_smart.planningOrg.notnull()) & (df_smart.TAN.notnull())
+                        & (df_smart.ETA_date.notnull()) & (df_smart['In-transit_quantity'].notnull())]
+
+    df_smart.loc[:,'ETA_date']=df_smart.ETA_date.astype('datetime64[ns]')
+    df_smart.loc[:, 'In-transit_quantity'] = df_smart['In-transit_quantity'].astype(int)
+
+    return df_smart
+
 
 
 def change_supply_to_versionless_and_addup_supply(df, org_col='planningOrg', pn_col='TAN'):
@@ -1132,6 +1153,10 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
 
     # Oh to fulfill backlog per site. update blg_dic_tan accordingly
     blg_dic_tan = fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan)
+
+    # read exceptional intransit from smartsheet and concat with df_transit
+    df_smart_intransit = read_exceptional_intransit_from_smartsheet()
+    df_transit=pd.concat([df_transit,df_smart_intransit],sort=False)
 
     # pivot df_transit and change to versionless
     df_transit = df_transit.pivot_table(index=['planningOrg', 'TAN'], columns='ETA_date', values='In-transit_quantity',
