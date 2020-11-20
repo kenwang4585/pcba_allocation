@@ -1102,3 +1102,11 @@ BU:
 File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
 File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
 Finish time: 14:53:50
+
+[Download/delete file] - 2020-11-20 15:09:04
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+File name: paste the file name here and click the download button
+
+[Download/delete file] - 2020-11-20 15:09:13
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+File name: FOL SCR allocation (all BU) 11-20 14h53m.xlsx

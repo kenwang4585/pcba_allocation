@@ -216,21 +216,6 @@ def allocation_download():
         fname_output = form.fname_output.data.strip()
         fname_uploaded=form.fname_uploaded.data.strip()
 
-        if pcba_site not in ['FOL','FDO','JPE','FJZ']:
-            msg="'{}' seems not a PCBA org??".format(pcba_site)
-            flash(msg, 'warning')
-            return render_template('allocation_download.html', form=form,
-                                   data_header=['File_name', 'Creation_time', 'File_size'],
-                                   files_output=df_output.values,
-                                   files_uploaded=df_upload.values)
-        """
-        try:
-            start_time = pd.Timestamp.now().strftime('%H:%M')
-            add_user_log('', start_time, 0, start_time, 'Download 3A4', '',
-                         'File name:{}'.format(fname), '', '')
-        except:
-            print('Adding user log error - user downloading: {}'.format(fname))
-        """
         if submit_download_output:
             f_path=base_dir_output
             fname=fname_output
@@ -247,6 +232,14 @@ def allocation_download():
             fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm') + '.xlsx'
             log_msg.append('Download supply from DB')
             download_supply_from_db = True
+
+            if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ']:
+                msg = "'{}' seems not a PCBA org??".format(pcba_site)
+                flash(msg, 'warning')
+                return render_template('allocation_download.html', form=form,
+                                       data_header=['File_name', 'Creation_time', 'File_size'],
+                                       files_output=df_output.values,
+                                       files_uploaded=df_upload.values)
 
         # Write the log file
         log_msg = '\n'.join(log_msg)
