@@ -244,7 +244,7 @@ def allocation_download():
         elif submit_download_supply:
             now = pd.Timestamp.now()
             f_path=base_dir_supply
-            fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %H%M') + '.xlsx'
+            fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm') + '.xlsx'
             log_msg.append('Download supply from DB')
             download_supply_from_db = True
 
