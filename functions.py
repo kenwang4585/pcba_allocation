@@ -235,7 +235,7 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
                     usage_list.append(usage)
 
             except:
-                pass
+                print('Error in finding TAN from FLB_TAN in {}'.format(item))
                 # print(po_list)
 
     # print(po_list)

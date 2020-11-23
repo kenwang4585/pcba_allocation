@@ -43,7 +43,7 @@ class FileDownloadForm(FlaskForm):
                             default='put in PCBA org here (e.g. FOL)')
     submit_download_supply=SubmitField('Download') # download from db
 
-    fname_output=StringField('Download the allocation data file:',default='paste the file name here and click the download button')
+    fname_output=StringField('Download the allocation result file:',default='paste the file name here and click the download button')
     submit_download_output=SubmitField('Download')
 
     fname_uploaded = StringField('Download user input data file:',default='paste the file name here and click the download button')

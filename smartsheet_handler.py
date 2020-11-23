@@ -140,7 +140,8 @@ class SmartSheetClient:
     
 
 if __name__ == '__main__':
-    token = input("please input your token for smartsheet")
+    # input token for smartsheet
+    token = 'TEST'
     proxies = None  # for proxy server
     smartsheet_client = SmartSheetClient(token, proxies)
     summary_sheet_id = 1955251633842052

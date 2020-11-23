@@ -20,7 +20,7 @@ import traceback
 import gc
 
 
-@app.route('/pcba_allocation', methods=['GET', 'POST'])
+@app.route('/allocation', methods=['GET', 'POST'])
 def allocation_run():
     form = UploadForm()
     # as these email valiable are redefined below in email_to_only check, thus have to use global to define here in advance
@@ -131,7 +131,7 @@ def allocation_run():
                 del df_scr, df_3a4, df_oh, df_transit
                 gc.collect()
             except:
-                pass
+                print('')
 
             print(module,': ', e)
             traceback.print_exc()
@@ -148,7 +148,7 @@ def allocation_run():
             del df_scr, df_3a4, df_oh, df_transit
             gc.collect()
         except:
-            pass
+            print('')
 
         return render_template('allocation_run.html', form=form)
 
