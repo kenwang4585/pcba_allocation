@@ -1,0 +1,40 @@
+
+<!-- Ken wang, Jan, 2020 -->
+<html>
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+	{% block title %}
+        <title>PCBA allocation</title>
+    {% endblock %}
+    {% block style %}
+        <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    {% endblock %}
+</head>
+
+<body>
+<main>
+            <table width="100%">
+                <tr>
+                    <td width="15%"bgcolor="#2E4053" align="center">
+                        <img src="{{ url_for('static', filename='logo.png')}}" width="60">
+                    </td>
+                    <td width="85%" bgcolor="#2E4053" align="left">
+                        <br>
+                        <span style="color: #f5f5f5; font-size: x-large"><strong>&nbsp;&nbsp;PCBA Allocation Tool</strong></span>
+                        <br><br>
+                    </td>
+                </tr>
+            </table>
+    <br>
+    <br>
+
+    {% block content %}
+    {% endblock %}
+
+</main>
+
+<br><br>
+
+</body></html>

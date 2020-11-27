@@ -4,19 +4,19 @@
 {% extends 'allocation_base.html' %}
 
 {% block content %}
-<div class="card container">
-    <ul class="nav nav-tabs">
-        <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
-        <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
-        <li class="active" style="font-size: large"><a href="{{ url_for('allocation_about')}}" style="font-size: large"><strong>About</strong></a></li>
-    </ul>
-</div>
+    <!--<div class="card container"> -->
+    <table width="90%" align="center">
+        <tr>
+            <td>
+                <ul class="nav nav-tabs">
+                    <li class="active" style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_about')}}" style="font-size: large"><strong>About</strong></a></li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+    <!-- </div> -->
 
-
-<div class="container">
-    <br>
-    <span></span>
-
-</div>
 
 {% endblock %}

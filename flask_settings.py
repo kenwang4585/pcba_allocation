@@ -35,7 +35,12 @@ class UploadForm(FlaskForm):
     use_blg_server=BooleanField('Use latest backlog loaded onto server')
     use_supply_server = BooleanField('Use latest supply loaded onto server')
     submit_allocation=SubmitField(' Make Allocation ')
-    email_option=BooleanField('Notify users by email')
+    email_option = SelectField('Share result to users by email: ',
+                               choices=[('no_email', 'Do not send email'),
+                                        ('to_me', 'Send to ME only'),
+                                        ('to_all', 'Send to ALL people'),],
+                               validators=[input_required()],
+                               default='no_email')
 
 
 class FileDownloadForm(FlaskForm):

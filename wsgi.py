@@ -13,6 +13,7 @@ from flask_settings import *
 from functions import *
 from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
 from settings import *
+from sending_email import *
 #from db_add import add_user_log
 #from db_read import read_table
 #from db_delete import delete_record
@@ -40,12 +41,14 @@ def allocation_run():
         pcba_site=form.org.data
         bu=form.bu.data
         bu_list=bu.strip().upper().split('/')
-        log_msg.append('PCBA_SITE: ' + pcba_site)
-        log_msg.append('BU: ' + bu.strip().upper())
-
+        email_option=form.email_option.data
         f_3a4 = form.file_3a4.data
         f_supply= form.file_supply.data
-        ranking_logic=form.ranking_logic.data
+        ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
+
+        log_msg.append('PCBA_SITE: ' + pcba_site)
+        log_msg.append('BU: ' + bu.strip().upper())
+        log_msg.append('Email option: ' + email_option)
 
         # 存储文件 - will save again with Org name in file name later
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
@@ -115,8 +118,14 @@ def allocation_run():
             #### main program
             module='Main program for allocation'
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+            flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
-            flash('SCR allocation file created: {}! You can download accordingly.'.format(output_filename), 'success')
+            # send result by email
+            module = 'send_allocation_result'
+            msg=send_allocation_result(email_option,output_filename,secure_filename(f_3a4.filename),secure_filename(f_supply.filename),
+                                       size_3a4,size_supply,bu_list)
+            flash(msg, 'success')
+
             finish_time=pd.Timestamp.now().strftime('%H:%M:%S')
             print('Finish run:',finish_time)
             log_msg.append('Finish time: ' + finish_time)

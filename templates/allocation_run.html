@@ -5,24 +5,29 @@
 
 {% block content %}
 
-<div class="card container">
-    <ul class="nav nav-tabs">
-        <li class="active" style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
-        <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
-        <li style="font-size: large"><a href="{{ url_for('allocation_about')}}" style="font-size: large"><strong>About</strong></a></li>
-    </ul>
-</div>
+<!--<div class="card container"> -->
+    <table width="90%" align="center">
+        <tr>
+            <td>
+                <ul class="nav nav-tabs">
+                    <li class="active" style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_about')}}" style="font-size: large"><strong>About</strong></a></li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+<!-- </div> -->
 
 
-<div class="container">
+<!-- <div class="container"> -->
     <form method="post" enctype="multipart/form-data">
     {{ form.csrf_token }}
 
-    <table style="border-collapse:collapse; background-color: #eeeeee" border="0" cellspacing="0px" align="center">
-    	<tbody>
+        <table style="border-collapse:collapse; background-color: #eeeeee" border="0" cellspacing="0px" width="90%" align="center">
     		<tr align="center">
-                <td width="60"></td>
-                <td width='500' align="left">
+                <td width="5%"></td>
+                <td width='40%' align="left">
                         <strong>Upload 3A4 backlog file (.csv):</strong>
                         {{ form.file_3a4 }}
                             <br><br><br>
@@ -31,32 +36,31 @@
                         {{ form.file_supply }}
                             <br><br><br>
                 </td>
-                <td width="100">
+                <td width="10%">
                 </td>
 
-                <td width="500" align="left">
+                <td width="40%" align="left">
                     <br>
                     <div class="form-group">
                     <strong>{{ form.org.label }}</strong><br>{{ form.org (class='form-control') }}<br>
                     <strong>{{ form.bu.label }}</strong><br>{{ form.bu (class='form-control')}}<br>
-                    <strong>{{ form.ranking_logic.label }}</strong><br>{{ form.ranking_logic }}<br><br>                    </div>
-                	<br><br>
+                    <strong>{{ form.email_option.label }}</strong><br>{{ form.email_option (class='form-control')}}<br><br>                    </div>
+
                 </td>
-                <td width="100"></td>
+                <td width="5%"></td>
             </tr>
+        </table>
+        <table style="border-collapse:collapse; " border="0" cellspacing="0px" width="90%" align="center">
             <tr>
-                <td></td>
-                <td></td>
-                <td align="center">
+                <td align="center" width="100%">
+                    <br>
                     {{ form.submit_allocation(class='btn btn-default btn-lg')  }}
-                    {{ form.email_option }} <span style="font-size: small"> Notify users by email</span>
                     <br><br>
             	</td>
         	</tr>
-    	</tbody>
 	</table>
     </form>
-</div>
+<!-- </div> -->
 
 
 {% endblock %}

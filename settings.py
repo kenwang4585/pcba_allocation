@@ -66,3 +66,17 @@ ranking_col_cust = ['priority_rank', 'ossd_offset', 'fcd_offset',
                            'C_UNSTAGED_QTY', 'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
 ranking_col_rev = ['priority_rank', 'ss_rev_rank', 'ossd_offset', 'fcd_offset',
                            'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
+
+# email options
+cisco_recipients=['kogoh@cisco.com',
+                  'emliu@cisco.com',
+                  'chaxu@cisco.com',
+                  'engng@cisco.com',
+                  'manfan@cisco.com',
+                  'kwang2@cisco.com',
+                  'clarwang@cisco.com',
+                  'seyang@cisco.com',
+                  'jimmyzh@cisco.com',
+                  'lilixiao@cisco.com',
+                  'wibo@cisco.com',
+                  'brigwang@cisco.com']

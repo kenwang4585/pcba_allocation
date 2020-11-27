@@ -1110,3 +1110,79 @@ File name: paste the file name here and click the download button
 [Download/delete file] - 2020-11-20 15:09:13
 User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
 File name: FOL SCR allocation (all BU) 11-20 14h53m.xlsx
+
+[Download/delete file] - 2020-11-27 09:07:53
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: paste the file name here and click the download button
+
+[Download/delete file] - 2020-11-27 09:09:31
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: paste the file name here and click the download button
+
+[Download/delete file] - 2020-11-27 09:10:54
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: paste the file name here and click the download button
+
+[Download/delete file] - 2020-11-27 09:12:06
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: paste the file name here and click the download button
+
+[Making allocation] - 2020-11-27
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+Start time: 10:09:14
+PCBA_SITE: FOL
+BU: ERBU
+Email option: no_email
+File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 10:10:04
+
+[Making allocation] - 2020-11-27
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+Start time: 10:10:45
+PCBA_SITE: FOL
+BU: ERBU
+Email option: to_me
+File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+ERROR!!!!10:11:35Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 124, in allocation_run
+    msg=send_allocation_result(email_option,output_filename)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1094, in send_allocation_result
+    embeded_filenames=None, sender='PCBA_Allocation')
+  File "/Users/wangken/py/pcba_allocation/sending_email.py", line 55, in send_attachment_and_embded_image
+    file_size=os.path.getsize(full_fname)
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/genericpath.py", line 50, in getsize
+    return os.stat(filename).st_size
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/wangken/py/pcba_allocation/upload_file/FOL SCR allocation (ERBU) 11-27 10h11m.xlsx'
+
+
+[Making allocation] - 2020-11-27
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+Start time: 10:14:14
+PCBA_SITE: FOL
+BU: ERBU
+Email option: to_me
+File 3a4: backlog3a4-detail3 (1).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 10:15:09
+
+[Making allocation] - 2020-11-27
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+Start time: 10:48:59
+PCBA_SITE: FOL
+BU: ERBU/SRGBU
+Email option: to_all
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 10:50:09
+
+[Making allocation] - 2020-11-27
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+Start time: 10:54:08
+PCBA_SITE: FOL
+BU: ERBU/SRGBU
+Email option: to_all
+File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
+File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
+Finish time: 10:55:14
