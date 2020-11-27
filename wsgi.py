@@ -269,7 +269,7 @@ def allocation_download():
                 else:
                     return send_from_directory(f_path, filename=fname, as_attachment=True)
             except Exception as e:
-                msg = 'File not found! Check filename you input! ' + str(e)
+                msg = 'File not found! Verify the filename you input! '
                 flash(msg, 'warning')
         else:
             try:
