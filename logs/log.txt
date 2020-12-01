@@ -1186,3 +1186,35 @@ Email option: to_all
 File 3a4: backlog3a4-detail (33).csv(size: 83.6Mb)
 File supply: SCR_OH_Intransit_1117.xlsx(size: 1.4Mb)
 Finish time: 10:55:14
+
+[Download/delete file] - 2020-11-30 14:54:15
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: paste the file name here and click the download button
+
+[Download/delete file] - 2020-11-30 14:56:21
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: paste the file name here and click the download button
+
+[Download/delete file] - 2020-11-30 15:01:01
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+
+[Download/delete file] - 2020-11-30 15:03:12
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+
+[Download/delete file] - 2020-11-30 15:25:18
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+
+[Download/delete file] - 2020-11-30 15:51:53
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: FOL SCR allocation (ERBU) 11-27 10h15m.xlsx
+
+[Download/delete file] - 2020-11-30 15:53:00
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: FOL SCR allocation (ERBU) 11-27 10h11m.xlsx
+
+[Download/delete file] - 2020-11-30 16:05:43
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+
+[Download/delete file] - 2020-11-30 16:10:13
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36
+File name: FOL SCR allocation (ERBU SRGBU) 11-27 10h55m.xlsx

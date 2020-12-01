@@ -8,7 +8,7 @@ matplotlib.use('Agg')
 
 import time
 from werkzeug.utils import secure_filename
-from flask import flash,send_from_directory,render_template, request
+from flask import flash,send_from_directory,render_template, request,redirect,url_for
 from flask_settings import *
 from functions import *
 from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
@@ -172,6 +172,7 @@ def allocation_download():
     files = []
     creation_time = []
     file_size = []
+    file_path = []
     for file in file_list:
         if file[:1] != '.' and file[:1] != '~' and file!='log.txt':
             c_time = os.stat(os.path.join(base_dir_output, file)).st_ctime
@@ -185,7 +186,8 @@ def allocation_download():
             files.append(file)
             creation_time.append(c_time)
             file_size.append(file_s)
-    df_output=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size})
+            file_path.append(os.path.join(base_dir_output,file))
+    df_output=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size, 'File_path':file_path})
     df_output.sort_values(by='Creation_time',ascending=False,inplace=True)
     #files.sort(key=lambda x:x[-17:-5]) # 排序
     #files_output=files[::-1]
@@ -195,6 +197,7 @@ def allocation_download():
     files = []
     creation_time = []
     file_size = []
+    file_path = []
     for file in file_list:
         if file[:1] != '.' and file[:1] != '~':
             c_time = os.stat(os.path.join(base_dir_upload, file)).st_ctime
@@ -208,8 +211,8 @@ def allocation_download():
             files.append(file)
             creation_time.append(c_time)
             file_size.append(file_s)
-
-    df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size})
+            file_path.append(os.path.join(base_dir_upload, file))
+    df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path':file_path})
     df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
 
     if form.validate_on_submit():
@@ -218,85 +221,169 @@ def allocation_download():
         log_msg.append('User info: ' + request.headers.get('User-agent'))
 
         submit_download_supply=form.submit_download_supply.data
-        submit_download_output=form.submit_download_output.data
-        submit_download_uploaded=form.submit_download_uploaded.data
-
         pcba_site=form.pcba_site.data.strip().upper()
-        fname_output = form.fname_output.data.strip()
-        fname_uploaded=form.fname_uploaded.data.strip()
 
-        if submit_download_output:
-            f_path=base_dir_output
-            fname=fname_output
-            log_msg.append('File name: ' + fname)
-            download_supply_from_db=False
-        elif submit_download_uploaded:
-            f_path=base_dir_upload
-            fname=fname_uploaded
-            log_msg.append('File name: ' + fname)
-            download_supply_from_db = False
-        elif submit_download_supply:
-            now = pd.Timestamp.now()
-            f_path=base_dir_supply
-            fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm') + '.xlsx'
-            log_msg.append('Download supply from DB')
-            download_supply_from_db = True
+        now = pd.Timestamp.now()
+        f_path=base_dir_supply
+        fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm') + '.xlsx'
+        log_msg.append('Download supply from DB')
 
-            if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ']:
-                msg = "'{}' seems not a PCBA org??".format(pcba_site)
-                flash(msg, 'warning')
-                return render_template('allocation_download.html', form=form,
-                                       data_header=['File_name', 'Creation_time', 'File_size'],
+        if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ']:
+            msg = "'{}' seems not a PCBA org??".format(pcba_site)
+            flash(msg, 'warning')
+            return render_template('allocation_download.html', form=form,
                                        files_output=df_output.values,
                                        files_uploaded=df_upload.values)
+        try:
+            df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
+            data_to_write = {'scr': df_scr,
+                             'oh': df_oh,
+                             'in-transit': df_intransit,
+                             'sourcing_rule': df_sourcing_rule}
 
-        # Write the log file
-        log_msg = '\n'.join(log_msg)
-        with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
-            file_object.write(log_msg)
-        print(log_msg)
-
-        # download/delete file
-        if download_supply_from_db==False:
-            try:
-                if fname[-7:] == '-delete': # 删除文件
-                    os.remove(os.path.join(f_path, fname[:-7]))
-                    flash('This file has been delted: {}'.format(fname[:-7]),'success')
-                    return render_template('allocation_download.html', form=form,
-                                               data_header=['File_name', 'Creation_time', 'File_size'],
-                                               files_output=df_output.values,
-                                               files_uploaded=df_upload.values)
-                else:
-                    return send_from_directory(f_path, filename=fname, as_attachment=True)
-            except Exception as e:
-                msg = 'File not found! Verify the filename you input! '
-                flash(msg, 'warning')
-        else:
-            try:
-                df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
-                data_to_write = {'scr': df_scr,
-                                 'oh': df_oh,
-                                 'in-transit': df_intransit,
-                                 'sourcing_rule':df_sourcing_rule}
-
-                write_data_to_excel(os.path.join(f_path,fname), data_to_write)
-                return send_from_directory(f_path, filename=fname, as_attachment=True)
-            except Exception as e:
-                msg = 'Error downloading supply data from database! ' + str(e)
-                flash(msg, 'warning')
+            write_data_to_excel(os.path.join(f_path, fname), data_to_write)
+            return send_from_directory(f_path, filename=fname, as_attachment=True)
+        except Exception as e:
+            msg = 'Error downloading supply data from database! ' + str(e)
+            flash(msg, 'warning')
 
     return render_template('allocation_download.html',form=form,
-                           data_header=['File_name','Creation_time','File_size'],
                            files_output=df_output.values,
                            files_uploaded=df_upload.values)
 
 
-@app.route('/about', methods=['GET'])
-def allocation_about():
-    ip = request.remote_addr
-    print(ip)
-    #print(request.headers)
-    return render_template('allocation_about.html')
+@app.route('/<path:file_path>',methods=['GET'])
+def download_file(file_path):
+    #form=FileDownloadForm()
+
+    f_path,fname = os.path.split(file_path)
+    f_path='/' + f_path
+    return send_from_directory(f_path, filename=fname, as_attachment=True)
+
+# Beloe did now work out somehow
+@app.route('/delete/<path:file_path>',methods=['POST'])
+def delete_file(file_path):
+    form=AdminForm()
+    password=form.password.data
+
+    if form.validate_on_submit():
+        print('enter')
+        if password!='4585':
+            msg='Not authorized!'
+            flash(msg,'warning')
+            return redirect(url_for("allocation_admin"))
+
+        os.remove(file_path)
+        msg = 'File deleted!'
+        flash(msg, 'warning')
+
+    return redirect(url_for("allocation_admin"))
+
+@app.route('/admin', methods=['GET','POST'])
+def allocation_admin():
+    form = AdminForm()
+
+    # allocation output files
+    file_list = os.listdir(base_dir_output)
+    files = []
+    creation_time = []
+    file_size = []
+    file_path = []
+    for file in file_list:
+        if file[:1] != '.' and file[:1] != '~' and file!='log.txt':
+            c_time = os.stat(os.path.join(base_dir_output, file)).st_ctime
+            c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
+            file_s = os.path.getsize(os.path.join(base_dir_output, file))
+            if file_s > 1024 * 1024:
+                file_s = str(round(file_s/(1024*1024),1)) + 'M'
+            else:
+                file_s = str(int(file_s / 1024)) + 'K'
+
+            files.append(file)
+            creation_time.append(c_time)
+            file_size.append(file_s)
+            file_path.append(os.path.join(base_dir_output,file))
+    df_output=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size, 'File_path':file_path})
+    df_output.sort_values(by='Creation_time',ascending=False,inplace=True)
+    #files.sort(key=lambda x:x[-17:-5]) # 排序
+    #files_output=files[::-1]
+
+    # files uploaded by user
+    file_list = os.listdir(base_dir_upload)
+    files = []
+    creation_time = []
+    file_size = []
+    file_path = []
+    for file in file_list:
+        if file[:1] != '.' and file[:1] != '~':
+            c_time = os.stat(os.path.join(base_dir_upload, file)).st_ctime
+            c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
+            file_s = os.path.getsize(os.path.join(base_dir_upload, file))
+            if file_s > 1024 * 1024:
+                file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
+            else:
+                file_s = str(int(file_s / 1024)) + 'K'
+
+            files.append(file)
+            creation_time.append(c_time)
+            file_size.append(file_s)
+            file_path.append(os.path.join(base_dir_upload, file))
+    df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path':file_path})
+    df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
+
+    # log files
+    file_list = os.listdir(base_dir_logs)
+    files = []
+    creation_time = []
+    file_size = []
+    file_path = []
+    for file in file_list:
+        if file[:1] != '.' and file[:1] != '~':
+            c_time = os.stat(os.path.join(base_dir_logs, file)).st_ctime
+            c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
+            file_s = os.path.getsize(os.path.join(base_dir_logs, file))
+            if file_s > 1024 * 1024:
+                file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
+            else:
+                file_s = str(int(file_s / 1024)) + 'K'
+
+            files.append(file)
+            creation_time.append(c_time)
+            file_size.append(file_s)
+            file_path.append(os.path.join(base_dir_logs, file))
+    df_logs = pd.DataFrame(
+        {'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path': file_path})
+    df_logs.sort_values(by='Creation_time', ascending=False, inplace=True)
+
+    if form.validate_on_submit():
+        password=form.password.data
+        fname=form.file_name.data
+
+        if password=='4585':
+            if fname in df_output.File_name.values:
+                f_path=df_output[df_output.File_name==fname].File_path.values[0]
+                print(f_path)
+                os.remove(f_path)
+                msg='{} removed!'.format(fname)
+                flash(msg,'success')
+            elif fname in df_upload.File_name.values:
+                f_path = df_upload[df_upload.File_name == fname].File_path.values[0]
+                os.remove(f_path)
+                msg = '{} removed!'.format(fname)
+                flash(msg, 'success')
+            else:
+                msg = 'Error file name! Ensure it is in output folder or upload folder: {}'.format(fname)
+                flash(msg, 'waning')
+
+            return redirect(url_for('allocation_admin'))
+        else:
+            msg = 'Error password!'
+            flash(msg, 'warning')
+
+    return render_template('allocation_admin.html',form=form,
+                           files_output=df_output.values,
+                           files_uploaded=df_upload.values,
+                           files_log=df_logs.values)
 
 # Below is a dummy one
 @app.route('/config',methods=['GET','POST'])

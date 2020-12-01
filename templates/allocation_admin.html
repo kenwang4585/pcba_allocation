@@ -10,8 +10,8 @@
             <td>
                 <ul class="nav nav-tabs">
                     <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
-                    <li class="active" style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
-
+                    <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+                    <li class="active" style="font-size: large"><a href="{{ url_for('allocation_admin')}}" style="font-size: large"><strong>Administrator</strong></a></li>
                 </ul>
             </td>
         </tr>
@@ -36,20 +36,25 @@
                   </td>
                 </tr>
 
-                <tr> <!-- For downloading data from SCDx -->
-                    <td width="95%">
-                        <br>
-                        <p><strong>Download supply data file from SCDx:</strong></p>
-                        <table>
-                            <tr>
-
-                                <td width="720">{{ form.pcba_site (class='form-control') }}</td>
-                                <td width="100" align="center">{{ form.submit_download_supply (class='btn-primary btn-sm') }}</td>
-                            </tr>
-                        </table>
+                <tr>
+                    <td>
+                        <br><br>
+                        <p><strong> Delete files:</strong></p>
+                                <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                                    <tr>
+                                        <td align="left" width="80%">
+                                            {{ form.file_name (class='form-control')}}
+                                        </td>
+                                        <td align="left" width="10%">
+                                            {{ form.password (class='form-control')}}
+                                        </td>
+                                        <td align="center" width="10%">
+                                            {{ form.submit_delete (class='btn-primary btn-sm')}}
+                                        </td>
+                                    </tr>
+                                </table>
                     </td>
                 </tr>
-
 
                 <tr>  <!-- For downloading the allocation resut files -->
                     <td width="95%">
@@ -59,7 +64,7 @@
                                 <table border="1" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                                     <tbody>
                                         <tr>
-                                            <td width="400"><span style="font-size: large;">&nbsp;&nbsp;Allocation files</span></td>
+                                            <td width="400"><span style="font-size: large;">&nbsp;&nbsp;File name</span></td>
                                             <td width="200"><span style="font-size: large">&nbsp;&nbsp;Creation time</span></td>
                                             <td width="120"><span style="font-size: large">&nbsp;&nbsp;File size</span></td>
                                             <td width="120">&nbsp;&nbsp;File download</td>
@@ -88,12 +93,39 @@
                                     <p><strong> Input files uploaded by user:</strong></p>
                                     <table style="border-collapse:collapse" border="1" cellspacing="0px" align="left">
                                         <tr>
-                                            <td width="400"><span style="font-size: large;">&nbsp;&nbsp;Allocation files</span></td>
+                                            <td width="400"><span style="font-size: large;">&nbsp;&nbsp;File name</span></td>
                                             <td width="200"><span style="font-size: large">&nbsp;&nbsp;Creation time</span></td>
                                             <td width="120"><span style="font-size: large">&nbsp;&nbsp;File size</span></td>
                                             <td width="120">&nbsp;&nbsp;File download</td>
                                         </tr>
                                         {% for row in files_uploaded %}
+                                            <tr>
+                                                {% for col in row[:3] %}
+                                                    <td><span style="font-size: small">&nbsp;&nbsp;&nbsp;{{col}}</span></td>
+                                                {% endfor %}
+                                                <td align="center">
+                                                    <a href="{{ url_for('download_file',file_path=row[3]) }}">download</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                {% endif %}
+                    </td>
+                </tr>
+
+                <tr> <!-- For downloading log data files -->
+                    <td width="95%">
+                        <br><br><br>
+                                {% if files_log|length>0 %}
+                                    <p><strong> Log files:</strong></p>
+                                    <table style="border-collapse:collapse" border="1" cellspacing="0px" align="left">
+                                        <tr>
+                                            <td width="400"><span style="font-size: large;">&nbsp;&nbsp;File name</span></td>
+                                            <td width="200"><span style="font-size: large">&nbsp;&nbsp;Creation time</span></td>
+                                            <td width="120"><span style="font-size: large">&nbsp;&nbsp;File size</span></td>
+                                            <td width="120">&nbsp;&nbsp;File download</td>
+                                        </tr>
+                                        {% for row in files_log %}
                                             <tr>
                                                 {% for col in row[:3] %}
                                                     <td><span style="font-size: small">&nbsp;&nbsp;&nbsp;{{col}}</span></td>
