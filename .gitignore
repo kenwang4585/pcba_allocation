@@ -4,3 +4,4 @@
 /upload_file/*.csv
 /upload_file/*.xlsx
 /supply_file/*.xlsx
+/logs/*.txt
