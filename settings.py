@@ -2,12 +2,11 @@ import os
 import getpass
 
 # use below or from user selelction on UI
-f_3a4='backlog3a4-pcba_allocation.csv'
-f_supply='test_SCR+OH+Intransit_0924.xlsx'
 sheet_scr='scr'
 sheet_transit='in-transit'
 sheet_oh='oh'
-pcba_site='FOL'
+sheet_sourcing='sourcing_rule'
+#pcba_site='FOL'
 
 ranking_col=['priority_rank', 'ossd_offset', 'fcd_offset','rev_non_rev_rank','C_UNSTAGED_QTY', 'SO_SS','PO_NUMBER']
 

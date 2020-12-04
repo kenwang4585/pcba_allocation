@@ -103,7 +103,7 @@ def allocation_run():
         try:
             # 读取数据
             module='Reading input data'
-            df_3a4, df_oh, df_transit, df_scr=read_data(file_path_3a4, file_path_supply, sheet_scr, sheet_oh, sheet_transit)
+            df_3a4, df_oh, df_transit, df_scr, df_sourcing=read_data(file_path_3a4, file_path_supply, sheet_scr, sheet_oh, sheet_transit, sheet_sourcing)
 
             # limit BU from 3a4 and df_scr for allocation
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
@@ -117,13 +117,13 @@ def allocation_run():
 
             #### main program
             module='Main program for allocation'
-            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, pcba_site, bu_list, ranking_col)
+            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col)
             flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
             # send result by email
             module = 'send_allocation_result'
             msg=send_allocation_result(email_option,output_filename,secure_filename(f_3a4.filename),secure_filename(f_supply.filename),
-                                       size_3a4,size_supply,bu_list)
+                                       size_3a4,size_supply,bu_list,pcba_site)
             flash(msg, 'success')
 
             finish_time=pd.Timestamp.now().strftime('%H:%M:%S')

@@ -710,7 +710,7 @@ def write_data_to_excel(output_file,data_to_write):
 
     writer.save()
 
-def write_excel_output_file(bu_list,df_scr,df_3a4,df_transit):
+def write_excel_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit):
     # save the scr output file and 3a4 to excel
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
@@ -793,7 +793,7 @@ def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
     return blg_dic_tan, transit_dic_tan
 
 
-def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit):
+def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit,sheet_sourcing):
     """
     Read source data from excel files
     :param f_3a4:
@@ -816,7 +816,10 @@ def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit):
     # read in-transit
     df_transit = pd.read_excel(f_supply, sheet_name=sheet_transit)
 
-    return df_3a4, df_oh, df_transit, df_scr
+    # read sourcing rules
+    df_sourcing=pd.read_excel(f_supply,sheet_name=sheet_sourcing)
+
+    return df_3a4, df_oh, df_transit, df_scr ,df_sourcing
 
 def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     """
@@ -1079,7 +1082,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     return df_scr
 
 
-def send_allocation_result(email_option,output_filename,file_3a4,file_supply,size_3a4,size_supply,bu_list):
+def send_allocation_result(email_option,output_filename,file_3a4,file_supply,size_3a4,size_supply,bu_list,pcba_site):
     """
     Send the allocation result to defined users by email
     """
@@ -1116,7 +1119,35 @@ def send_allocation_result(email_option,output_filename,file_3a4,file_supply,siz
 
     return msg
 
-def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_list,ranking_col):
+def collect_available_sourcing(df_sourcing):
+    """
+    Generate a list that contains all the available sourcings: [DF_org-TAN(verionless)].
+    """
+    regex = re.compile(r'\d{2,3}-\d{4,7}')
+
+    # convert to versionless and add temp col
+    df_sourcing.loc[:, 'tan_versionless'] = df_sourcing.TAN.map(lambda x: regex.search(x).group())
+    df_sourcing.loc[:, 'org_tan'] = df_sourcing.DF_site + '-' + df_sourcing.tan_versionless
+
+    # create a simple list of the available sourcing rules
+    sourcing_rules=[]
+    for row in df_sourcing.itertuples():
+        sourcing_rules.append(row.org_tan)
+
+    return sourcing_rules
+
+def remove_unavailable_sourcing (df_3a4,sourcing_rules):
+    """
+    Removed the unavaialbe sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
+    """
+
+    df_3a4.loc[:,'org_pn']=df_3a4.ORGANIZATION_CODE+'-'+df_3a4.BOM_PN
+
+    df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules)].copy()
+
+    return df_3a4
+
+def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col):
     """
     Main program to process the data and PCBA allocation.
     :param df_3a4:
@@ -1172,6 +1203,9 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     # (do below after ranking) Process 3a4 BOM base on FLB_TAN col. BOM_PN refers to tan_group if exist, or SCR Tan if not.
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
+    # collect available sourcing rules
+    sourcing_rules=collect_available_sourcing(df_sourcing)
+    df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rules)
 
     # create backlog dict for Tan exists in SCR
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys())
@@ -1240,7 +1274,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr,pcba_site,bu_
     df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
 
     # 存储文件
-    output_filename = write_excel_output_file(bu_list, df_scr, df_3a4, df_transit)
+    output_filename = write_excel_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit)
 
     return output_filename
 
