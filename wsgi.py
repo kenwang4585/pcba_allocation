@@ -27,6 +27,7 @@ def allocation_run():
     # as these email valiable are redefined below in email_to_only check, thus have to use global to define here in advance
     # otherwise can't be used. (as we create new vaiables with _ suffix thus no need to set global variable)
     # global backlog_dashboard_emails
+    login_user = request.headers.get('Oidc-Claim-Sub')
 
     if form.validate_on_submit():
         log_msg = []
@@ -161,11 +162,12 @@ def allocation_run():
 
         return render_template('allocation_run.html', form=form)
 
-    return render_template('allocation_run.html', form=form)
+    return render_template('allocation_run.html', form=form, login_user=login_user)
 
 @app.route('/download', methods=['GET', 'POST'])
 def allocation_download():
     form = FileDownloadForm()
+    login_user = request.headers.get('Oidc-Claim-Sub')
 
     # output files
     file_list = os.listdir(base_dir_output)
@@ -249,7 +251,8 @@ def allocation_download():
 
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
-                           files_uploaded=df_upload.values)
+                           files_uploaded=df_upload.values,
+                           login_user=login_user)
 
 
 @app.route('/<path:file_path>',methods=['GET'])
@@ -283,9 +286,7 @@ def delete_file(file_path):
 def allocation_admin():
     form = AdminForm()
 
-    print(session)
-    print(request.headers)
-    get_application_property
+    login_user=request.headers.get('Oidc-Claim-Sub')
 
     # allocation output files
     file_list = os.listdir(base_dir_output)
@@ -387,7 +388,8 @@ def allocation_admin():
     return render_template('allocation_admin.html',form=form,
                            files_output=df_output.values,
                            files_uploaded=df_upload.values,
-                           files_log=df_logs.values)
+                           files_log=df_logs.values,
+                           login_user=login_user)
 
 # Below is a dummy one
 @app.route('/config',methods=['GET','POST'])
