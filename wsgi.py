@@ -8,7 +8,7 @@ matplotlib.use('Agg')
 
 import time
 from werkzeug.utils import secure_filename
-from flask import flash,send_from_directory,render_template, request,redirect,url_for, session
+from flask import flash,send_from_directory,render_template, request,redirect,url_for
 from flask_settings import *
 from functions import *
 from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
@@ -28,13 +28,19 @@ def allocation_run():
     # otherwise can't be used. (as we create new vaiables with _ suffix thus no need to set global variable)
     # global backlog_dashboard_emails
     login_user = request.headers.get('Oidc-Claim-Sub')
+    print(request.headers)
     if login_user==None:
         login_user=''
+
+    if login_user!='':
+        with open(os.path.join(base_dir_logs, 'log_visit.txt'), 'a+') as file_object:
+            log_visit= '\n' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
+            file_object.write(log_visit)
 
     if form.validate_on_submit():
         log_msg = []
         log_msg.append('\n\n[Making allocation] - ' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d'))
-        log_msg.append('User info: ' + request.headers.get('User-agent'))
+        #log_msg.append('User info: ' + request.headers.get('User-agent'))
 
         start_time=pd.Timestamp.now().strftime('%H:%M:%S')
         print('Start time:', start_time)
@@ -56,8 +62,8 @@ def allocation_run():
         # 存储文件 - will save again with Org name in file name later
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
         #file_path_supply = os.path.join(app.config['UPLOAD_PATH'],'supply.xlsx')
-        file_path_3a4 = os.path.join(base_dir_upload, secure_filename(f_3a4.filename))
-        file_path_supply = os.path.join(base_dir_upload, secure_filename(f_supply.filename))
+        file_path_3a4 = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_3a4.filename))
+        file_path_supply = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_supply.filename))
         # save the files to server
         f_3a4.save(file_path_3a4)
         f_supply.save(file_path_supply)
@@ -291,6 +297,9 @@ def allocation_admin():
     login_user=request.headers.get('Oidc-Claim-Sub')
     if login_user==None:
         login_user=''
+
+    if login_user!='' and login_user!='kwang2':
+        return redirect(url_for('allocation_run'))
 
     # allocation output files
     file_list = os.listdir(base_dir_output)
