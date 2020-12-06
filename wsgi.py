@@ -28,9 +28,10 @@ def allocation_run():
     # otherwise can't be used. (as we create new vaiables with _ suffix thus no need to set global variable)
     # global backlog_dashboard_emails
     login_user = request.headers.get('Oidc-Claim-Sub')
-    print(request.headers)
+    login_name=request.headers.get('Oidc-Claim-Fullname')
     if login_user==None:
         login_user=''
+        login_name=''
 
     if login_user!='':
         with open(os.path.join(base_dir_logs, 'log_visit.txt'), 'a+') as file_object:
@@ -170,14 +171,16 @@ def allocation_run():
 
         return render_template('allocation_run.html', form=form)
 
-    return render_template('allocation_run.html', form=form, login_user=login_user)
+    return render_template('allocation_run.html', form=form, user=login_name)
 
 @app.route('/download', methods=['GET', 'POST'])
 def allocation_download():
     form = FileDownloadForm()
     login_user = request.headers.get('Oidc-Claim-Sub')
-    if login_user==None:
-        login_user=''
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    if login_user == None:
+        login_user = ''
+        login_name = ''
 
     # output files
     file_list = os.listdir(base_dir_output)
@@ -261,7 +264,7 @@ def allocation_download():
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
                            files_uploaded=df_upload.values,
-                           login_user=login_user)
+                           login_user=login_name)
 
 
 @app.route('/<path:file_path>',methods=['GET'])
@@ -295,8 +298,10 @@ def delete_file(file_path):
 def allocation_admin():
     form = AdminForm()
     login_user=request.headers.get('Oidc-Claim-Sub')
-    if login_user==None:
-        login_user=''
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    if login_user == None:
+        login_user = ''
+        login_name = ''
 
     if login_user!='' and login_user!='kwang2':
         return redirect(url_for('allocation_run'))
@@ -402,7 +407,7 @@ def allocation_admin():
                            files_output=df_output.values,
                            files_uploaded=df_upload.values,
                            files_log=df_logs.values,
-                           login_user=login_user)
+                           login_user=login_name)
 
 # Below is a dummy one
 @app.route('/config',methods=['GET','POST'])
