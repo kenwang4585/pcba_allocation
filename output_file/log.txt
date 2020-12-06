@@ -77,3 +77,35 @@ Email option: no_email
 File 3a4: backlog3a4-detail3 (2).csv(size: 89.2Mb)
 File supply: SCR_OH_Intransit_1130 (1).xlsx(size: 1.4Mb)
 Finish time: 16:13:26
+
+[Making allocation] -  - 2020-12-06
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36
+Start time: 15:43:00
+PCBA_SITE: FOL
+BU: ERBU
+Email option: no_email
+File 3a4: backlog3a4-detail3 (2).csv(size: 89.2Mb)
+File supply: SCR_OH_Intransit_1130 (1).xlsx(size: 1.4Mb)
+ERROR!!!!15:43:21Traceback (most recent call last):
+  File "/Users/wangken/py/pcba_allocation/wsgi.py", line 123, in allocation_run
+    output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 1163, in pcba_allocation_main_program
+    tan_group = read_tan_group_mapping_from_smartsheet()
+  File "/Users/wangken/py/pcba_allocation/functions.py", line 44, in read_tan_group_mapping_from_smartsheet
+    smartsheet_client = SmartSheetClient(token, proxies)
+  File "/Users/wangken/py/pcba_allocation/smartsheet_handler.py", line 12, in __init__
+    self.smartsheet_client = smartsheet.Smartsheet(access_token=access_token, proxies=proxies)
+  File "/Users/wangken/.local/share/virtualenvs/pcba_allocation-lWAyiP-1/lib/python3.7/site-packages/smartsheet/smartsheet.py", line 145, in __init__
+    raise ValueError('Access Token must be set in the environment '
+ValueError: Access Token must be set in the environment or passed to smartsheet.Smartsheet() as a parameter.
+
+
+[Making allocation] -  - 2020-12-06
+User info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36
+Start time: 15:44:00
+PCBA_SITE: FOL
+BU: ERBU
+Email option: no_email
+File 3a4: backlog3a4-detail3 (2).csv(size: 89.2Mb)
+File supply: SCR_OH_Intransit_1130 (1).xlsx(size: 1.4Mb)
+Finish time: 15:44:53

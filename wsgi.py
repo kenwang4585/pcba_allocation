@@ -28,10 +28,12 @@ def allocation_run():
     # otherwise can't be used. (as we create new vaiables with _ suffix thus no need to set global variable)
     # global backlog_dashboard_emails
     login_user = request.headers.get('Oidc-Claim-Sub')
+    if login_user==None:
+        login_user=''
 
     if form.validate_on_submit():
         log_msg = []
-        log_msg.append('\n\n[Making allocation] - ' + pd.Timestamp.now().strftime('%Y-%m-%d'))
+        log_msg.append('\n\n[Making allocation] - ' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d'))
         log_msg.append('User info: ' + request.headers.get('User-agent'))
 
         start_time=pd.Timestamp.now().strftime('%H:%M:%S')
@@ -118,13 +120,13 @@ def allocation_run():
 
             #### main program
             module='Main program for allocation'
-            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col)
+            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)
             flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
             # send result by email
             module = 'send_allocation_result'
             msg=send_allocation_result(email_option,output_filename,secure_filename(f_3a4.filename),secure_filename(f_supply.filename),
-                                       size_3a4,size_supply,bu_list,pcba_site)
+                                       size_3a4,size_supply,bu_list,pcba_site,login_user)
             flash(msg, 'success')
 
             finish_time=pd.Timestamp.now().strftime('%H:%M:%S')
@@ -133,7 +135,7 @@ def allocation_run():
 
             # Write the log file
             log_msg='\n'.join(log_msg)
-            with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
+            with open(os.path.join(base_dir_logs, 'log.txt'), 'a+') as file_object:
                 file_object.write(log_msg)
 
         except Exception as e:
@@ -168,6 +170,8 @@ def allocation_run():
 def allocation_download():
     form = FileDownloadForm()
     login_user = request.headers.get('Oidc-Claim-Sub')
+    if login_user==None:
+        login_user=''
 
     # output files
     file_list = os.listdir(base_dir_output)
@@ -222,7 +226,6 @@ def allocation_download():
         log_msg.append('\n\n[Download/delete file] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
         log_msg.append('User info: ' + request.headers.get('User-agent'))
 
-        submit_download_supply=form.submit_download_supply.data
         pcba_site=form.pcba_site.data.strip().upper()
 
         now = pd.Timestamp.now()
@@ -285,8 +288,9 @@ def delete_file(file_path):
 @app.route('/admin', methods=['GET','POST'])
 def allocation_admin():
     form = AdminForm()
-
     login_user=request.headers.get('Oidc-Claim-Sub')
+    if login_user==None:
+        login_user=''
 
     # allocation output files
     file_list = os.listdir(base_dir_output)
