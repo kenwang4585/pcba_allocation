@@ -178,6 +178,7 @@ def allocation_download():
     form = FileDownloadForm()
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
+    print(request.headers)
     if login_user == None:
         login_user = ''
         login_name = ''
@@ -264,7 +265,7 @@ def allocation_download():
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
                            files_uploaded=df_upload.values,
-                           login_user=login_name)
+                           user=login_name)
 
 
 @app.route('/<path:file_path>',methods=['GET'])
@@ -407,7 +408,7 @@ def allocation_admin():
                            files_output=df_output.values,
                            files_uploaded=df_upload.values,
                            files_log=df_logs.values,
-                           login_user=login_name)
+                           user=login_name)
 
 # Below is a dummy one
 @app.route('/config',methods=['GET','POST'])
