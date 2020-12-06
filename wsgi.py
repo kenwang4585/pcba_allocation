@@ -8,7 +8,7 @@ matplotlib.use('Agg')
 
 import time
 from werkzeug.utils import secure_filename
-from flask import flash,send_from_directory,render_template, request,redirect,url_for
+from flask import flash,send_from_directory,render_template, request,redirect,url_for, session
 from flask_settings import *
 from functions import *
 from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
@@ -282,6 +282,8 @@ def delete_file(file_path):
 @app.route('/admin', methods=['GET','POST'])
 def allocation_admin():
     form = AdminForm()
+
+    print(session)
 
     # allocation output files
     file_list = os.listdir(base_dir_output)
