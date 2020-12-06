@@ -284,6 +284,8 @@ def allocation_admin():
     form = AdminForm()
 
     print(session)
+    print(request.headers)
+    get_application_property
 
     # allocation output files
     file_list = os.listdir(base_dir_output)
