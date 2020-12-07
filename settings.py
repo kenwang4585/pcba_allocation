@@ -55,14 +55,15 @@ output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS',
 
 col_3a4_must_have=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','PRODUCT_ID',
            'TAN','ADDRESSABLE_FLAG','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
-           'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','LT_TARGET_FCD','C_UNSTAGED_DOLLARS',
+           'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','LT_TARGET_FCD','PROGRAM','C_UNSTAGED_DOLLARS',
             'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN']
+
 col_transit_must_have=['planningOrg','TAN','BU','ETA_date','In-transit_quantity']
 col_oh_must_have=['planningOrg','TAN','BU','OH']
 col_scr_must_have=['planningOrg','TAN','BU','SCRDate','SCRQuantity']
 
 # Revenue rank
-ranking_col_cust = ['priority_rank', 'ossd_offset', 'fcd_offset',
+ranking_col_cust = ['priority_rank', 'ossd_offset', 'fcd_offset', 'PROGRAM',
                            'C_UNSTAGED_QTY', 'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
 ranking_col_rev = ['priority_rank', 'ss_rev_rank', 'ossd_offset', 'fcd_offset',
                            'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']

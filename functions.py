@@ -214,6 +214,7 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
     po_list = []
     pn_list = []
     usage_list = []
+    error_pn = []
     for row in df_flb_tan.itertuples(index=False):
         po = row.PO_NUMBER
         flb_tan = row.FLB_TAN
@@ -237,8 +238,10 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
                     usage_list.append(usage)
 
             except:
-                print('Error in finding TAN from FLB_TAN in {}'.format(item))
-                # print(po_list)
+                error_pn.append(item)
+
+    print('Error in regex TAN from FLB_TAN for below PN:')
+    print(error_pn)
 
     # print(po_list)
     df_order_bom_from_flb = pd.DataFrame({'PO_NUMBER': po_list, 'BOM_PN': pn_list, 'BOM_PN_QTY': usage_list})

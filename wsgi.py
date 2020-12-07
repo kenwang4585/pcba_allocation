@@ -169,7 +169,7 @@ def allocation_run():
         except:
             print('')
 
-        return render_template('allocation_run.html', form=form)
+        return redirect(url_for('allocation_run'))
 
     return render_template('allocation_run.html', form=form, user=login_name)
 
@@ -178,7 +178,7 @@ def allocation_download():
     form = FileDownloadForm()
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
-    print(request.headers)
+
     if login_user == None:
         login_user = ''
         login_name = ''
@@ -246,9 +246,7 @@ def allocation_download():
         if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ']:
             msg = "'{}' seems not a PCBA org??".format(pcba_site)
             flash(msg, 'warning')
-            return render_template('allocation_download.html', form=form,
-                                       files_output=df_output.values,
-                                       files_uploaded=df_upload.values)
+            return redirect(url_for('allocation_download'))
         try:
             df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
             data_to_write = {'scr': df_scr,
