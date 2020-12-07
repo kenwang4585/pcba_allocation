@@ -306,7 +306,9 @@ def allocation_admin():
         login_name = ''
 
     if login_user!='' and login_user!='kwang2':
-        return redirect(url_for('allocation_run'))
+        return redirect('https://pcba-allocation.cisco.com/allocation')
+
+    print('ok')
 
     # allocation output files
     file_list = os.listdir(base_dir_output)
