@@ -308,8 +308,6 @@ def allocation_admin():
     if login_user!='' and login_user!='kwang2':
         return redirect('https://pcba-allocation.cisco.com/allocation')
 
-    print('ok')
-
     # allocation output files
     file_list = os.listdir(base_dir_output)
     files = []
