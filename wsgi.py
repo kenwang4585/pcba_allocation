@@ -33,7 +33,7 @@ def allocation_run():
         login_user=''
         login_name=''
 
-    if login_user!='':
+    if login_user!='' and login_user!='kwang2':
         with open(os.path.join(base_dir_logs, 'log_visit.txt'), 'a+') as file_object:
             log_visit= '\n' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
             file_object.write(log_visit)
