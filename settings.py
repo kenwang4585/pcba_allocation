@@ -40,7 +40,7 @@ if getpass.getuser()=='ubuntu': # if it's on crate server
     base_dir_output = '/home/ubuntu/output_file'
     base_dir_upload='/home/ubuntu/upload_file'
     base_dir_supply='/home/ubuntu/supply_file'
-    base_dir_logs = '/home/ubuntu/pcba_allocation/logs'
+    base_dir_logs = '/home/ubuntu/logs'
 else:
     base_dir_output = os.path.join(os.getcwd(),'output_file')
     base_dir_upload = os.path.join(os.getcwd(),'upload_file')
