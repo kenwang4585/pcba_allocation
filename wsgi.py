@@ -378,7 +378,7 @@ def allocation_admin():
     df_logs.sort_values(by='Creation_time', ascending=False, inplace=True)
 
     if login_user != '' and login_user != 'kwang2':
-        return redirect(url_for('allocation_run'))
+        return redirect('https://pcba-allocation.cisco.com/allocation')
 
     if form.validate_on_submit():
         password=form.password.data
@@ -400,7 +400,11 @@ def allocation_admin():
                 msg = 'Error file name! Ensure it is in output folder or upload folder: {}'.format(fname)
                 flash(msg, 'waning')
 
-            return redirect(url_for('allocation_admin'))
+            return render_template('allocation_admin.html',form=form,
+                           files_output=df_output.values,
+                           files_uploaded=df_upload.values,
+                           files_log=df_logs.values,
+                           user=login_name)
 
         else:
             msg = 'Error password!'
