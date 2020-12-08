@@ -37,7 +37,7 @@ class UploadForm(FlaskForm):
     submit_allocation=SubmitField(' Make Allocation ')
     email_option = SelectField('Share result to users by email: ',
                                choices=[('no_email', 'Do not send email'),
-                                        ('to_me', 'Send to ME only'),
+                                        ('to_me', 'Send to myself only'),
                                         ('to_all', 'Send to ALL people'),],
                                validators=[input_required()],
                                default='no_email')

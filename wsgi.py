@@ -285,7 +285,7 @@ def delete_file(file_path):
 
     if form.validate_on_submit():
         print('enter')
-        if password!='4585':
+        if password==os.getenv('PASSWORD'):
             msg='Not authorized!'
             flash(msg,'warning')
             return redirect(url_for("allocation_admin"))
@@ -384,7 +384,7 @@ def allocation_admin():
         password=form.password.data
         fname=form.file_name.data
 
-        if password=='4585':
+        if password==os.getenv('PASSWORD'):
             if fname in df_output.File_name.values:
                 f_path=df_output[df_output.File_name==fname].File_path.values[0]
                 print(f_path)

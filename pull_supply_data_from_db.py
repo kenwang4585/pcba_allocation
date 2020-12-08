@@ -5,7 +5,7 @@ import os
 
 def collect_scr_oh_transit_from_scdx(pcba_site):
     # %% connect to SCDx
-    SCDX_URI=os.getenv('SCDX_URI') + 'admin?connectTimeoutMS=300000&authSource=admin&authMechanism=SCRAM-SHA-1'
+    SCDX_URI=os.getenv('SCDX_URI')
     client = MongoClient(SCDX_URI)
     database = client["pmocscdb"]
     table = database["commonVersion"]
@@ -115,33 +115,41 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
     df_scr = pd.DataFrame()
     df_sourcing_rule = pd.DataFrame()
 
+
+
     for doc in cursor1:
         df = pd.DataFrame(doc, index=[0])
         df_intransit = df_intransit.append(df)
     for doc in cursor2:
         df = pd.DataFrame(doc, index=[0])
         df_oh = df_oh.append(df)
-    for doc in cursor3:
-        df = pd.DataFrame(doc, index=[0])
-        df_scr = df_scr.append(df)
     for doc in cursor4:
         df = pd.DataFrame(doc, index=[0])
         df_sourcing_rule = df_sourcing_rule.append(df)
 
-    client.close()
+    for doc in cursor3:
+        df = pd.DataFrame(doc, index=[0])
+        df_scr = df_scr.append(df)
 
+
+    client.close()
+    #return df_scr
     return df_scr,df_oh,df_intransit,df_sourcing_rule
 
 
 if __name__=='__main__':
     pcba_site='FOL'
-    print(datetime.today().now())
+    a=pd.Timestamp.now()
     df_scr, df_oh, df_intransit, df_sourcing_rule=collect_scr_oh_transit_from_scdx(pcba_site)
-
+    #df_scr = collect_scr_oh_transit_from_scdx(pcba_site)
+    b = pd.Timestamp.now()
+    print(b - a)
+    print(df_scr.head())
+    """
     today = datetime.today()
     outPath = os.path.join(os.getcwd(), 'SCR_OH_Intransit_' + today.strftime('%m%d %Hh%Mm') + '.xlsx')
     writer = pd.ExcelWriter(outPath,engine='xlsxwriter')
-
+    
     df_intransit.to_excel(writer, sheet_name='in-transit', index=False)
     df_oh.to_excel(writer, sheet_name='oh', index=False)
     df_scr.to_excel(writer, sheet_name='scr', index=False)
@@ -149,3 +157,4 @@ if __name__=='__main__':
     writer.save()
     print(datetime.today().now())
     #writer.close()
+    """
