@@ -305,10 +305,7 @@ def allocation_admin():
         login_user = ''
         login_name = ''
 
-    if login_user!='' and login_user!='kwang2':
-        return redirect('https://pcba-allocation.cisco.com/allocation')
-
-    # allocation output files
+   # allocation output files
     file_list = os.listdir(base_dir_output)
     files = []
     creation_time = []
@@ -380,6 +377,9 @@ def allocation_admin():
         {'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path': file_path})
     df_logs.sort_values(by='Creation_time', ascending=False, inplace=True)
 
+    if login_user != '' and login_user != 'kwang2':
+        return redirect(url_for('allocation_run'))
+
     if form.validate_on_submit():
         password=form.password.data
         fname=form.file_name.data
@@ -401,6 +401,7 @@ def allocation_admin():
                 flash(msg, 'waning')
 
             return redirect(url_for('allocation_admin'))
+
         else:
             msg = 'Error password!'
             flash(msg, 'warning')
