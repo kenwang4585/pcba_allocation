@@ -293,7 +293,7 @@ def download_file(file_path):
         login_user = ''
         login_name = ''
     add_user_log(user=login_user, location='Download', user_action='Download file', email_option='',
-                 status='Success')
+                 status=fname)
 
     return send_from_directory(f_path, filename=fname, as_attachment=True)
 
