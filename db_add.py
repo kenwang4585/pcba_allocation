@@ -4,7 +4,7 @@ import pandas as pd
 from flask_settings import *
 
 
-def add_user_log(user='', location='', user_action='',email_option='',status=''):
+def add_user_log(user='', location='', user_action='',summary=''):
     '''
     Add the user log to db
     '''
@@ -14,8 +14,7 @@ def add_user_log(user='', location='', user_action='',email_option='',status='')
                     TIME=pd.Timestamp.now().strftime('%H:%M:%S'),
                     LOCATION=location,
                     USER_ACTION=user_action,
-                    EMAIL_OPTION=email_option,
-                    STATUS=status)
+                    SUMMARY=summary)
 
 
     db.session.add(log)  # can also use add_all() for multiple adding at one time
@@ -69,5 +68,5 @@ def roll_back():
 
 
 if __name__ == '__main__':
-    add_user_log(user='kwang2', location='Admin', user_action='Visit', email_option='',
-                 status='Warning')
+    add_user_log(user='kwang2', location='Admin', user_action='Visit',
+                 summary='Warning')

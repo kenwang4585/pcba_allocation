@@ -87,6 +87,5 @@ class UserLog(db.Model):
     DATE=db.Column(db.Date)
     TIME=db.Column(db.String(8))
     LOCATION=db.Column(db.String(10))
-    USER_ACTION=db.Column(db.Text)
-    EMAIL_OPTION=db.Column(db.String(10))
-    STATUS=db.Column(db.Text)
+    USER_ACTION=db.Column(db.String(20))
+    SUMMARY=db.Column(db.Text)

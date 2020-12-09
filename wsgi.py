@@ -34,7 +34,7 @@ def allocation_run():
         login_name=''
 
     if login_user!='' and login_user!='kwang2':
-        add_user_log(user=login_user,location='Allocation',user_action='visit',email_option='',status='')
+        add_user_log(user=login_user,location='Allocation',user_action='visit',summary='')
         with open(os.path.join(base_dir_logs, 'log_visit.txt'), 'a+') as file_object:
             log_visit= '\n' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
             file_object.write(log_visit)
@@ -142,7 +142,7 @@ def allocation_run():
             log_msg.append('Finish time: ' + finish_time)
 
             # Write the log file
-            add_user_log(user=login_user,location='Allocation',user_action='run allocation',email_option=email_option,status='Success')
+            add_user_log(user=login_user,location='Allocation',user_action='run allocation',summary='Success. Email sent to: ' + email_option)
             log_msg='\n'.join(log_msg)
             with open(os.path.join(base_dir_logs, 'log.txt'), 'a+') as file_object:
                 file_object.write(log_msg)
@@ -159,7 +159,7 @@ def allocation_run():
             flash('Error encountered in module : {} - {}'.format(module,e),'warning')
             #Write the log file
             add_user_log(user=login_user, location='Allocation', user_action='run allocation',
-                         email_option=email_option, status=e)
+                         summary='Error: ' + e)
             log_msg.append('ERROR!!!!' + pd.Timestamp.now().strftime('%H:%M:%S'))
             log_msg='\n'.join(log_msg)
             with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
@@ -188,8 +188,7 @@ def allocation_download():
         login_name = ''
 
     if login_user!='' and login_user!='kwang2':
-        add_user_log(user=login_user, location='Download', user_action='Visit', email_option='',
-                 status='')
+        add_user_log(user=login_user, location='Download', user_action='Visit', summary='')
 
     # output files
     file_list = os.listdir(base_dir_output)
@@ -266,15 +265,13 @@ def allocation_download():
                              'sourcing_rule': df_sourcing_rule}
 
             write_data_to_excel(os.path.join(f_path, fname), data_to_write)
-            add_user_log(user=login_user, location='Download', user_action='Download SCDx', email_option='',
-                         status='Success')
+            add_user_log(user=login_user, location='Download', user_action='Download SCDx', summary='Success: ' + pcba_site)
 
             return send_from_directory(f_path, filename=fname, as_attachment=True)
         except Exception as e:
             msg = 'Error downloading supply data from database! ' + str(e)
             flash(msg, 'warning')
-            add_user_log(user=login_user, location='Download', user_action='Download SCDx', email_option='',
-                         status=e)
+            add_user_log(user=login_user, location='Download', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + e)
 
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
@@ -292,8 +289,7 @@ def download_file(file_path):
     if login_user == None:
         login_user = ''
         login_name = ''
-    add_user_log(user=login_user, location='Download', user_action='Download file', email_option='',
-                 status=fname)
+    add_user_log(user=login_user, location='Download', user_action='Download file', summary=fname)
 
     return send_from_directory(f_path, filename=fname, as_attachment=True)
 
@@ -326,8 +322,7 @@ def allocation_admin():
         login_name = ''
 
     if login_user!='' and login_user!='kwang2':
-        add_user_log(user=login_user, location='Admin', user_action='Visit', email_option='',
-                     status='Warning')
+        add_user_log(user=login_user, location='Admin', user_action='Visit', summary='Warning')
         return redirect('https://pcba-allocation.cisco.com/allocation')
 
     # allocation output files
@@ -404,7 +399,7 @@ def allocation_admin():
 
     # read logs
     df_log_detail = read_table('user_log')
-    df_log_detail.sort_values(by=['DATE'],ascending=False,inplace=True)
+    df_log_detail.sort_values(by=['DATE','TIME'],ascending=False,inplace=True)
 
     if form.validate_on_submit():
         password=form.password.data
