@@ -14,9 +14,9 @@ from functions import *
 from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
 from settings import *
 from sending_email import *
-#from db_add import add_user_log
-#from db_read import read_table
-#from db_delete import delete_record
+from db_add import add_user_log
+from db_read import read_table
+from db_delete import delete_record
 import traceback
 import gc
 
@@ -34,6 +34,7 @@ def allocation_run():
         login_name=''
 
     if login_user!='' and login_user!='kwang2':
+        add_user_log(user=login_user,location='Allocation',user_action='visit',email_option='',status='')
         with open(os.path.join(base_dir_logs, 'log_visit.txt'), 'a+') as file_object:
             log_visit= '\n' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
             file_object.write(log_visit)
@@ -141,6 +142,7 @@ def allocation_run():
             log_msg.append('Finish time: ' + finish_time)
 
             # Write the log file
+            add_user_log(user=login_user,location='Allocation',user_action='run allocation',email_option=email_option,status='Success')
             log_msg='\n'.join(log_msg)
             with open(os.path.join(base_dir_logs, 'log.txt'), 'a+') as file_object:
                 file_object.write(log_msg)
@@ -156,6 +158,8 @@ def allocation_run():
             traceback.print_exc()
             flash('Error encountered in module : {} - {}'.format(module,e),'warning')
             #Write the log file
+            add_user_log(user=login_user, location='Allocation', user_action='run allocation',
+                         email_option=email_option, status=e)
             log_msg.append('ERROR!!!!' + pd.Timestamp.now().strftime('%H:%M:%S'))
             log_msg='\n'.join(log_msg)
             with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
@@ -182,6 +186,10 @@ def allocation_download():
     if login_user == None:
         login_user = ''
         login_name = ''
+
+    if login_user!='' and login_user!='kwang2':
+        add_user_log(user=login_user, location='Download', user_action='Visit', email_option='',
+                 status='')
 
     # output files
     file_list = os.listdir(base_dir_output)
@@ -258,10 +266,15 @@ def allocation_download():
                              'sourcing_rule': df_sourcing_rule}
 
             write_data_to_excel(os.path.join(f_path, fname), data_to_write)
+            add_user_log(user=login_user, location='Download', user_action='Download SCDx', email_option='',
+                         status='Success')
+
             return send_from_directory(f_path, filename=fname, as_attachment=True)
         except Exception as e:
             msg = 'Error downloading supply data from database! ' + str(e)
             flash(msg, 'warning')
+            add_user_log(user=login_user, location='Download', user_action='Download SCDx', email_option='',
+                         status=e)
 
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
@@ -271,13 +284,20 @@ def allocation_download():
 
 @app.route('/<path:file_path>',methods=['GET'])
 def download_file(file_path):
-    #form=FileDownloadForm()
-
     f_path,fname = os.path.split(file_path)
     f_path='/' + f_path
+
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    if login_user == None:
+        login_user = ''
+        login_name = ''
+    add_user_log(user=login_user, location='Download', user_action='Download file', email_option='',
+                 status='Success')
+
     return send_from_directory(f_path, filename=fname, as_attachment=True)
 
-# Beloe did now work out somehow
+# Below did now work out somehow - NOT USED
 @app.route('/delete/<path:file_path>',methods=['POST'])
 def delete_file(file_path):
     form=AdminForm()
@@ -305,7 +325,12 @@ def allocation_admin():
         login_user = ''
         login_name = ''
 
-   # allocation output files
+    if login_user!='' and login_user!='kwang2':
+        add_user_log(user=login_user, location='Admin', user_action='Visit', email_option='',
+                     status='Warning')
+        return redirect('https://pcba-allocation.cisco.com/allocation')
+
+    # allocation output files
     file_list = os.listdir(base_dir_output)
     files = []
     creation_time = []
@@ -377,8 +402,9 @@ def allocation_admin():
         {'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path': file_path})
     df_logs.sort_values(by='Creation_time', ascending=False, inplace=True)
 
-    if login_user != '' and login_user != 'kwang2':
-        return redirect('https://pcba-allocation.cisco.com/allocation')
+    # read logs
+    df_log_detail = read_table('user_log')
+    df_log_detail.sort_values(by=['DATE'],ascending=False,inplace=True)
 
     if form.validate_on_submit():
         password=form.password.data
@@ -400,11 +426,7 @@ def allocation_admin():
                 msg = 'Error file name! Ensure it is in output folder or upload folder: {}'.format(fname)
                 flash(msg, 'waning')
 
-            return render_template('allocation_admin.html',form=form,
-                           files_output=df_output.values,
-                           files_uploaded=df_upload.values,
-                           files_log=df_logs.values,
-                           user=login_name)
+            return redirect('https://pcba-allocation.cisco.com/admin')
 
         else:
             msg = 'Error password!'
@@ -414,6 +436,7 @@ def allocation_admin():
                            files_output=df_output.values,
                            files_uploaded=df_upload.values,
                            files_log=df_logs.values,
+                           log_details=df_log_detail.values,
                            user=login_name)
 
 # Below is a dummy one

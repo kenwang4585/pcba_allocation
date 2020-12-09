@@ -139,6 +139,34 @@
                                 {% endif %}
                     </td>
                 </tr>
+
+                <tr> <!-- For viewing the log details -->
+                    <td width="95%">
+                        <br><br><br>
+                                {% if log_details|length>0 %}
+                                    <p><strong> Log details:</strong></p>
+                                    <table style="border-collapse:collapse" border="1" cellspacing="0px" align="left">
+                                        <tr>
+                                            <td width="20"><span style="font-size: large;">&nbsp;&nbsp;id</span></td>
+                                            <td width="100"><span style="font-size: large;">&nbsp;&nbsp;User id</span></td>
+                                            <td width="100"><span style="font-size: large">&nbsp;&nbsp;Date</span></td>
+                                            <td width="100"><span style="font-size: large">&nbsp;&nbsp;Time</span></td>
+                                            <td width="100"><span style="font-size: large">&nbsp;&nbsp;Location</span></td>
+                                            <td width="120"><span style="font-size: large">&nbsp;&nbsp;User action</span></td>
+                                            <td width="120"><span style="font-size: large">&nbsp;&nbsp;Email option</span></td>
+                                            <td width="600"><span style="font-size: large">&nbsp;&nbsp;Status</span></td>
+                                        </tr>
+                                        {% for row in log_details %}
+                                            <tr>
+                                                {% for col in row %}
+                                                    <td><span style="font-size: small">&nbsp;&nbsp;&nbsp;{{col}}</span></td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                {% endif %}
+                    </td>
+                </tr>
         </table>
 
     </form>
