@@ -162,9 +162,9 @@ def allocation_run():
                          email_option=email_option, status=e)
             log_msg.append('ERROR!!!!' + pd.Timestamp.now().strftime('%H:%M:%S'))
             log_msg='\n'.join(log_msg)
-            with open(os.path.join(base_dir_output, 'log.txt'), 'a+') as file_object:
+            with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
                 file_object.write(log_msg)
-            traceback.print_exc(file=open(os.path.join(base_dir_output, 'log.txt'), 'a+'))
+            traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log.txt'), 'a+'))
 
         # clear memory
         try:
