@@ -59,8 +59,6 @@ def read_tan_group_mapping_from_smartsheet():
         for org in df_orgs:
             tan_group_sourcing.append(org + '-' + row.Group_name)
 
-    print(tan_group_sourcing)
-
     return tan_group, tan_group_sourcing
 
 
