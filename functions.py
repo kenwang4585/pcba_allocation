@@ -34,7 +34,7 @@ def read_backlog_priority_from_smartsheet():
 
 def read_tan_group_mapping_from_smartsheet():
     '''
-    Read TAN group mapping from smartsheet; change to version during processing.
+    Read TAN group mapping and tan-group sourcing from smartsheet; change to version during processing.
     :return:
     '''
     # 从smartsheet读取backlog
@@ -49,11 +49,19 @@ def read_tan_group_mapping_from_smartsheet():
     #  chagne to versionless
     df_smart=change_pn_to_versionless(df_smart, pn_col='TAN')
 
-    tan_group = {}
+    #
+    tan_group = {} #{TAN: Group}
+    tan_group_sourcing = [] # [org-group]
     for row in df_smart.itertuples():
         tan_group[row.TAN] = row.Group_name
+        df_orgs=row.DF.split('/')
+        df_orgs = [org.strip().upper() for org in df_orgs]
+        for org in df_orgs:
+            tan_group_sourcing.append(org + '-' + row.Group_name)
 
-    return tan_group
+    print(tan_group_sourcing)
+
+    return tan_group, tan_group_sourcing
 
 
 def read_exceptional_intransit_from_smartsheet():
@@ -1141,14 +1149,17 @@ def collect_available_sourcing(df_sourcing):
 
     return sourcing_rules
 
-def remove_unavailable_sourcing (df_3a4,sourcing_rules):
+def remove_unavailable_sourcing (df_3a4,sourcing_rules, tan_group_sourcing):
     """
     Removed the unavaialbe sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
+    Need to consider tan_group_sourcing as well.
     """
 
     df_3a4.loc[:,'org_pn']=df_3a4.ORGANIZATION_CODE+'-'+df_3a4.BOM_PN
 
-    df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules)].copy()
+    sourcing_rules_combined=sourcing_rules+tan_group_sourcing
+
+    df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules_combined)].copy()
 
     return df_3a4
 
@@ -1165,7 +1176,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     :return: None
     """
     # Read TAN group mapping from smartsheet
-    tan_group = read_tan_group_mapping_from_smartsheet()
+    tan_group,tan_group_sourcing = read_tan_group_mapping_from_smartsheet()
 
     # extract BU info for TAN from SCR for final report processing use
     tan_bu = extract_bu_from_scr(df_scr,tan_group)
@@ -1209,8 +1220,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
     # collect available sourcing rules
-    sourcing_rules=collect_available_sourcing(df_sourcing)
-    df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rules)
+    sourcing_rules=collect_available_sourcing(df_sourcing) # Below need to consider tan grouping sourcing as well
+    df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rules,tan_group_sourcing) # consider tan group sourcing too
 
     # create backlog dict for Tan exists in SCR
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys())
