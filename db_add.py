@@ -19,7 +19,7 @@ def add_user_log(user='', location='', user_action='',summary=''):
 
     db.session.add(log)  # can also use add_all() for multiple adding at one time
     db.session.commit()
-    print('User log added')
+    #print('User log added')
 
 def add_data_from_file_initial():
     '''
