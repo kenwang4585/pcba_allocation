@@ -332,19 +332,18 @@ def allocation_admin():
     file_size = []
     file_path = []
     for file in file_list:
-        if file[:1] != '.' and file[:1] != '~' and file!='log.txt':
-            c_time = os.stat(os.path.join(base_dir_output, file)).st_ctime
-            c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
-            file_s = os.path.getsize(os.path.join(base_dir_output, file))
-            if file_s > 1024 * 1024:
-                file_s = str(round(file_s/(1024*1024),1)) + 'M'
-            else:
-                file_s = str(int(file_s / 1024)) + 'K'
+        c_time = os.stat(os.path.join(base_dir_output, file)).st_ctime
+        c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
+        file_s = os.path.getsize(os.path.join(base_dir_output, file))
+        if file_s > 1024 * 1024:
+            file_s = str(round(file_s/(1024*1024),1)) + 'M'
+        else:
+            file_s = str(int(file_s / 1024)) + 'K'
 
-            files.append(file)
-            creation_time.append(c_time)
-            file_size.append(file_s)
-            file_path.append(os.path.join(base_dir_output,file))
+        files.append(file)
+        creation_time.append(c_time)
+        file_size.append(file_s)
+        file_path.append(os.path.join(base_dir_output,file))
     df_output=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size, 'File_path':file_path})
     df_output.sort_values(by='Creation_time',ascending=False,inplace=True)
     #files.sort(key=lambda x:x[-17:-5]) # 排序
@@ -357,19 +356,18 @@ def allocation_admin():
     file_size = []
     file_path = []
     for file in file_list:
-        if file[:1] != '.' and file[:1] != '~':
-            c_time = os.stat(os.path.join(base_dir_upload, file)).st_ctime
-            c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
-            file_s = os.path.getsize(os.path.join(base_dir_upload, file))
-            if file_s > 1024 * 1024:
-                file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
-            else:
-                file_s = str(int(file_s / 1024)) + 'K'
+        c_time = os.stat(os.path.join(base_dir_upload, file)).st_ctime
+        c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
+        file_s = os.path.getsize(os.path.join(base_dir_upload, file))
+        if file_s > 1024 * 1024:
+            file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
+        else:
+            file_s = str(int(file_s / 1024)) + 'K'
 
-            files.append(file)
-            creation_time.append(c_time)
-            file_size.append(file_s)
-            file_path.append(os.path.join(base_dir_upload, file))
+        files.append(file)
+        creation_time.append(c_time)
+        file_size.append(file_s)
+        file_path.append(os.path.join(base_dir_upload, file))
     df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path':file_path})
     df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
 
@@ -380,19 +378,18 @@ def allocation_admin():
     file_size = []
     file_path = []
     for file in file_list:
-        if file[:1] != '.' and file[:1] != '~':
-            c_time = os.stat(os.path.join(base_dir_logs, file)).st_ctime
-            c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
-            file_s = os.path.getsize(os.path.join(base_dir_logs, file))
-            if file_s > 1024 * 1024:
-                file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
-            else:
-                file_s = str(int(file_s / 1024)) + 'K'
+        c_time = os.stat(os.path.join(base_dir_logs, file)).st_ctime
+        c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
+        file_s = os.path.getsize(os.path.join(base_dir_logs, file))
+        if file_s > 1024 * 1024:
+            file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
+        else:
+            file_s = str(int(file_s / 1024)) + 'K'
 
-            files.append(file)
-            creation_time.append(c_time)
-            file_size.append(file_s)
-            file_path.append(os.path.join(base_dir_logs, file))
+        files.append(file)
+        creation_time.append(c_time)
+        file_size.append(file_s)
+        file_path.append(os.path.join(base_dir_logs, file))
     df_logs = pd.DataFrame(
         {'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path': file_path})
     df_logs.sort_values(by='Creation_time', ascending=False, inplace=True)
@@ -419,7 +416,7 @@ def allocation_admin():
                 flash(msg, 'success')
             else:
                 msg = 'Error file name! Ensure it is in output folder or upload folder: {}'.format(fname)
-                flash(msg, 'waning')
+                flash(msg, 'warning')
 
             return redirect('https://pcba-allocation.cisco.com/admin')
 
