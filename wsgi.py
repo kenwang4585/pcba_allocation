@@ -67,8 +67,8 @@ def allocation_run():
         file_path_3a4 = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_3a4.filename))
         file_path_supply = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_supply.filename))
         # save the files to server
-        f_3a4.save(file_path_3a4)
-        f_supply.save(file_path_supply)
+        #f_3a4.save(file_path_3a4)
+        #f_supply.save(file_path_supply)
 
         # check and store file size - after file is saved
         size_3a4=os.path.getsize(file_path_3a4)
