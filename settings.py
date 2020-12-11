@@ -49,24 +49,22 @@ else:
 
 output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','distinct_po_filter', 'PRODUCT_ID',
            'TAN','BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
-           'ORIGINAL_FCD_NBD_DATE','ossd_offset','CURRENT_FCD_NBD_DATE','fcd_offset', 'TARGET_SSD','LT_TARGET_FCD','C_UNSTAGED_DOLLARS',
-            'ss_unstg_rev',
+           'CURRENT_FCD_NBD_DATE','fcd_offset','ORIGINAL_FCD_NBD_DATE','ossd_offset', 'TARGET_SSD','LT_TARGET_FCD','C_UNSTAGED_DOLLARS',
+            'ss_unstg_rev','REVENUE_NON_REVENUE',
             'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN','PROGRAM']
 
 col_3a4_must_have=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','PRODUCT_ID',
            'TAN','ADDRESSABLE_FLAG','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
            'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','LT_TARGET_FCD','PROGRAM','C_UNSTAGED_DOLLARS',
-            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN']
+            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN','REVENUE_NON_REVENUE']
 
 col_transit_must_have=['planningOrg','TAN','BU','ETA_date','In-transit_quantity']
 col_oh_must_have=['planningOrg','TAN','BU','OH']
 col_scr_must_have=['planningOrg','TAN','BU','SCRDate','SCRQuantity']
 
-# Revenue rank
-ranking_col_cust = ['priority_rank', 'ossd_offset', 'fcd_offset', 'PROGRAM',
+# rank sequences
+ranking_col_cust = ['priority_rank_top', 'fcd_offset', 'priority_rank_mid','ossd_offset',
                            'C_UNSTAGED_QTY', 'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
-ranking_col_rev = ['priority_rank', 'ss_rev_rank', 'ossd_offset', 'fcd_offset',
-                           'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
 
 # email options
 cisco_recipients=['kogoh@cisco.com',
