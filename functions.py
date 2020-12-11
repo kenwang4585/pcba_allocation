@@ -28,7 +28,7 @@ def read_backlog_priority_from_smartsheet():
     priority_mid = {}
     for row in df_smart.itertuples():
         try: # in case error input of non-num ranking
-            if row.Ranking<4:
+            if float(row.Ranking)<4:
                 priority_top[row.SO_SS] = float(row.Ranking)
             else:
                 priority_mid[row.SO_SS] = float(row.Ranking)
