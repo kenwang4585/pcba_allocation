@@ -149,7 +149,7 @@ def allocation_run():
 
             print(module,': ', e)
             traceback.print_exc()
-            log_msg.append(e)
+            log_msg.append(str(e))
             flash('Error encountered in module : {} - {}'.format(module,e),'warning')
             #Write the log file
             summary = '; '.join(log_msg)

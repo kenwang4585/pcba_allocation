@@ -50,24 +50,27 @@ def read_tan_group_mapping_from_smartsheet():
     sheet_id = os.getenv('TAN_GROUP_ID')
     proxies = None  # for proxy server
     smartsheet_client = SmartSheetClient(token, proxies)
-    df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
+    df_grouping = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
-    df_smart = df_smart[(df_smart.Group_name.notnull()) & (df_smart.TAN.notnull())]
+    df_grouping = df_grouping[(df_grouping.Group_name.notnull()) & (df_grouping.TAN.notnull())]
 
     #  chagne to versionless
-    df_smart=change_pn_to_versionless(df_smart, pn_col='TAN')
+    df_grouping=change_pn_to_versionless(df_grouping, pn_col='TAN')
 
     #
     tan_group = {} #{TAN: Group}
     tan_group_sourcing = [] # [org-group]
-    for row in df_smart.itertuples():
+    for row in df_grouping.itertuples():
         tan_group[row.TAN] = row.Group_name
         df_orgs=row.DF.split('/')
         df_orgs = [org.strip().upper() for org in df_orgs]
         for org in df_orgs:
             tan_group_sourcing.append(org + '-' + row.Group_name)
 
-    return tan_group, tan_group_sourcing
+    df_grouping.drop(['index','row_id'],axis=1,inplace=True)
+    df_grouping.set_index('Group_name',inplace=True)
+
+    return df_grouping, tan_group, tan_group_sourcing
 
 
 def read_exceptional_intransit_from_smartsheet():
@@ -841,7 +844,7 @@ def write_data_to_excel(output_file,data_to_write):
 
     writer.save()
 
-def write_excel_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,login_user):
+def write_excel_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_sourcing,df_grouping,login_user):
     # save the scr output file and 3a4 to excel
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
@@ -863,8 +866,10 @@ def write_excel_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,login_us
     df_transit.set_index(['planningOrg'], inplace=True)
     df_transit.rename(columns={'In-transit':'Total'},inplace=True)
     data_to_write = {'pcba_allocation': df_scr,
-                     '3a4_backlog': df_3a4,
-                     'in-transit': df_transit}
+                     'backlog_ranked': df_3a4,
+                     'in-transit': df_transit,
+                     'sourcing_rule':df_sourcing,
+                     'tan_group':df_grouping}
 
     write_data_to_excel(output_path, data_to_write)
 
@@ -1273,7 +1278,10 @@ def collect_available_sourcing(df_sourcing):
     for row in df_sourcing.itertuples():
         sourcing_rules.append(row.org_tan)
 
-    return sourcing_rules
+    df_sourcing.drop(['tan_versionless','org_tan'],axis=1,inplace=True)
+    df_sourcing.set_index('version',inplace=True)
+
+    return df_sourcing,sourcing_rules
 
 def remove_unavailable_sourcing (df_3a4,sourcing_rules, tan_group_sourcing):
     """
@@ -1302,7 +1310,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     :return: None
     """
     # Read TAN group mapping from smartsheet
-    tan_group,tan_group_sourcing = read_tan_group_mapping_from_smartsheet()
+    df_grouping, tan_group,tan_group_sourcing = read_tan_group_mapping_from_smartsheet()
 
     # extract BU info for TAN from SCR for final report processing use
     tan_bu = extract_bu_from_scr(df_scr,tan_group)
@@ -1346,7 +1354,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
     # collect available sourcing rules
-    sourcing_rules=collect_available_sourcing(df_sourcing) # Below need to consider tan grouping sourcing as well
+    df_sourcing, sourcing_rules=collect_available_sourcing(df_sourcing) # Below need to consider tan grouping sourcing as well
     df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rules,tan_group_sourcing) # consider tan group sourcing too
 
     # create backlog dict for Tan exists in SCR
@@ -1416,7 +1424,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
 
     # 存储文件
-    output_filename = write_excel_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,login_user)
+    output_filename = write_excel_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_sourcing,df_grouping,login_user)
 
     return output_filename
 
