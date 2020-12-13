@@ -846,6 +846,9 @@ def write_excel_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,login_us
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
 
+    if login_user=='':
+        login_user='(testing)'
+
     if bu_list != ['']:
         bu = ' '.join(bu_list)
         output_filename = pcba_site + ' SCR allocation (' + bu + ') ' + login_user + ' ' + dt + '.xlsx'
@@ -1222,7 +1225,10 @@ def send_allocation_result(email_option,output_filename,file_3a4,file_supply,siz
     #att_files_allocation = [(base_dir_output, output_filename)]  # List of tuples (path, file_name)
 
     if email_option=='to_me':
-        to_address = [login_user + '@cisco.com']
+        if login_user=='':
+            to_address = ['kwang2@cisco.com']
+        else:
+            to_address = [login_user + '@cisco.com']
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
                                          embeded_filenames=None, sender='PCBA_Allocation',
                                          file_3a4=file_3a4,

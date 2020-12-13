@@ -35,18 +35,12 @@ def allocation_run():
 
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user,location='Allocation',user_action='visit',summary='')
-        with open(os.path.join(base_dir_logs, 'log_visit.txt'), 'a+') as file_object:
-            log_visit= '\n' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
-            file_object.write(log_visit)
 
     if form.validate_on_submit():
+        start_time = pd.Timestamp.now()
         log_msg = []
-        log_msg.append('\n\n[Making allocation] - ' + login_user + ' - ' + pd.Timestamp.now().strftime('%Y-%m-%d'))
+        log_msg.append('\n\n[' + login_user + '] ' + start_time.strftime('%Y-%m-%d %H:%M'))
         #log_msg.append('User info: ' + request.headers.get('User-agent'))
-
-        start_time=pd.Timestamp.now().strftime('%H:%M:%S')
-        print('Start time:', start_time)
-        log_msg.append('Start time: ' + start_time)
 
         # 通过条件判断及邮件赋值，开始执行任务
         pcba_site=form.org.data
@@ -108,8 +102,8 @@ def allocation_run():
        # 判断并定义ranking_col
         if ranking_logic == 'cus_sat':
             ranking_col = ranking_col_cust
-        elif ranking_logic == 'max_rev':
-            ranking_col = ranking_col_rev
+        #elif ranking_logic == 'max_rev':
+        #    ranking_col = ranking_col_rev
 
         try:
             # 读取数据
@@ -137,15 +131,14 @@ def allocation_run():
                                        size_3a4,size_supply,bu_list,pcba_site,login_user)
             flash(msg, 'success')
 
-            finish_time=pd.Timestamp.now().strftime('%H:%M:%S')
-            print('Finish run:',finish_time)
-            log_msg.append('Finish time: ' + finish_time)
+            finish_time = pd.Timestamp.now()
+            processing_time = round((finish_time - start_time).total_seconds() / 60, 1)
+            log_msg.append('Processing time: ' + str(processing_time) + ' min')
+            print('Finish run:',finish_time.strftime('%H:%M'))
 
             # Write the log file
-            add_user_log(user=login_user,location='Allocation',user_action='run allocation',summary='Success. Email sent to: ' + email_option)
-            log_msg='\n'.join(log_msg)
-            with open(os.path.join(base_dir_logs, 'log.txt'), 'a+') as file_object:
-                file_object.write(log_msg)
+            summary='; '.join(log_msg)
+            add_user_log(user=login_user,location='Allocation',user_action='Make allocation',summary=summary)
 
         except Exception as e:
             try:
@@ -156,15 +149,17 @@ def allocation_run():
 
             print(module,': ', e)
             traceback.print_exc()
+            log_msg.append(e)
             flash('Error encountered in module : {} - {}'.format(module,e),'warning')
             #Write the log file
-            add_user_log(user=login_user, location='Allocation', user_action='run allocation',
-                         summary='Error: ' + e)
-            log_msg.append('ERROR!!!!' + pd.Timestamp.now().strftime('%H:%M:%S'))
+            summary = '; '.join(log_msg)
+            add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
+
+            # write details to error_log.txt
             log_msg='\n'.join(log_msg)
             with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
                 file_object.write(log_msg)
-            traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log.txt'), 'a+'))
+            traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
 
         # clear memory
         try:
