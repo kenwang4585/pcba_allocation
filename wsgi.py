@@ -97,7 +97,7 @@ def allocation_run():
             flash(msg_scr,'warning')
 
         if sheet_name_msg!='' or msg_3a4!='' or msg_3a4_option!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
-            return render_template('allocation_run.html', form=form)
+            return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
        # 判断并定义ranking_col
         if ranking_logic == 'cus_sat':
@@ -114,11 +114,11 @@ def allocation_run():
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
             if df_3a4.shape[0] == 0:
                 flash('The 3a4 data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return render_template('allocation_run.html', form=form)
+                return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
             if df_scr.shape[0] == 0:
                 flash('The SCR data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return render_template('allocation_run.html', form=form)
+                return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
             #### main program
             module='Main program for allocation'
@@ -168,7 +168,7 @@ def allocation_run():
         except:
             print('')
 
-        return render_template('allocation_run.html', form=form, user=login_name)
+        return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
     return render_template('allocation_run.html', form=form, user=login_name)
 
@@ -248,10 +248,7 @@ def allocation_download():
         if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ']:
             msg = "'{}' seems not a PCBA org??".format(pcba_site)
             flash(msg, 'warning')
-            return render_template('allocation_download.html',form=form,
-                           files_output=df_output.values,
-                           files_uploaded=df_upload.values,
-                           user=login_name)
+            return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
         try:
             df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
             data_to_write = {'scr': df_scr,
@@ -318,7 +315,7 @@ def allocation_admin():
 
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user, location='Admin', user_action='Visit', summary='Warning')
-        return redirect('https://pcba-allocation.cisco.com/allocation')
+        return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
     # allocation output files
     file_list = os.listdir(base_dir_output)
@@ -418,6 +415,7 @@ def allocation_admin():
         else:
             msg = 'Error password!'
             flash(msg, 'warning')
+            return redirect(url_for('allocation_admin', _external=True, _scheme='https', viewarg1=1))
 
     return render_template('allocation_admin.html',form=form,
                            files_output=df_output.values,
