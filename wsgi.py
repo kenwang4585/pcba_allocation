@@ -413,7 +413,7 @@ def allocation_admin():
                 msg = 'Error file name! Ensure it is in output folder or upload folder: {}'.format(fname)
                 flash(msg, 'warning')
 
-            return redirect(url_for('allocation_admin'))
+            return redirect(url_for('allocation_admin',_external=True,_scheme='https',viewarg1=1))
 
         else:
             msg = 'Error password!'
