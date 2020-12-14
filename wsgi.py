@@ -413,7 +413,7 @@ def allocation_admin():
                 msg = 'Error file name! Ensure it is in output folder or upload folder: {}'.format(fname)
                 flash(msg, 'warning')
 
-            return redirect('https://pcba-allocation.cisco.com/admin')
+            return redirect(url_for('allocation_admin'))
 
         else:
             msg = 'Error password!'
