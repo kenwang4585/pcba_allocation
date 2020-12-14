@@ -16,7 +16,7 @@ from settings import *
 from sending_email import *
 from db_add import add_user_log
 from db_read import read_table
-from db_delete import delete_record
+#from db_delete import delete_record
 import traceback
 import gc
 
@@ -38,6 +38,7 @@ def allocation_run():
 
     if form.validate_on_submit():
         start_time = pd.Timestamp.now()
+        print('start to run: {}'.format(start_time.strftime('%Y-%m-%d %H:%M')))
         log_msg = []
         log_msg.append('\n\n[' + login_user + '] ' + start_time.strftime('%Y-%m-%d %H:%M'))
         #log_msg.append('User info: ' + request.headers.get('User-agent'))
@@ -134,7 +135,7 @@ def allocation_run():
             finish_time = pd.Timestamp.now()
             processing_time = round((finish_time - start_time).total_seconds() / 60, 1)
             log_msg.append('Processing time: ' + str(processing_time) + ' min')
-            print('Finish run:',finish_time.strftime('%H:%M'))
+            print('Finish run:',finish_time.strftime('%Y-%m-%d %H:%M'))
 
             # Write the log file
             summary='; '.join(log_msg)
@@ -282,6 +283,11 @@ def download_file(file_path):
         login_user = ''
         login_name = ''
     add_user_log(user=login_user, location='Download', user_action='Download file', summary=fname)
+
+    if fname=='favicon.ico':
+        log_msg='Downloading favicon.ico. Path: ' + f_path
+        with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+            file_object.write(log_msg)
 
     return send_from_directory(f_path, filename=fname, as_attachment=True)
 

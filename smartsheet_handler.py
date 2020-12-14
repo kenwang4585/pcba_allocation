@@ -65,12 +65,12 @@ class SmartSheetClient:
         values = [[x.get('displayValue') for x in y] for y in rows]
         return pd.DataFrame(values)
 
-    def delete_row(self,ss=None,sheet_id=None,row_id=None):
+    def delete_row(self,sheet_id=None,row_id=None):
         '''
         Delete rows from Smartsheet
         Added by Ken
         '''
-        ss.Sheets.delete_rows(sheet_id, [row_id])
+        self.smartsheet_client.Sheets.delete_rows(sheet_id, row_id)
         
         
         
@@ -140,7 +140,7 @@ class SmartSheetClient:
     
 
 if __name__ == '__main__':
-    # input token for smartsheet
+    #input token for smartsheet
     #token = 'TEST'
     proxies = None  # for proxy server
     smartsheet_client = SmartSheetClient(token, proxies)

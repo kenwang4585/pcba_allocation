@@ -9,9 +9,10 @@ from smartsheet_handler import SmartSheetClient
 from sending_email import *
 
 
-def read_backlog_priority_from_smartsheet():
+def read_backlog_priority_from_smartsheet(df_3a4):
     '''
-    Read backlog priorities from smartsheet; segregate to top priority and mid priority
+    Read backlog priorities from smartsheet; remove SS already disappear from 34(cancelled/packed);
+     create and segregate to top priority and mid priority
     :return:
     '''
     # 从smartsheet读取backlog
@@ -21,6 +22,18 @@ def read_backlog_priority_from_smartsheet():
     smartsheet_client = SmartSheetClient(token, proxies)
     df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
+    # remove SS not in df_3a4
+    """ Below need to update - instead of delete not-existing ones, plan delete only those marked as packed/cancelled to avoid wrong delete
+    df_removal=df_smart[~df_smart.SO_SS.isin(df_3a4.SO_SS)]
+    row_id=df_removal.row_id.values
+    print(row_id)
+    for id in row_id[:2]:
+        smartsheet_client.delete_row(sheet_id=sheet_id, row_id=[id])
+        print(id)
+    #print('Below SO_SS removed from exceptional priority smartsheet: {}'.format(df_removal.SO_SS.values))
+    """
+
+    # create the priority dict
     df_smart.drop_duplicates('SO_SS', keep='last', inplace=True)
     df_smart = df_smart[(df_smart.SO_SS.notnull()) & (df_smart.Ranking.notnull())]
     ss_priority = {}
@@ -1345,8 +1358,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
 
-    # read smartsheet for exceptional priority ss
-    ss_priority=read_backlog_priority_from_smartsheet()
+    # Remove the SS not in df_3a4 from exceptional priority smartsheet and read the rest data
+    ss_priority=read_backlog_priority_from_smartsheet(df_3a4)
     # Rank the orders
     df_3a4 = ss_ranking_overall_new_december(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
 

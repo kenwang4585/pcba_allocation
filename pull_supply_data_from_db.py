@@ -1,6 +1,5 @@
 from pymongo import MongoClient
 import pandas as pd
-from datetime import datetime
 import os
 
 def collect_scr_oh_transit_from_scdx(pcba_site):
@@ -110,30 +109,13 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
     cursor3 = table.aggregate(pipeline_scr,allowDiskUse=False)
     cursor4 = table.aggregate(pipeline_sourcing_rule,allowDiskUse=False)
 
-    df_intransit = pd.DataFrame()
-    df_oh = pd.DataFrame()
-    df_scr = pd.DataFrame()
-    df_sourcing_rule = pd.DataFrame()
-
-
-
-    for doc in cursor1:
-        df = pd.DataFrame(doc, index=[0])
-        df_intransit = df_intransit.append(df)
-    for doc in cursor2:
-        df = pd.DataFrame(doc, index=[0])
-        df_oh = df_oh.append(df)
-    for doc in cursor4:
-        df = pd.DataFrame(doc, index=[0])
-        df_sourcing_rule = df_sourcing_rule.append(df)
-
-    for doc in cursor3:
-        df = pd.DataFrame(doc, index=[0])
-        df_scr = df_scr.append(df)
-
+    df_intransit=pd.DataFrame(cursor1)
+    df_oh=pd.DataFrame(cursor2)
+    df_scr=pd.DataFrame(cursor3)
+    df_sourcing_rule=pd.DataFrame(cursor4)
 
     client.close()
-    #return df_scr
+
     return df_scr,df_oh,df_intransit,df_sourcing_rule
 
 
@@ -141,13 +123,8 @@ if __name__=='__main__':
     pcba_site='FOL'
     a=pd.Timestamp.now()
     df_scr, df_oh, df_intransit, df_sourcing_rule=collect_scr_oh_transit_from_scdx(pcba_site)
-    #df_scr = collect_scr_oh_transit_from_scdx(pcba_site)
-    b = pd.Timestamp.now()
-    print(b - a)
-    print(df_scr.head())
-    """
-    today = datetime.today()
-    outPath = os.path.join(os.getcwd(), 'SCR_OH_Intransit_' + today.strftime('%m%d %Hh%Mm') + '.xlsx')
+
+    outPath = os.path.join(os.getcwd(), 'SCR_OH_Intransit_' + a.strftime('%m%d %Hh%Mm') + '.xlsx')
     writer = pd.ExcelWriter(outPath,engine='xlsxwriter')
     
     df_intransit.to_excel(writer, sheet_name='in-transit', index=False)
@@ -155,6 +132,6 @@ if __name__=='__main__':
     df_scr.to_excel(writer, sheet_name='scr', index=False)
     df_sourcing_rule.to_excel(writer, sheet_name='sourcing_rule', index=False)
     writer.save()
-    print(datetime.today().now())
     #writer.close()
-    """
+    b = pd.Timestamp.now()
+    print(b - a)
