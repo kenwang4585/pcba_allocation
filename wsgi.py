@@ -285,7 +285,7 @@ def download_file(file_path):
     add_user_log(user=login_user, location='Download', user_action='Download file', summary=fname)
 
     if fname=='favicon.ico':
-        log_msg='Downloading favicon.ico. Path: ' + f_path
+        log_msg='Somehow fname==favicon... filepath: ' + file_path
         with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
             file_object.write(log_msg)
 

@@ -8,6 +8,21 @@ from settings import *
 from smartsheet_handler import SmartSheetClient
 from sending_email import *
 
+def get_packed_or_cancelled_ss_from_3a4(df_3a4):
+    """
+    Get the fully packed or canceleld SS from 3a4 - for deleting exceptional priority smartsheet purpose.
+    """
+    ss_cancelled=df_3a4[df_3a4.ADDRESSABLE_FLAG=='PO_CANCELLED'].SO_SS.unique()
+
+    ss_with_po_packed=df_3a4[df_3a4.PACKOUT_QUANTITY=='Packout Completed'].SO_SS.unique()
+    ss_wo_po_packed = df_3a4[df_3a4.PACKOUT_QUANTITY != 'Packout Completed'].SO_SS.unique() # some PO may not be packed in one SS
+    ss_fully_packed=np.setdiff1d(ss_with_po_packed,ss_wo_po_packed)
+
+    ss_packed_not_cancelled=np.setdiff1d(ss_fully_packed,ss_cancelled)
+
+    ss_cancelled_or_packed_3a4=ss_cancelled.tolist()+ss_packed_not_cancelled.tolist()
+
+    return ss_cancelled_or_packed_3a4
 
 def read_backlog_priority_from_smartsheet(df_3a4):
     '''
@@ -23,15 +38,13 @@ def read_backlog_priority_from_smartsheet(df_3a4):
     df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
     # remove SS not in df_3a4
-    """ Below need to update - instead of delete not-existing ones, plan delete only those marked as packed/cancelled to avoid wrong delete
-    df_removal=df_smart[~df_smart.SO_SS.isin(df_3a4.SO_SS)]
-    row_id=df_removal.row_id.values
-    print(row_id)
-    for id in row_id[:2]:
-        smartsheet_client.delete_row(sheet_id=sheet_id, row_id=[id])
-        print(id)
-    #print('Below SO_SS removed from exceptional priority smartsheet: {}'.format(df_removal.SO_SS.values))
-    """
+    ss_cancelled_or_packed_3a4=get_packed_or_cancelled_ss_from_3a4(df_3a4)
+    df_removal=df_smart[df_smart.SO_SS.isin(ss_cancelled_or_packed_3a4)]
+    removal_row_id=df_removal.row_id.values.tolist()
+    removal_ss_email=list(set(df_removal['Created By'].values.tolist()))
+    removal_ss_email = removal_ss_email + ['kwang2@cisco.com','manfan@cisco.com']
+
+    smartsheet_client.delete_row(sheet_id=sheet_id, row_id=removal_row_id)
 
     # create the priority dict
     df_smart.drop_duplicates('SO_SS', keep='last', inplace=True)
@@ -51,7 +64,22 @@ def read_backlog_priority_from_smartsheet(df_3a4):
         ss_priority['priority_top'] = priority_top
         ss_priority['priority_mid'] = priority_mid
 
-    return ss_priority
+    return ss_priority,removal_ss_email,df_removal
+
+
+def send_email_for_priority_ss_removal(removal_ss_email,df_removal,login_user):
+    """
+    Send email to corresponding people for whose SS are removed from the priority smartsheet
+    """
+    to_address = removal_ss_email
+    html_template='priority_ss_removal_email.html'
+    subject='Exceptional priority smartsheet: cancelled/packed SS removal notification'
+    send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
+                                     embeded_filenames=None, sender='PCBA_Allocation',
+                                     removal_ss_header=df_removal.columns,
+                                     removal_ss_details=df_removal.values,
+                                     user=login_user)
+
 
 def read_tan_group_mapping_from_smartsheet():
     '''
@@ -1019,7 +1047,7 @@ def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col
 
     return sheet_name_msg, msg_3a4, msg_3a4_option, msg_transit,msg_oh,msg_scr
 
-def redefine_addressable_flag_main_pip_version(df_3a4):
+def redefine_addressable_flag_main_pid_version(df_3a4):
     '''
     Updated on Oct 27, 2020 to leveraging existing addressable definition of Y, and redefine the NO to MFG_HOLD,
     UNSCHEDULED,PACKED,PO_CANCELLED,NON_REVENUE
@@ -1354,12 +1382,16 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
         axis=1)
 
     # redefine addressable flag
-    df_3a4=redefine_addressable_flag_main_pip_version(df_3a4)
-    # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
-    df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
+    df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
 
-    # Remove the SS not in df_3a4 from exceptional priority smartsheet and read the rest data
-    ss_priority=read_backlog_priority_from_smartsheet(df_3a4)
+    # read from exceptional priority smartsheet for ss priority - remove the packed/cancelled one the same time
+    ss_priority,removal_ss_email,df_removal = read_backlog_priority_from_smartsheet(df_3a4)
+
+    # send email notification for ss removal from exceptional priority smartsheet
+    send_email_for_priority_ss_removal(removal_ss_email, df_removal, login_user)
+
+   # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
+    df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
     # Rank the orders
     df_3a4 = ss_ranking_overall_new_december(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
 
