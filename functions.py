@@ -71,14 +71,15 @@ def send_email_for_priority_ss_removal(removal_ss_email,df_removal,login_user):
     """
     Send email to corresponding people for whose SS are removed from the priority smartsheet
     """
-    to_address = removal_ss_email
-    html_template='priority_ss_removal_email.html'
-    subject='Exceptional priority smartsheet: cancelled/packed SS removal notification'
-    send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
-                                     embeded_filenames=None, sender='PCBA_Allocation',
-                                     removal_ss_header=df_removal.columns,
-                                     removal_ss_details=df_removal.values,
-                                     user=login_user)
+    if df_removal.shape[0]>0:
+        to_address = removal_ss_email
+        html_template='priority_ss_removal_email.html'
+        subject='Exceptional priority smartsheet: cancelled/packed SS removal notification'
+        send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
+                                         embeded_filenames=None, sender='PCBA_Allocation',
+                                         removal_ss_header=df_removal.columns,
+                                         removal_ss_details=df_removal.values,
+                                         user=login_user)
 
 
 def read_tan_group_mapping_from_smartsheet():
