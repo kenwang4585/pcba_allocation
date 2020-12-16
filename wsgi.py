@@ -246,8 +246,8 @@ def allocation_download():
         fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm') + '.xlsx'
         log_msg.append('Download supply from DB')
 
-        if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ']:
-            msg = "'{}' seems not a PCBA org??".format(pcba_site)
+        if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']:
+            msg = "'{}' is not a PCBA org.".format(pcba_site)
             flash(msg, 'warning')
             return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
         try:
@@ -369,6 +369,29 @@ def allocation_admin():
     df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path':file_path})
     df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
 
+    # files uploaded by user
+    file_list = os.listdir(base_dir_supply)
+    files = []
+    creation_time = []
+    file_size = []
+    file_path = []
+    for file in file_list:
+        c_time = os.stat(os.path.join(base_dir_supply, file)).st_ctime
+        c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
+        file_s = os.path.getsize(os.path.join(base_dir_supply, file))
+        if file_s > 1024 * 1024:
+            file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
+        else:
+            file_s = str(int(file_s / 1024)) + 'K'
+
+        files.append(file)
+        creation_time.append(c_time)
+        file_size.append(file_s)
+        file_path.append(os.path.join(base_dir_supply, file))
+    df_supply = pd.DataFrame(
+        {'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path': file_path})
+    df_supply.sort_values(by='Creation_time', ascending=False, inplace=True)
+
     # log files
     file_list = os.listdir(base_dir_logs)
     files = []
@@ -397,35 +420,32 @@ def allocation_admin():
     df_log_detail.sort_values(by=['DATE','TIME'],ascending=False,inplace=True)
 
     if form.validate_on_submit():
-        password=form.password.data
         fname=form.file_name.data
-
-        if password==os.getenv('PASSWORD'):
-            if fname in df_output.File_name.values:
-                f_path=df_output[df_output.File_name==fname].File_path.values[0]
-                print(f_path)
-                os.remove(f_path)
-                msg='{} removed!'.format(fname)
-                flash(msg,'success')
-            elif fname in df_upload.File_name.values:
-                f_path = df_upload[df_upload.File_name == fname].File_path.values[0]
-                os.remove(f_path)
-                msg = '{} removed!'.format(fname)
-                flash(msg, 'success')
-            else:
-                msg = 'Error file name! Ensure it is in output folder or upload folder: {}'.format(fname)
-                flash(msg, 'warning')
-
-            return redirect(url_for('allocation_admin',_external=True,_scheme='https',viewarg1=1))
-
+        print(fname)
+        if fname in df_output.File_name.values:
+            f_path=df_output[df_output.File_name==fname].File_path.values[0]
+            os.remove(f_path)
+            msg='{} removed!'.format(fname)
+            flash(msg,'success')
+        elif fname in df_upload.File_name.values:
+            f_path = df_upload[df_upload.File_name == fname].File_path.values[0]
+            os.remove(f_path)
+            msg = '{} removed!'.format(fname)
+            flash(msg, 'success')
+        elif fname in df_supply.File_name.values:
+            f_path = df_supply[df_supply.File_name == fname].File_path.values[0]
+            os.remove(f_path)
+            msg = '{} removed!'.format(fname)
+            flash(msg, 'success')
         else:
-            msg = 'Error password!'
+            msg = 'Error file name! Ensure it is in output folder,upload folder or supply folder: {}'.format(fname)
             flash(msg, 'warning')
-            return redirect(url_for('allocation_admin', _external=True, _scheme='https', viewarg1=1))
+            return redirect(url_for('allocation_admin',_external=True,_scheme='https',viewarg1=1))
 
     return render_template('allocation_admin.html',form=form,
                            files_output=df_output.values,
                            files_uploaded=df_upload.values,
+                           files_supply=df_supply.values,
                            files_log=df_logs.values,
                            log_details=df_log_detail.values,
                            user=login_name)

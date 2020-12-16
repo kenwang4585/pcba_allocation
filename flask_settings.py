@@ -49,8 +49,7 @@ class FileDownloadForm(FlaskForm):
     submit_download_supply=SubmitField('Download') # download from db
 
 class AdminForm(FlaskForm):
-    password=PasswordField('Password:',validators=[DataRequired()],default='')
-    file_name=StringField()
+    file_name=StringField(validators=[DataRequired()])
     submit_delete=SubmitField('Delete')
 
 

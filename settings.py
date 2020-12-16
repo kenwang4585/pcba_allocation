@@ -8,8 +8,6 @@ sheet_oh='oh'
 sheet_sourcing='sourcing_rule'
 #pcba_site='FOL'
 
-ranking_col=['priority_rank', 'ossd_offset', 'fcd_offset','rev_non_rev_rank','C_UNSTAGED_QTY', 'SO_SS','PO_NUMBER']
-
 # backlog offset by transit pad will not consider ocean ship - assuming ocean is to cocver fcst demand but not backlog demand
 transit_time={'FOL':{'FOC':1,
                      'FTX':7,
@@ -32,8 +30,6 @@ transit_time={'FOL':{'FOC':1,
 close_eta_cutoff_criteria=15
 # Far ETA eligible to backward fulfill PO: offset OSSD by deducting below days
 eta_backward_offset_days=10
-
-
 
 
 if getpass.getuser()=='ubuntu': # if it's on crate server
