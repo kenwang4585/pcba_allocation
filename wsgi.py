@@ -237,13 +237,12 @@ def allocation_download():
     if form.validate_on_submit():
         log_msg = []
         log_msg.append('\n\n[Download/delete file] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
-        log_msg.append('User info: ' + request.headers.get('User-agent'))
 
         pcba_site=form.pcba_site.data.strip().upper()
 
         now = pd.Timestamp.now()
         f_path=base_dir_supply
-        fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm') + '.xlsx'
+        fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
         log_msg.append('Download supply from DB')
 
         if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']:
