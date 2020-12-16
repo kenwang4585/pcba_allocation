@@ -248,7 +248,7 @@ def allocation_download():
         if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']:
             msg = "'{}' is not a PCBA org.".format(pcba_site)
             flash(msg, 'warning')
-            return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+            return redirect(url_for('allocation_download',_external=True,_scheme='https',viewarg1=1))
         try:
             df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
             data_to_write = {'scr': df_scr,
