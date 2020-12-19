@@ -187,52 +187,8 @@ def allocation_download():
         add_user_log(user=login_user, location='Download', user_action='Visit', summary='')
 
     # output files
-    file_list = os.listdir(base_dir_output)
-    files = []
-    creation_time = []
-    file_size = []
-    file_path = []
-    for file in file_list:
-        if file[:1] != '.' and file[:1] != '~' and file!='log.txt':
-            c_time = os.stat(os.path.join(base_dir_output, file)).st_ctime
-            c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
-            file_s = os.path.getsize(os.path.join(base_dir_output, file))
-            if file_s > 1024 * 1024:
-                file_s = str(round(file_s/(1024*1024),1)) + 'M'
-            else:
-                file_s = str(int(file_s / 1024)) + 'K'
-
-            files.append(file)
-            creation_time.append(c_time)
-            file_size.append(file_s)
-            file_path.append(os.path.join(base_dir_output,file))
-    df_output=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size, 'File_path':file_path})
-    df_output.sort_values(by='Creation_time',ascending=False,inplace=True)
-    #files.sort(key=lambda x:x[-17:-5]) # 排序
-    #files_output=files[::-1]
-
-    # files upload
-    file_list = os.listdir(base_dir_upload)
-    files = []
-    creation_time = []
-    file_size = []
-    file_path = []
-    for file in file_list:
-        if file[:1] != '.' and file[:1] != '~':
-            c_time = os.stat(os.path.join(base_dir_upload, file)).st_ctime
-            c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
-            file_s = os.path.getsize(os.path.join(base_dir_upload, file))
-            if file_s > 1024 * 1024:
-                file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
-            else:
-                file_s = str(int(file_s / 1024)) + 'K'
-
-            files.append(file)
-            creation_time.append(c_time)
-            file_size.append(file_s)
-            file_path.append(os.path.join(base_dir_upload, file))
-    df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path':file_path})
-    df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
+    df_output=get_file_info_on_drive(base_dir_output)
+    df_upload=get_file_info_on_drive(base_dir_upload)
 
     if form.validate_on_submit():
         log_msg = []
@@ -271,6 +227,26 @@ def allocation_download():
                            user=login_name)
 
 
+# Below did now work out somehow - NOT USED
+@app.route('/delete/<path:file_path>',methods=['POST'])
+def delete_file(file_path):
+    form=AdminForm()
+    password=form.password.data
+
+    if form.validate_on_submit():
+        print('enter')
+        if password==os.getenv('xxxxx'):
+            msg='Not authorized!'
+            flash(msg,'warning')
+            return redirect(url_for("allocation_admin"))
+
+        os.remove(file_path)
+        msg = 'File deleted!'
+        flash(msg, 'warning')
+
+    return redirect(url_for("allocation_admin"))
+
+
 @app.route('/<path:file_path>',methods=['GET'])
 def download_file(file_path):
     f_path,fname = os.path.split(file_path)
@@ -284,30 +260,11 @@ def download_file(file_path):
     add_user_log(user=login_user, location='Download', user_action='Download file', summary=fname)
 
     if fname=='favicon.ico':
-        log_msg='Somehow fname==favicon... filepath: ' + file_path
+        log_msg='\n\nSomehow fname==favicon... filepath: ' + file_path
         with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
             file_object.write(log_msg)
 
     return send_from_directory(f_path, filename=fname, as_attachment=True)
-
-# Below did now work out somehow - NOT USED
-@app.route('/delete/<path:file_path>',methods=['POST'])
-def delete_file(file_path):
-    form=AdminForm()
-    password=form.password.data
-
-    if form.validate_on_submit():
-        print('enter')
-        if password==os.getenv('PASSWORD'):
-            msg='Not authorized!'
-            flash(msg,'warning')
-            return redirect(url_for("allocation_admin"))
-
-        os.remove(file_path)
-        msg = 'File deleted!'
-        flash(msg, 'warning')
-
-    return redirect(url_for("allocation_admin"))
 
 @app.route('/admin', methods=['GET','POST'])
 def allocation_admin():
@@ -322,97 +279,11 @@ def allocation_admin():
         add_user_log(user=login_user, location='Admin', user_action='Visit', summary='Warning')
         return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
-    # allocation output files
-    file_list = os.listdir(base_dir_output)
-    files = []
-    creation_time = []
-    file_size = []
-    file_path = []
-    for file in file_list:
-        c_time = os.stat(os.path.join(base_dir_output, file)).st_ctime
-        c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
-        file_s = os.path.getsize(os.path.join(base_dir_output, file))
-        if file_s > 1024 * 1024:
-            file_s = str(round(file_s/(1024*1024),1)) + 'M'
-        else:
-            file_s = str(int(file_s / 1024)) + 'K'
-
-        files.append(file)
-        creation_time.append(c_time)
-        file_size.append(file_s)
-        file_path.append(os.path.join(base_dir_output,file))
-    df_output=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size, 'File_path':file_path})
-    df_output.sort_values(by='Creation_time',ascending=False,inplace=True)
-    #files.sort(key=lambda x:x[-17:-5]) # 排序
-    #files_output=files[::-1]
-
-    # files uploaded by user
-    file_list = os.listdir(base_dir_upload)
-    files = []
-    creation_time = []
-    file_size = []
-    file_path = []
-    for file in file_list:
-        c_time = os.stat(os.path.join(base_dir_upload, file)).st_ctime
-        c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
-        file_s = os.path.getsize(os.path.join(base_dir_upload, file))
-        if file_s > 1024 * 1024:
-            file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
-        else:
-            file_s = str(int(file_s / 1024)) + 'K'
-
-        files.append(file)
-        creation_time.append(c_time)
-        file_size.append(file_s)
-        file_path.append(os.path.join(base_dir_upload, file))
-    df_upload = pd.DataFrame({'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path':file_path})
-    df_upload.sort_values(by='Creation_time', ascending=False, inplace=True)
-
-    # files uploaded by user
-    file_list = os.listdir(base_dir_supply)
-    files = []
-    creation_time = []
-    file_size = []
-    file_path = []
-    for file in file_list:
-        c_time = os.stat(os.path.join(base_dir_supply, file)).st_ctime
-        c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
-        file_s = os.path.getsize(os.path.join(base_dir_supply, file))
-        if file_s > 1024 * 1024:
-            file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
-        else:
-            file_s = str(int(file_s / 1024)) + 'K'
-
-        files.append(file)
-        creation_time.append(c_time)
-        file_size.append(file_s)
-        file_path.append(os.path.join(base_dir_supply, file))
-    df_supply = pd.DataFrame(
-        {'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path': file_path})
-    df_supply.sort_values(by='Creation_time', ascending=False, inplace=True)
-
-    # log files
-    file_list = os.listdir(base_dir_logs)
-    files = []
-    creation_time = []
-    file_size = []
-    file_path = []
-    for file in file_list:
-        c_time = os.stat(os.path.join(base_dir_logs, file)).st_ctime
-        c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
-        file_s = os.path.getsize(os.path.join(base_dir_logs, file))
-        if file_s > 1024 * 1024:
-            file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
-        else:
-            file_s = str(int(file_s / 1024)) + 'K'
-
-        files.append(file)
-        creation_time.append(c_time)
-        file_size.append(file_s)
-        file_path.append(os.path.join(base_dir_logs, file))
-    df_logs = pd.DataFrame(
-        {'File_name': files, 'Creation_time': creation_time, 'File_size': file_size, 'File_path': file_path})
-    df_logs.sort_values(by='Creation_time', ascending=False, inplace=True)
+    # get file info
+    df_output=get_file_info_on_drive(base_dir_output)
+    df_upload=get_file_info_on_drive(base_dir_upload)
+    df_supply=get_file_info_on_drive(base_dir_supply)
+    df_logs=get_file_info_on_drive(base_dir_logs)
 
     # read logs
     df_log_detail = read_table('user_log')

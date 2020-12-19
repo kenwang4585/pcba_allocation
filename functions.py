@@ -7,6 +7,7 @@ import math
 from settings import *
 from smartsheet_handler import SmartSheetClient
 from sending_email import *
+import time
 
 def get_packed_or_cancelled_ss_from_3a4(df_3a4):
     """
@@ -43,8 +44,8 @@ def read_backlog_priority_from_smartsheet(df_3a4):
     removal_row_id=df_removal.row_id.values.tolist()
     removal_ss_email=list(set(df_removal['Created By'].values.tolist()))
     removal_ss_email = removal_ss_email + ['kwang2@cisco.com','manfan@cisco.com']
-
-    smartsheet_client.delete_row(sheet_id=sheet_id, row_id=removal_row_id)
+    if len(removal_row_id)>0:
+        smartsheet_client.delete_row(sheet_id=sheet_id, row_id=removal_row_id)
 
     # create the priority dict
     df_smart.drop_duplicates('SO_SS', keep='last', inplace=True)
@@ -65,6 +66,35 @@ def read_backlog_priority_from_smartsheet(df_3a4):
         ss_priority['priority_mid'] = priority_mid
 
     return ss_priority,removal_ss_email,df_removal
+
+
+
+def get_file_info_on_drive(base_path):
+    """
+    Collect the file info on a drive and make that into a df.
+    """
+    file_list = os.listdir(base_path)
+    files = []
+    creation_time = []
+    file_size = []
+    file_path = []
+    for file in file_list:
+        c_time = os.stat(os.path.join(base_path, file)).st_ctime
+        c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
+        file_s = os.path.getsize(os.path.join(base_path, file))
+        if file_s > 1024 * 1024:
+            file_s = str(round(file_s/(1024*1024),1)) + 'M'
+        else:
+            file_s = str(int(file_s / 1024)) + 'K'
+
+        files.append(file)
+        creation_time.append(c_time)
+        file_size.append(file_s)
+        file_path.append(os.path.join(base_path,file))
+    df_file_info=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size, 'File_path':file_path})
+    df_file_info.sort_values(by='Creation_time',ascending=False,inplace=True)
+
+    return df_file_info
 
 
 def send_email_for_priority_ss_removal(removal_ss_email,df_removal,login_user):
@@ -700,10 +730,8 @@ def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', 
                                                           'L4',
                                                           np.where(df_3a4.BUP_RANK.notnull(),
                                                                    'BUP',
-                                                                   None)
-                                                      )
-                                                      )
-                                             )
+                                                                   None))))
+
     #### Update below DO/DX orders to PR1 due to current PR1/2/3 not updated when order change to DPAS from others
     df_3a4.loc[:, 'priority_cat'] = np.where(
         (df_3a4.DPAS_RATING.isin(['DO', 'DX', 'TAA-DO', 'TAA-DX'])) & (df_3a4.priority_cat.isnull()),
