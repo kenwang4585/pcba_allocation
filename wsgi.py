@@ -291,7 +291,6 @@ def allocation_admin():
 
     if form.validate_on_submit():
         fname=form.file_name.data
-        print(fname)
         if fname in df_output.File_name.values:
             f_path=df_output[df_output.File_name==fname].File_path.values[0]
             os.remove(f_path)
