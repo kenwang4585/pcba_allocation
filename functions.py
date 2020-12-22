@@ -50,7 +50,7 @@ def read_backlog_priority_from_smartsheet(df_3a4):
     # create the priority dict
     df_smart.drop_duplicates('SO_SS', keep='last', inplace=True)
     df_smart = df_smart[(df_smart.SO_SS.notnull()) & (df_smart.Ranking.notnull())]
-    ss_priority = {}
+    ss_exceptional_priority = {}
     priority_top = {}
     priority_mid = {}
     for row in df_smart.itertuples():
@@ -62,10 +62,10 @@ def read_backlog_priority_from_smartsheet(df_3a4):
         except:
             print('{} has a wrong ranking#: {}.'.format(row.SO_SS,row.Ranking) )
 
-        ss_priority['priority_top'] = priority_top
-        ss_priority['priority_mid'] = priority_mid
+        ss_exceptional_priority['priority_top'] = priority_top
+        ss_exceptional_priority['priority_mid'] = priority_mid
 
-    return ss_priority,removal_ss_email,df_removal
+    return ss_exceptional_priority,removal_ss_email,df_removal
 
 
 
@@ -672,11 +672,11 @@ def extract_bu_from_scr(df_scr,tan_group):
 
 
 ##### Depracated!!!!!
-def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
+def ss_ranking_overall_new(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
     """
     根据priority_cat,OSSD,FCD, REVENUE_NON_REVENUE,C_UNSTAGED_QTY,按照ranking_col的顺序对SS进行排序。最后放MFG_HOLD订单.
     :param df_3a4:
-    :param ss_priority: manual priority set for backlog through smartsheet
+    :param ss_exceptional_priority: manual priority set for backlog through smartsheet
     :param ranking_col:e.g. ['priority_rank', 'ORIGINAL_FCD_NBD_DATE', 'CURRENT_FCD_NBD_DATE','rev_non_rev_rank',
                         'C_UNSTAGED_QTY', 'SO_SS','PO_NUMBER']
     :param order_col:'SO_SS'
@@ -762,12 +762,12 @@ def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', 
     df_3a4.loc[:, 'rev_non_rev_rank'] = np.where(df_3a4.REVENUE_NON_REVENUE == 'YES', 0, 1)
 
     #### Step3: Integrate ranking from smartsheet
-    df_3a4.loc[:, 'priority_rank'] = np.where(df_3a4.SO_SS.isin(ss_priority.keys()),
-                                              df_3a4.SO_SS.map(lambda x: ss_priority.get(x)),
+    df_3a4.loc[:, 'priority_rank'] = np.where(df_3a4.SO_SS.isin(ss_exceptional_priority.keys()),
+                                              df_3a4.SO_SS.map(lambda x: ss_exceptional_priority.get(x)),
                                               df_3a4.priority_rank)
 
-    #df_3a4.loc[:,'priority_rank']=df_3a4.SO_SS.map(lambda x: ss_priority.get(x))
-    #df_3a4.loc[:, 'priority_rank_temp'] = df_3a4.SO_SS.map(lambda x: ss_priority.get(x))
+    #df_3a4.loc[:,'priority_rank']=df_3a4.SO_SS.map(lambda x: ss_exceptional_priority.get(x))
+    #df_3a4.loc[:, 'priority_rank_temp'] = df_3a4.SO_SS.map(lambda x: ss_exceptional_priority.get(x))
 
     ##### Step4: sort the SS per ranking columns and Put MFG hold orders at the back
     df_3a4.sort_values(by=ranking_col, ascending=True, inplace=True)
@@ -786,7 +786,7 @@ def ss_ranking_overall_new(df_3a4, ss_priority, ranking_col, order_col='SO_SS', 
     return df_3a4
 
 
-def ss_ranking_overall_new_december(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
+def ss_ranking_overall_new_december(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
     """
     根据priority_cat,OSSD,FCD, REVENUE_NON_REVENUE,C_UNSTAGED_QTY,按照ranking_col的顺序对SS进行排序。最后放MFG_HOLD订单.
     """
@@ -863,15 +863,17 @@ def ss_ranking_overall_new_december(df_3a4, ss_priority, ranking_col, order_col=
 
 
     #### update ranking based on exception priority setting
-    df_3a4.loc[:, 'priority_rank_top'] = np.where(df_3a4.SO_SS.isin(ss_priority['priority_top'].keys()),
-                                              df_3a4.SO_SS.map(lambda x: ss_priority['priority_top'].get(x)),
+    df_3a4.loc[:, 'priority_rank_top'] = np.where(df_3a4.SO_SS.isin(ss_exceptional_priority['priority_top'].keys()),
+                                              df_3a4.SO_SS.map(lambda x: ss_exceptional_priority['priority_top'].get(x)),
                                               df_3a4.priority_rank_top)
-    df_3a4.loc[:, 'priority_rank_mid'] = np.where(df_3a4.SO_SS.isin(ss_priority['priority_mid'].keys()),
-                                                  df_3a4.SO_SS.map(lambda x: ss_priority['priority_mid'].get(x)),
+    df_3a4.loc[:, 'priority_rank_mid'] = np.where(df_3a4.SO_SS.isin(ss_exceptional_priority['priority_mid'].keys()),
+                                                  df_3a4.SO_SS.map(lambda x: ss_exceptional_priority['priority_mid'].get(x)),
                                                   df_3a4.priority_rank_mid)
 
    # Create a new col to indicate the rank - in ranking, actually use priority_rank_top and priority_rank_mid
-    df_3a4.loc[:, 'priority_rank']=df_3a4.priority_rank_mid
+    df_3a4.loc[:, 'priority_rank']=np.where(df_3a4.priority_rank_mid.notnull(),
+                                            df_3a4.priority_rank_mid,
+                                            df_3a4.priority_rank)
     df_3a4.loc[:, 'priority_rank']=np.where(df_3a4.priority_rank_top.notnull(),
                                             df_3a4.priority_rank_top,
                                             df_3a4.priority_rank)
@@ -1414,7 +1416,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
 
     # read from exceptional priority smartsheet for ss priority - remove the packed/cancelled one the same time
-    ss_priority,removal_ss_email,df_removal = read_backlog_priority_from_smartsheet(df_3a4)
+    ss_exceptional_priority,removal_ss_email,df_removal = read_backlog_priority_from_smartsheet(df_3a4)
 
     # send email notification for ss removal from exceptional priority smartsheet
     send_email_for_priority_ss_removal(removal_ss_email, df_removal, login_user)
@@ -1422,7 +1424,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
    # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
     # Rank the orders
-    df_3a4 = ss_ranking_overall_new_december(df_3a4, ss_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
+    df_3a4 = ss_ranking_overall_new_december(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
 
     # (do below after ranking) Process 3a4 BOM base on FLB_TAN col. BOM_PN refers to tan_group if exist, or SCR Tan if not.
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
