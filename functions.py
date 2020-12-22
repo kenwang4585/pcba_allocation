@@ -864,19 +864,21 @@ def ss_ranking_overall_new_december(df_3a4, ss_exceptional_priority, ranking_col
 
     #### update ranking based on exception priority setting
     df_3a4.loc[:, 'priority_rank_top'] = np.where(df_3a4.SO_SS.isin(ss_exceptional_priority['priority_top'].keys()),
-                                              df_3a4.SO_SS.map(lambda x: ss_exceptional_priority['priority_top'].get(x)),
-                                              df_3a4.priority_rank_top)
+                                                  df_3a4.SO_SS.map(lambda x: ss_exceptional_priority['priority_top'].get(x)),
+                                                  np.where(df_3a4.SO_SS.isin(ss_exceptional_priority['priority_mid'].keys()),
+                                                            None,
+                                                            df_3a4.priority_rank_top))
     df_3a4.loc[:, 'priority_rank_mid'] = np.where(df_3a4.SO_SS.isin(ss_exceptional_priority['priority_mid'].keys()),
                                                   df_3a4.SO_SS.map(lambda x: ss_exceptional_priority['priority_mid'].get(x)),
-                                                  df_3a4.priority_rank_mid)
+                                                  np.where(df_3a4.SO_SS.isin(ss_exceptional_priority['priority_top'].keys()),
+                                                            None,
+                                                            df_3a4.priority_rank_mid))
 
-   # Create a new col to indicate the rank - in ranking, actually use priority_rank_top and priority_rank_mid
-    df_3a4.loc[:, 'priority_rank']=np.where(df_3a4.priority_rank_mid.notnull(),
-                                            df_3a4.priority_rank_mid,
-                                            df_3a4.priority_rank)
-    df_3a4.loc[:, 'priority_rank']=np.where(df_3a4.priority_rank_top.notnull(),
-                                            df_3a4.priority_rank_top,
-                                            df_3a4.priority_rank)
+
+    # Create a new col to indicate the rank - in ranking, actually use priority_rank_top and priority_rank_mid
+    df_3a4.loc[:, 'priority_rank'] = np.where(df_3a4.priority_rank_top.notnull(),
+                                              df_3a4.priority_rank_top,
+                                              df_3a4.priority_rank_mid)
 
     ##### Step3: Give revenue/non-revenue a rank
     df_3a4.loc[:, 'rev_non_rev_rank'] = np.where(df_3a4.REVENUE_NON_REVENUE == 'YES', 0, 1)
