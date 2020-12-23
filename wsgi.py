@@ -258,7 +258,8 @@ def download_file(file_path):
     if login_user == None:
         login_user = ''
         login_name = ''
-    add_user_log(user=login_user, location='Download', user_action='Download file', summary=fname)
+    else:
+        add_user_log(user=login_user, location='Download', user_action='Download file', summary=fname)
 
     if fname=='favicon.ico':
         log_msg='\n\nSomehow fname==favicon... filepath: ' + file_path
