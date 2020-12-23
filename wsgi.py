@@ -56,7 +56,7 @@ def allocation_run():
         log_msg.append('BU: ' + bu.strip().upper())
         log_msg.append('Email option: ' + email_option)
 
-        # 存储文件 - will save again with Org name in file name later
+        # 存储文件
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
         #file_path_supply = os.path.join(app.config['UPLOAD_PATH'],'supply.xlsx')
         file_path_3a4 = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_3a4.filename))
@@ -98,6 +98,7 @@ def allocation_run():
             flash(msg_scr,'warning')
 
         if sheet_name_msg!='' or msg_3a4!='' or msg_3a4_option!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
+            print('error')
             return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
        # 判断并定义ranking_col

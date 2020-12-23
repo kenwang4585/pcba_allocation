@@ -97,7 +97,7 @@ def get_file_info_on_drive(base_path):
     return df_file_info
 
 
-def send_email_for_priority_ss_removal(removal_ss_email,df_removal,login_user):
+def send_email_for_priority_ss_removal(removal_ss_email,df_removal,login_user,sender='PCBA allocation tool'):
     """
     Send email to corresponding people for whose SS are removed from the priority smartsheet
     """
@@ -106,7 +106,7 @@ def send_email_for_priority_ss_removal(removal_ss_email,df_removal,login_user):
         html_template='priority_ss_removal_email.html'
         subject='Exceptional priority smartsheet: cancelled/packed SS removal notification'
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
-                                         embeded_filenames=None, sender='PCBA_Allocation',
+                                         embeded_filenames=None, sender=sender,
                                          removal_ss_header=df_removal.columns,
                                          removal_ss_details=df_removal.values,
                                          user=login_user)
@@ -1421,7 +1421,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     ss_exceptional_priority,removal_ss_email,df_removal = read_backlog_priority_from_smartsheet(df_3a4)
 
     # send email notification for ss removal from exceptional priority smartsheet
-    send_email_for_priority_ss_removal(removal_ss_email, df_removal, login_user)
+    send_email_for_priority_ss_removal(removal_ss_email, df_removal, login_user,sender='PCBA allocation tool')
 
    # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
