@@ -70,7 +70,7 @@
                                                     <td><span style="font-size: small">&nbsp;&nbsp;&nbsp;{{col}}</span></td>
                                                 {% endfor %}
                                                 <td align="center">
-                                                    <a href="{{ url_for('download_file',file_path=row[3]) }}">download</a>
+                                                    <a href="{{ url_for('download_file_output',filename=row[0]) }}">download</a>
                                                 </td>
                                             </tr>
                                         {% endfor %}
@@ -99,7 +99,7 @@
                                                     <td><span style="font-size: small">&nbsp;&nbsp;&nbsp;{{col}}</span></td>
                                                 {% endfor %}
                                                 <td align="center">
-                                                    <a href="{{ url_for('download_file',file_path=row[3]) }}">download</a>
+                                                    <a href="{{ url_for('download_file_upload',filename=row[0]) }}">download</a>
                                                 </td>
                                             </tr>
                                         {% endfor %}

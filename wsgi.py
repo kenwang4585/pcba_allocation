@@ -248,25 +248,48 @@ def delete_file(file_path):
     return redirect(url_for("allocation_admin"))
 
 
-@app.route('/<path:file_path>',methods=['GET'])
-def download_file(file_path):
-    f_path,fname = os.path.split(file_path)
-    f_path='/' + f_path
-
+@app.route('/o/<filename>',methods=['GET'])
+def download_file_output(filename):
+    f_path=base_dir_output
+    print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
-    login_name = request.headers.get('Oidc-Claim-Fullname')
-    if login_user == None:
-        login_user = ''
-        login_name = ''
-    else:
-        add_user_log(user=login_user, location='Download', user_action='Download file', summary=fname)
+    if login_user != None:
+        add_user_log(user=login_user, location='Download', user_action='Download file',
+                 summary=filename)
+    return send_from_directory(f_path, filename=filename, as_attachment=True)
 
-    if fname=='favicon.ico':
-        log_msg='\n\nSomehow fname==favicon... filepath: ' + file_path
-        with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
-            file_object.write(log_msg)
+@app.route('/u/<filename>',methods=['GET'])
+def download_file_upload(filename):
+    f_path=base_dir_upload
+    print(f_path)
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    if login_user != None:
+        add_user_log(user=login_user, location='Download', user_action='Download file',
+                 summary=filename)
+    return send_from_directory(f_path, filename=filename, as_attachment=True)
 
-    return send_from_directory(f_path, filename=fname, as_attachment=True)
+@app.route('/s/<filename>',methods=['GET'])
+def download_file_supply(filename):
+    f_path=base_dir_supply
+    print(f_path)
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    if login_user != None:
+        add_user_log(user=login_user, location='Download', user_action='Download file',
+                 summary=filename)
+    return send_from_directory(f_path, filename=filename, as_attachment=True)
+
+@app.route('/l/<filename>',methods=['GET'])
+def download_file_logs(filename):
+    f_path=base_dir_logs
+    print(f_path)
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    if login_user != None:
+        add_user_log(user=login_user, location='Download', user_action='Download file',
+                 summary=filename)
+    return send_from_directory(f_path, filename=filename, as_attachment=True)
+
+
+
 
 @app.route('/admin', methods=['GET','POST'])
 def allocation_admin():
