@@ -32,6 +32,8 @@ def allocation_run():
     if login_user==None:
         login_user=''
         login_name=''
+    print(request.headers)
+    print(request.url)
 
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user,location='Allocation',user_action='visit',summary='')
@@ -290,7 +292,6 @@ def download_file_logs(filename):
 
 
 
-
 @app.route('/admin', methods=['GET','POST'])
 def allocation_admin():
     form = AdminForm()
@@ -349,3 +350,10 @@ def allocation_admin():
 def config():
     form = ConfigForm()
     return render_template('config_control_panel_new.html', form=form)
+
+@app.route('/time')
+def index():
+    import datetime
+    dt = datetime.datetime.utcnow()
+    return render_template('test.html',
+        dt=dt)
