@@ -194,35 +194,66 @@ def allocation_download():
     df_upload=get_file_info_on_drive(base_dir_upload)
 
     if form.validate_on_submit():
-        log_msg = []
-        log_msg.append('\n\n[Download/delete file] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
+        submit_download_scdx=form.submit_download_supply.data
+        submit_detete_file=form.submit_delete.data
 
-        pcba_site=form.pcba_site.data.strip().upper()
+        if submit_download_scdx:
+            log_msg = []
+            log_msg.append('\n\n[Download SCDx] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-        now = pd.Timestamp.now()
-        f_path=base_dir_supply
-        fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
-        log_msg.append('Download supply from DB')
+            pcba_site=form.pcba_site.data.strip().upper()
 
-        if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']:
-            msg = "'{}' is not a PCBA org.".format(pcba_site)
-            flash(msg, 'warning')
-            return redirect(url_for('allocation_download',_external=True,_scheme='https',viewarg1=1))
-        try:
-            df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
-            data_to_write = {'scr': df_scr,
-                             'oh': df_oh,
-                             'in-transit': df_intransit,
-                             'sourcing_rule': df_sourcing_rule}
+            now = pd.Timestamp.now()
+            f_path=base_dir_supply
+            fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
+            log_msg.append('Download supply from DB')
 
-            write_data_to_excel(os.path.join(f_path, fname), data_to_write)
-            add_user_log(user=login_user, location='Download', user_action='Download SCDx', summary='Success: ' + pcba_site)
+            if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']:
+                msg = "'{}' is not a PCBA org.".format(pcba_site)
+                flash(msg, 'warning')
+                return redirect(url_for('allocation_download',_external=True,_scheme='https',viewarg1=1))
+            try:
+                df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
+                data_to_write = {'scr': df_scr,
+                                 'oh': df_oh,
+                                 'in-transit': df_intransit,
+                                 'sourcing_rule': df_sourcing_rule}
 
-            return send_from_directory(f_path, filename=fname, as_attachment=True)
-        except Exception as e:
-            msg = 'Error downloading supply data from database! ' + str(e)
-            flash(msg, 'warning')
-            add_user_log(user=login_user, location='Download', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + e)
+                write_data_to_excel(os.path.join(f_path, fname), data_to_write)
+                add_user_log(user=login_user, location='Download', user_action='Download SCDx', summary='Success: ' + pcba_site)
+
+                return send_from_directory(f_path, filename=fname, as_attachment=True)
+            except Exception as e:
+                msg = 'Error downloading supply data from database! ' + str(e)
+                flash(msg, 'warning')
+                add_user_log(user=login_user, location='Download', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + e)
+        elif submit_detete_file:
+            fname = form.file_name.data
+            if login_user in fname:
+                if fname in df_output.File_name.values:
+                    f_path = df_output[df_output.File_name == fname].File_path.values[0]
+                    os.remove(f_path)
+                    msg = '{} removed!'.format(fname)
+                    flash(msg, 'success')
+                elif fname in df_upload.File_name.values:
+                    f_path = df_upload[df_upload.File_name == fname].File_path.values[0]
+                    os.remove(f_path)
+                    msg = '{} removed!'.format(fname)
+                    flash(msg, 'success')
+                else:
+                    add_user_log(user=login_user, location='Download', user_action='Delete file',
+                                 summary='Fail: {}'.format(fname))
+                    msg = 'Error file name: {}'.format(fname)
+                    flash(msg, 'warning')
+                    return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+                add_user_log(user=login_user, location='Download', user_action='Delete file',
+                             summary='Success: {}'.format(fname))
+            else:
+                msg='You are not allowed to delete this file created by others: {}'.format(fname)
+                flash(msg,'warning')
+                return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+
+            return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
 
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
@@ -234,20 +265,13 @@ def allocation_download():
 @app.route('/delete/<path:file_path>',methods=['POST'])
 def delete_file(file_path):
     form=AdminForm()
-    password=form.password.data
 
     if form.validate_on_submit():
-        print('enter')
-        if password==os.getenv('xxxxx'):
-            msg='Not authorized!'
-            flash(msg,'warning')
-            return redirect(url_for("allocation_admin"))
-
         os.remove(file_path)
         msg = 'File deleted!'
-        flash(msg, 'warning')
-
-    return redirect(url_for("allocation_admin"))
+        flash(msg, 'success')
+        return redirect(url_for("allocation_admin"))
+    return render_template('allocation_admin.html',form=form)
 
 
 @app.route('/o/<filename>',methods=['GET'])
@@ -359,3 +383,16 @@ def index():
 
     return render_template('test.html',
         dt=dt)
+
+@app.route('/user-guide')
+def user_guide():
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    if login_user == None:
+        login_user = ''
+        login_name = ''
+
+    if login_user != '' and login_user != 'kwang2':
+        add_user_log(user=login_user, location='User-guide', user_action='Visit', summary='')
+
+    return render_template('allocation_userguide.html',user=login_name)

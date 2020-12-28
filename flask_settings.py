@@ -48,6 +48,9 @@ class FileDownloadForm(FlaskForm):
                             default='put in PCBA org here (e.g. FOL)')
     submit_download_supply=SubmitField('Download') # download from db
 
+    file_name=StringField(validators=[DataRequired()]) # for deleting filename created by user self
+    submit_delete=SubmitField('   Delete   ')
+
 class AdminForm(FlaskForm):
     file_name=StringField(validators=[DataRequired()])
     submit_delete=SubmitField('Delete')

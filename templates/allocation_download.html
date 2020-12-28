@@ -11,7 +11,7 @@
                 <ul class="nav nav-tabs">
                     <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
                     <li class="active" style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
-
+                    <li style="font-size: large"><a href="{{ url_for('user_guide')}}" style="font-size: large"><strong>User-guide</strong></a></li>
                 </ul>
             </td>
         </tr>
@@ -40,16 +40,35 @@
                     <td width="95%">
                         <br>
                         <p><strong>Download supply data file from SCDx-POC:</strong></p>
-                        <table>
+                        <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                             <tr>
-
-                                <td width="720">{{ form.pcba_site (class='form-control') }}</td>
-                                <td width="100" align="center">{{ form.submit_download_supply (class='btn-primary btn-sm') }}</td>
+                                <td align="left" width="85%">
+                                    {{ form.pcba_site (class='form-control') }}
+                                </td>
+                                <td align="center" width="15%">
+                                    {{ form.submit_download_supply (class='btn-primary btn-sm') }}
+                                </td>
                             </tr>
                         </table>
                     </td>
                 </tr>
 
+                <tr>  <!-- For deleting the files created by user -->
+                    <td width="95%">
+                        <br><br><br>
+                        <p><strong> Delete files created by yourself:</strong></p>
+                                <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                                    <tr>
+                                        <td align="left" width="85%">
+                                            {{ form.file_name (class='form-control')}}
+                                        </td>
+                                        <td align="center" width="15%">
+                                            {{ form.submit_delete (class='btn-primary btn-sm')}}
+                                        </td>
+                                    </tr>
+                                </table>
+                    </td>
+                </tr>
 
                 <tr>  <!-- For downloading the allocation resut files -->
                     <td width="95%">

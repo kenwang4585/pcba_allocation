@@ -1,0 +1,60 @@
+
+<!-- Ken wang, Oct, 2020 -->
+
+{% extends 'allocation_base.html' %}
+
+{% block content %}
+    <!--<div class="card container"> -->
+    <table width="90%" align="center">
+        <tr>
+            <td>
+                <ul class="nav nav-tabs">
+                    <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+                    <li class="active" style="font-size: large"><a href="{{ url_for('user_guide')}}" style="font-size: large"><strong>User-guide</strong></a></li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+    <!-- </div> -->
+    <table width="85%" align="center">
+        <tr>
+            <td>
+                <h3>Who can use this tool?</h3>
+                <p>
+                    PMM and PSP are eligible to run this tool. PMM(Mandy Fan) runs site level PCBA allocation every Monday for PCBA site execution; PSP can rerun the allocation for <strong>responsible BU</strong> during other days of the week depends on needs.
+                </p>
+
+                <h3>What data are need to run the tool?</h3>
+                    <ol type="1">
+                        <li>3a4 Backlog: download from UOV with view: kw_PA (default includes all DF sites, user can limit ORG/BU as appropriate if need to);</li>
+                        <li>Supply data file (includes SCR, in-transit, DF OH, sourcing rules): via "Download supply data file from SCDx-POC)" under "Download" tab;</li>
+                        <li>Exceptional priority(optional): maintained in smartsheet by PSP as needed;</li>
+                        <li>TAN grouping(optional): maintained in smartsheet by PSP as needed;</li>
+                        <li>Missing in-transit (for SRG only): maintained in smartsheet as needed by Mandy as short term fix of SCDx missing data.</li>
+                    </ol>
+
+                <h3>How PMM run the tool on Monday for whole site?</h3>
+                    <ol type="1">
+                        <li>Download 3a4 and supply data file;</li>
+                        <li>Upload the 2 files from the "Allocation" tab;</li>
+                        <li>Put in appropriate PCBA org;</li>
+                        <li>Select appropriate email option;</li>
+                        <li>Click "Make Allocation".</li>
+                    </ol>
+
+
+                <h3>How PSP run the tool for responsible BU on other days?</h3>
+                    <ol type="1">
+                        <li>Download 3a4 and supply data file;</li>
+                        <li><span style="color: #1a6dca">Adjust the supply data file as needed - if updated supply not reflected in SCDx;</span></li>
+                        <li>Upload the 2 files from the "Allocation" tab;</li>
+                        <li>Put in appropriate PCBA org <span style="color: #1a6dca">and BU</span> </li>
+                        <li>Select appropriate email option;</li>
+                        <li>Click "Make Allocation".</li>
+                    </ol>
+            </td>
+        </tr>
+    </table>
+
+{% endblock %}
