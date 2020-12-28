@@ -355,5 +355,7 @@ def config():
 def index():
     import datetime
     dt = datetime.datetime.utcnow()
+    print(request)
+
     return render_template('test.html',
         dt=dt)
