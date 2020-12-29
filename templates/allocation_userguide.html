@@ -22,7 +22,7 @@
             <td>
                 <h3>Who can use this tool?</h3>
                 <p>
-                    PMM and PSP are eligible to run this tool. PMM(Mandy Fan) runs site level PCBA allocation every Monday for PCBA site execution; PSP can rerun the allocation for <strong>responsible BU</strong> during other days of the week depends on needs.
+                    PMM and PSP are eligible to run this tool. PMM(Mandy Fan) runs site level PCBA allocation every Monday for PCBA site execution; PSP can rerun the allocation for <strong>respective BU</strong> during other days of the week upon needs.
                 </p>
 
                 <h3>What data are need to run the tool?</h3>
@@ -49,12 +49,29 @@
                         <li>Download 3a4 and supply data file;</li>
                         <li><span style="color: #1a6dca">Adjust the supply data file as needed - if updated supply not reflected in SCDx;</span></li>
                         <li>Upload the 2 files from the "Allocation" tab;</li>
-                        <li>Put in appropriate PCBA org <span style="color: #1a6dca">and BU</span> </li>
+                        <li>Put in appropriate PCBA org <span style="color: #1a6dca">and BU</span>; </li>
                         <li>Select appropriate email option;</li>
                         <li>Click "Make Allocation".</li>
                     </ol>
+
+                <h3>What is Exceptional priority?</h3>
+                PSP can give an exceptional priority to any SS to overwrite the priority setting in UOV. This can be used in situations like:
+                <ol type="1">
+                    <li>Order is not reflecting as priority in UOV but PSP wants to consider it as priority;</li>
+                    <li>PSP may want to give higher priority to certain orders (e.g. L4, BUP) so they get absolute priority even though this may lead to other OTD hits if site execute accordingly;</li>
+                </ol>
+                PSP can set the priority via this <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">smartsheet</a>. Rank#<4 will have absolute priority surpassing FCD of other orders; Rank#>=4 will be considered in addition to FCD dates.
+
+                <h3>What is Tan grouping?</h3>
+                Some BU have different TAN supply to different DF sites but which share the same materials at PCBA level, by grouping them we can not only decide the allocation but also let PCBA site know how to allocate the materials between the different TANs in production. PSP can set the grouping as needed via this <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">smartsheet</a>.
+                <br><br>
+                <br><br>
+                <p>
+                    <strong>P.S.</strong>&nbsp;&nbsp; if any feedback or suggestions pls feel free to talk to Mandy or Ken.
+                </p>
+
             </td>
         </tr>
     </table>
-
+<br><br>
 {% endblock %}
