@@ -5,11 +5,13 @@ import os
 
 
 def create_table():
-    db.drop_all()  # if any update have to drop all first then can apply the changes
-    print('delete done')
+    a=input('Do you want to drop all tables?(YeS/no)')
+    if a=='YeS':
+        db.drop_all()  # if any update have to drop all first then can apply the changes
+        print('All tables deleted!!!')
 
     db.create_all()
-    print('create done')
+    print('Tables created:')
 
     engine = create_engine(os.getenv('DB_URI'))
     print(engine.table_names())

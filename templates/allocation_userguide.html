@@ -11,6 +11,7 @@
                 <ul class="nav nav-tabs">
                     <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
                     <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('email_settings')}}" style="font-size: large"><strong>Email-settings</strong></a></li>
                     <li class="active" style="font-size: large"><a href="{{ url_for('user_guide')}}" style="font-size: large"><strong>User-guide</strong></a></li>
                 </ul>
             </td>
@@ -59,8 +60,10 @@
                 <ol type="1">
                     <li>Order is not reflecting as priority in UOV but PSP wants to consider it as priority;</li>
                     <li>PSP may want to give higher priority to certain orders (e.g. L4, BUP) so they get absolute priority even though this may lead to other OTD hits if site execute accordingly;</li>
+                    <li>PSP has a close control on order priority and require site to execute strictly following a specific order list in sequence;</li>
+                    <li>Etc.</li>
                 </ol>
-                PSP can set the priority via this <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">smartsheet</a>. Rank#<4 will have absolute priority surpassing FCD of other orders; Rank#>=4 will be considered in addition to FCD dates.
+                PSP can set the priority via this <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">smartsheet</a>. Default priority ranking#: PR1:1; PR2:2; PR3:3; L4:4; BUP:5; YE:6. Rank#<4 will have absolute priority surpassing FCD of other orders; Rank#>=4 will be prioritized on top of FCD dates.
 
                 <h3>What is Tan grouping?</h3>
                 Some BU have different TAN supply to different DF sites but which share the same materials at PCBA level, by grouping them we can not only decide the allocation but also let PCBA site know how to allocate the materials between the different TANs in production. PSP can set the grouping as needed via this <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">smartsheet</a>.

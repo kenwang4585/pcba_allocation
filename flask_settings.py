@@ -55,6 +55,15 @@ class AdminForm(FlaskForm):
     file_name=StringField(validators=[DataRequired()])
     submit_delete=SubmitField('Delete')
 
+class EmailSettingForm(FlaskForm):
+    identity=SelectField('*Identity:',
+                         choices=[('Cisco','Cisco'),('CM','CM')])
+    pcba_org=StringField("*PCBA Org(multiple org separate by '/'):")
+    bu=StringField("BU(multiple BU separate by '/')")
+    email_to_add=StringField('*Email address:')
+    submit_add=SubmitField('   Add email   ')
+    email_to_remove=StringField('*Email to remove:')
+    submit_remove=SubmitField('Remove email')
 
 
 # dummy form for config - temp
@@ -91,3 +100,15 @@ class UserLog(db.Model):
     LOCATION=db.Column(db.String(10))
     USER_ACTION=db.Column(db.String(20))
     SUMMARY=db.Column(db.Text)
+
+class EmailSettings(db.Model):
+    '''
+    Email setting db table
+    '''
+    id=db.Column(db.Integer,primary_key=True)
+    Identity=db.Column(db.String(5))
+    PCBA_Org=db.Column(db.String())
+    BU=db.Column(db.String(17))
+    Email=db.Column(db.String(30))
+    Added_by=db.Column(db.String(10))
+    Added_on=db.Column(db.Date)

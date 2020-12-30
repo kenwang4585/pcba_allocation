@@ -16,7 +16,6 @@ def delete_record(table_name,id_list):
         db.session.delete(record)
         db.session.commit()
 
-    print('records deleted')
 
 if __name__=='__main__':
     delete_record()

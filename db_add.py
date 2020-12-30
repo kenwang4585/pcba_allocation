@@ -21,6 +21,23 @@ def add_user_log(user='', location='', user_action='',summary=''):
     db.session.commit()
     #print('User log added')
 
+def add_email_data(identity, pcba_org, bu,email,login_user):
+    '''
+    Add the user log to db
+    '''
+
+    log = EmailSettings(Identity=identity,
+                  PCBA_Org=pcba_org,
+                  BU=bu,
+                  Email=email,
+                  Added_by=login_user,
+                  Added_on=pd.Timestamp.now().date(),)
+
+    db.session.add(log)  # can also use add_all() for multiple adding at one time
+    db.session.commit()
+    #print('User log added')
+
+
 def add_data_from_file_initial():
     '''
     Add data from file: initial update
@@ -68,5 +85,6 @@ def roll_back():
 
 
 if __name__ == '__main__':
-    add_user_log(user='kwang2', location='Admin', user_action='Visit',
-                 summary='Warning')
+    #add_user_log(user='kwang2', location='Admin', user_action='Visit',
+    #             summary='Warning')
+    add_email_data('Cisco', 'FOL', 'ERBU', 'kwang2@cisco.com','kwang2')

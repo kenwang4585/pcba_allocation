@@ -14,9 +14,10 @@ from functions import *
 from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
 from settings import *
 from sending_email import *
-from db_add import add_user_log
+from db_add import add_user_log,add_email_data
 from db_read import read_table
-#from db_delete import delete_record
+from db_update import update_email_data
+from db_delete import delete_record
 import traceback
 import gc
 
@@ -32,8 +33,8 @@ def allocation_run():
     if login_user==None:
         login_user=''
         login_name=''
-    print(request.headers)
-    print(request.url)
+    #print(request.headers)
+    #print(request.url)
 
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user,location='Allocation',user_action='visit',summary='')
@@ -314,6 +315,66 @@ def download_file_logs(filename):
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
+@app.route('/email',methods=['GET','POST'])
+def email_settings():
+    form = EmailSettingForm()
+    login_user=request.headers.get('Oidc-Claim-Sub')
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    if login_user == None:
+        login_user = ''
+        login_name = ''
+
+    # read emails
+    df_email_detail = read_table('email_settings')
+    df_email_detail.sort_values(by=['Identity','BU'],inplace=True)
+
+    if form.validate_on_submit():
+        submit_add=form.submit_add.data
+        submit_remove=form.submit_remove.data
+
+        if submit_add:
+            identity=form.identity.data
+            pcba_org=form.pcba_org.data.strip().upper()
+            bu=form.bu.data.strip().upper()
+            email_to_add=form.email_to_add.data.strip().lower()
+
+            if len(pcba_org)==0 or len(email_to_add)==0:
+                msg='PCBA org and email are mandatory fields!'
+                flash(msg,'warning')
+                return redirect(url_for('email_settings'))#, _external=True, _scheme='https', viewarg1=1)
+
+            if email_to_add in df_email_detail.Email.values:
+                update_email_data(identity, pcba_org, bu, email_to_add, login_user)
+                msg='This email already exists! Data has been updated: {}'.format(email_to_add)
+                flash(msg,'success')
+                return redirect(url_for('email_settings'))  # , _external=True, _scheme='https', viewarg1=1)
+            else:
+                add_email_data(identity, pcba_org, bu, email_to_add,login_user)
+                msg='This email is added: {}'.format(email_to_add)
+                flash(msg,'success')
+                return redirect(url_for('email_settings'))  # , _external=True, _scheme='https', viewarg1=1)
+        elif submit_remove:
+            email_to_remove=form.email_to_remove.data.strip().lower()
+            if len(email_to_remove)==0:
+                msg='Put in the email to remove!'
+                flash(msg,'warning')
+                return redirect(url_for('email_settings'))#, _external=True, _scheme='https', viewarg1=1)
+
+            if email_to_remove in df_email_detail.Email.values:
+                id_list=df_email_detail[df_email_detail.Email==email_to_remove].id.to_list()
+                print(id_list)
+                delete_record('email_settings', id_list)
+                msg='This email has been removed: {}'.format(email_to_remove)
+                flash(msg,'success')
+                return redirect(url_for('email_settings'))  # , _external=True, _scheme='https', viewarg1=1)
+            else:
+                msg='This email does not exist: {}'.format(email_to_remove)
+                flash(msg,'warning')
+                return redirect(url_for('email_settings'))  # , _external=True, _scheme='https', viewarg1=1)
+
+    return render_template('allocation_email_settings.html', form=form,
+                           email_details=df_email_detail.values,
+                           user=login_name)
 
 
 @app.route('/admin', methods=['GET','POST'])
