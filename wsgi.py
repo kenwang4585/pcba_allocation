@@ -344,24 +344,24 @@ def email_settings():
             if len(pcba_org)==0 or len(email_to_add)==0:
                 msg='PCBA org and email are mandatory fields!'
                 flash(msg,'warning')
-                return redirect(url_for('email_settings'), _external=True, _scheme='https', viewarg1=1)
+                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
 
             if email_to_add in df_email_detail.Email.values:
                 update_email_data(identity, pcba_org, bu, email_to_add, login_user)
                 msg='This email already exists! Data has been updated: {}'.format(email_to_add)
                 flash(msg,'success')
-                return redirect(url_for('email_settings'), _external=True, _scheme='https', viewarg1=1)
+                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
             else:
                 add_email_data(identity, pcba_org, bu, email_to_add,login_user)
                 msg='This email is added: {}'.format(email_to_add)
                 flash(msg,'success')
-                return redirect(url_for('email_settings') , _external=True, _scheme='https', viewarg1=1)
+                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
         elif submit_remove:
             email_to_remove=form.email_to_remove.data.strip().lower()
             if len(email_to_remove)==0:
                 msg='Put in the email to remove!'
                 flash(msg,'warning')
-                return redirect(url_for('email_settings'), _external=True, _scheme='https', viewarg1=1)
+                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
 
             if email_to_remove in df_email_detail.Email.values:
                 add_user_log(user=login_user, location='Email settings', user_action='Remove email',
@@ -370,11 +370,11 @@ def email_settings():
                 delete_record('email_settings', id_list)
                 msg='This email has been removed: {}'.format(email_to_remove)
                 flash(msg,'success')
-                return redirect(url_for('email_settings') , _external=True, _scheme='https', viewarg1=1)
+                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
             else:
                 msg='This email does not exist: {}'.format(email_to_remove)
                 flash(msg,'warning')
-                return redirect(url_for('email_settings'), _external=True, _scheme='https', viewarg1=1)
+                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
 
     return render_template('allocation_email_settings.html', form=form,
                            email_details=df_email_detail.values,
