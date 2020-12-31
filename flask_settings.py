@@ -35,12 +35,7 @@ class UploadForm(FlaskForm):
     use_blg_server=BooleanField('Use latest backlog loaded onto server')
     use_supply_server = BooleanField('Use latest supply loaded onto server')
     submit_allocation=SubmitField(' Make Allocation ')
-    email_option = SelectField('Share result to users by email: ',
-                               choices=[('no_email', 'Do not send email'),
-                                        ('to_me', 'Send to myself only'),
-                                        ('to_all', 'Send to ALL people'),],
-                               validators=[input_required()],
-                               default='no_email')
+
 
 
 class FileDownloadForm(FlaskForm):
@@ -48,8 +43,13 @@ class FileDownloadForm(FlaskForm):
                             default='put in PCBA org here (e.g. FOL)')
     submit_download_supply=SubmitField('Download') # download from db
 
-    file_name=StringField(validators=[DataRequired()]) # for deleting filename created by user self
+    file_name_delete=StringField() # for deleting filename created by user self
     submit_delete=SubmitField('   Delete   ')
+
+    file_name_share=StringField() # share by email
+    email_msg=TextAreaField(default='Hello, the allocation result is ready to be downloaded from https://pcba-allocation.cisco.com/download')
+    submit_share=SubmitField('   Share    ')
+
 
 class AdminForm(FlaskForm):
     file_name=StringField(validators=[DataRequired()])

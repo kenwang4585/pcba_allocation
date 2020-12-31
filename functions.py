@@ -1327,18 +1327,10 @@ def send_allocation_result(email_option,output_filename,file_3a4,file_supply,siz
     elif email_option=='to_all':
         to_address = cisco_recipients
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
-                                         embeded_filenames=None, sender='PCBA_Allocation',
-                                         file_3a4=file_3a4,
-                                         file_supply=file_supply,
-                                         size_3a4=size_3a4,
-                                         size_supply=size_supply,
-                                         BU=bu_list,
-                                         pcba_site=pcba_site,
-                                         output_filename=output_filename)
+                                         embeded_filenames=None, sender=login_user + ' via PCBA_Allocation',
+                                         output_filename=output_filename,email_msg=email_msg)
 
-        msg = 'Result sent to all predefined users by email.'
-    else:
-        msg = 'No email sent.'
+        msg = '{} sent to predefined users.'
 
     return msg
 

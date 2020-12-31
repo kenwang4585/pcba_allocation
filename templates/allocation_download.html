@@ -56,15 +56,34 @@
 
                 <tr>  <!-- For deleting the files created by user -->
                     <td width="95%">
-                        <br><br><br>
+                        <br>
                         <p><strong> Delete files created by yourself:</strong></p>
                                 <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                                     <tr>
                                         <td align="left" width="85%">
-                                            {{ form.file_name (class='form-control')}}
+                                            {{ form.file_name_delete (class='form-control')}}
                                         </td>
                                         <td align="center" width="15%">
                                             {{ form.submit_delete (class='btn-primary btn-sm')}}
+                                        </td>
+                                    </tr>
+                                </table>
+                    </td>
+                </tr>
+
+
+                <tr>  <!-- For sharing the files via email -->
+                    <td width="95%">
+                        <br>
+                        <p><strong> Share allocation result via email:</strong></p>
+                                <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                                    <tr>
+                                        <td align="left" width="85%">
+                                            {{ form.file_name_share (class='form-control')}}
+                                            {{ form.email_msg (class='form-control') }}
+                                        </td>
+                                        <td align="center" width="15%">
+                                            {{ form.submit_share (class='btn-primary btn-sm')}}
                                         </td>
                                     </tr>
                                 </table>

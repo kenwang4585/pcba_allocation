@@ -130,11 +130,6 @@ def allocation_run():
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)
             flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
-            # send result by email
-            module = 'send_allocation_result'
-            msg=send_allocation_result(email_option,output_filename,secure_filename(f_3a4.filename),secure_filename(f_supply.filename),
-                                       size_3a4,size_supply,bu_list,pcba_site,login_user)
-            flash(msg, 'success')
 
             finish_time = pd.Timestamp.now()
             processing_time = round((finish_time - start_time).total_seconds() / 60, 1)
@@ -197,6 +192,7 @@ def allocation_download():
     if form.validate_on_submit():
         submit_download_scdx=form.submit_download_supply.data
         submit_detete_file=form.submit_delete.data
+        submit_share_file=form.submit_share.data
 
         if submit_download_scdx:
             log_msg = []
@@ -229,7 +225,7 @@ def allocation_download():
                 flash(msg, 'warning')
                 add_user_log(user=login_user, location='Download', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + e)
         elif submit_detete_file:
-            fname = form.file_name.data
+            fname = form.file_name_delete.data
             if login_user in fname:
                 if fname in df_output.File_name.values:
                     f_path = df_output[df_output.File_name == fname].File_path.values[0]
@@ -255,6 +251,12 @@ def allocation_download():
                 return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
 
             return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+        elif submit_share_file:
+            fname_share = form.file_name_share.data
+            email_msg=form.email_msg.data
+            email_msg = email_msg + '\n' + 'File name: {}'.format(fname_share)
+
+            pass
 
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,

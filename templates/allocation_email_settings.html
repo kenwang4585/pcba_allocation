@@ -40,33 +40,38 @@
                 <tr> <!-- For downloading data from SCDx -->
                     <td width="95%">
                         <br>
+                        Allocation result notification will be sent based on below email settings. Data share with CM will not include backlog details.
+                        <br><br><br>
                         <table width="800" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                             <tr>
                                 <td align="left" width="12%">
-                                    <br>
                                     Identity:<br>
                                     {{ form.identity (class='form-control')}}
                                 </td>
                                 <td align="left" width="23%">
-                                    PCBA Org:<br> (multiple org sep by '/')
+                                    PCBA Org:<br>
                                     {{ form.pcba_org (class='form-control')}}
                                 </td>
                                 <td align="left" width="25%">
-                                    BU (optional):<br> (multiple BU sep by '/')
+                                    BU (optional):<br>
                                     {{ form.bu (class='form-control')}}
                                 </td>
                                 <td align="left" width="25%">
-                                    <br>
                                     Email address:<br>
                                     {{ form.email_to_add (class='form-control')}}
                                 </td>
                                 <td align="right" width="15%">
-                                    <br><br>
+                                    <br>
                                     {{ form.submit_add (class='btn-primary btn-sm')}}
                                 </td>
                             </tr>
                         </table>
+                        <br>
+                        <table width="800" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                            <tr><td>* If input multiple ORG or BU please separate by '/'.</td></tr>
+                        </table>
 
+                        <br>
                         <table width="800" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                             <tr>
                                 <td align="left" width="85%">
