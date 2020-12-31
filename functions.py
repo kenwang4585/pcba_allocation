@@ -68,11 +68,11 @@ def read_backlog_priority_from_smartsheet(df_3a4):
     return ss_exceptional_priority,removal_ss_email,df_removal
 
 
-
-def get_file_info_on_drive(base_path):
+def get_file_info_on_drive(base_path,keep_hours=100):
     """
-    Collect the file info on a drive and make that into a df.
+    Collect the file info on a drive and make that into a df. Remove files if older than keep_hours.
     """
+    now=time.time()
     file_list = os.listdir(base_path)
     files = []
     creation_time = []
@@ -80,17 +80,22 @@ def get_file_info_on_drive(base_path):
     file_path = []
     for file in file_list:
         c_time = os.stat(os.path.join(base_path, file)).st_ctime
-        c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c_time))
-        file_s = os.path.getsize(os.path.join(base_path, file))
-        if file_s > 1024 * 1024:
-            file_s = str(round(file_s/(1024*1024),1)) + 'M'
-        else:
-            file_s = str(int(file_s / 1024)) + 'K'
 
-        files.append(file)
-        creation_time.append(c_time)
-        file_size.append(file_s)
-        file_path.append(os.path.join(base_path,file))
+        if (now - c_time) / 3600 > keep_hours: #hours
+            os.remove(os.path.join(base_path, file))
+        else:
+            c_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c_time))
+            file_s = os.path.getsize(os.path.join(base_path, file))
+            if file_s > 1024 * 1024:
+                file_s = str(round(file_s / (1024 * 1024), 1)) + 'M'
+            else:
+                file_s = str(int(file_s / 1024)) + 'K'
+
+            files.append(file)
+            creation_time.append(c_time)
+            file_size.append(file_s)
+            file_path.append(os.path.join(base_path,file))
+
     df_file_info=pd.DataFrame({'File_name':files,'Creation_time':creation_time, 'File_size':file_size, 'File_path':file_path})
     df_file_info.sort_values(by='Creation_time',ascending=False,inplace=True)
 

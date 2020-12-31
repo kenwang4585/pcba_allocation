@@ -191,8 +191,8 @@ def allocation_download():
         add_user_log(user=login_user, location='Download', user_action='Visit', summary='')
 
     # output files
-    df_output=get_file_info_on_drive(base_dir_output)
-    df_upload=get_file_info_on_drive(base_dir_upload)
+    df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
+    df_upload=get_file_info_on_drive(base_dir_upload,keep_hours=240)
 
     if form.validate_on_submit():
         submit_download_scdx=form.submit_download_supply.data
@@ -395,10 +395,10 @@ def allocation_admin():
         return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
 
     # get file info
-    df_output=get_file_info_on_drive(base_dir_output)
-    df_upload=get_file_info_on_drive(base_dir_upload)
-    df_supply=get_file_info_on_drive(base_dir_supply)
-    df_logs=get_file_info_on_drive(base_dir_logs)
+    df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
+    df_upload=get_file_info_on_drive(base_dir_upload,keep_hours=240)
+    df_supply=get_file_info_on_drive(base_dir_supply,keep_hours=240)
+    df_logs=get_file_info_on_drive(base_dir_logs,keep_hours=10000)
 
     # read logs
     df_log_detail = read_table('user_log')
