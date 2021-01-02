@@ -223,7 +223,7 @@ def allocation_download():
         elif submit_share_file:
             fname_share = form.file_name_share.data.strip()
             if fname_share not in df_output.File_name.values:
-                msg='The file name you put in is not correct!'
+                msg='This file you put in does not exist on server: {}!'.format(fname_share)
                 flash(msg,'warning')
                 return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
 
@@ -235,7 +235,7 @@ def allocation_download():
             email_msg=form.email_msg.data
             email_msg = email_msg + '\nFile name: {}'.format(fname_share)
 
-            email_option = 'to_me'  # use "to_me" when testing.
+            email_option = 'to_all'  # use "to_me" when testing.
 
             send_allocation_result(email_option, email_msg, fname_share, login_user)
 
