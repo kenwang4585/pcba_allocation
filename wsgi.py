@@ -452,7 +452,7 @@ def user_guide():
 
     return render_template('allocation_userguide.html',user=login_name)
 
-@app.route('/datasource')
+@app.route('/datasource',methods=['GET','POST'])
 def allocation_datasource():
     form=DataSourceForm()
     login_user = request.headers.get('Oidc-Claim-Sub')
