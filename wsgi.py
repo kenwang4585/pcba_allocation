@@ -185,9 +185,11 @@ def allocation_download():
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user, location='Download', user_action='Visit', summary='')
 
-    # output files
-    df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
-    df_upload=get_file_info_on_drive(base_dir_upload,keep_hours=240)
+    # read the files
+    output_record_hours=360
+    upload_record_hours=240
+    df_output=get_file_info_on_drive(base_dir_output,keep_hours=output_record_hours)
+    df_upload=get_file_info_on_drive(base_dir_upload,keep_hours=upload_record_hours)
 
     if form.validate_on_submit():
         submit_detete_file=form.submit_delete.data
@@ -223,7 +225,7 @@ def allocation_download():
         elif submit_share_file:
             fname_share = form.file_name_share.data.strip()
             if fname_share not in df_output.File_name.values:
-                msg='This file you put in does not exist on server: {}!'.format(fname_share)
+                msg='This file you put in does not exist on server: {}'.format(fname_share)
                 flash(msg,'warning')
                 return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
 
@@ -248,7 +250,9 @@ def allocation_download():
 
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
+                           output_record_days=int(output_record_hours/24),
                            files_uploaded=df_upload.values,
+                           upload_record_days=int(upload_record_hours/24),
                            user=login_name)
 
 

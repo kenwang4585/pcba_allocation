@@ -78,7 +78,7 @@
                     <td width="95%">
                         <br><br><br>
                             {% if files_output|length>0 %}
-                                <p><strong> Allocation files generated:</strong></p>
+                                <p><strong> Allocation files generated (record kept by {{ output_record_days }} days):</strong></p>
                                 <table border="1" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                                     <tbody>
                                         <tr>
@@ -108,7 +108,7 @@
                     <td width="95%">
                         <br><br><br>
                                 {% if files_uploaded|length>0 %}
-                                    <p><strong> Input files uploaded by user:</strong></p>
+                                    <p><strong> Input files uploaded by user (record kept by {{ upload_record_days }} days):</strong></p>
                                     <table style="border-collapse:collapse" border="1" cellspacing="0px" align="left">
                                         <tr>
                                             <td width="400"><span style="font-size: large;">&nbsp;&nbsp;File name</span></td>
