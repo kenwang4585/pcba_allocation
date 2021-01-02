@@ -1,0 +1,84 @@
+
+<!-- Ken wang, Oct, 2020 -->
+
+{% extends 'allocation_base.html' %}
+
+{% block content %}
+    <!--<div class="card container"> -->
+    <table width="90%" align="center">
+        <tr>
+            <td>
+                <ul class="nav nav-tabs">
+                    <li class="active" style="font-size: large"><a href="{{ url_for('allocation_datasource')}}"><strong>Datasource</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('email_settings')}}" style="font-size: large"><strong>Email-settings</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('user_guide')}}" style="font-size: large"><strong>User-guide</strong></a></li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+    <!-- </div> -->
+
+
+    <form method="post" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+         <!-- below for flashed messages -->
+        <table style="border-collapse:collapse" border="0" cellspacing="0px" width="88%" align="center">
+                <tr>
+                  <td align="left" width="95%">
+                        {% if get_flashed_messages()|length>0 %}
+                          {% for message in get_flashed_messages(with_categories=True) %}
+                            <div class="alert alert-{{ message[0] }}" role="alert">
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                {{ message[1] }}
+                            </div>
+                          {% endfor %}
+                        {% endif %}
+                  </td>
+                </tr>
+
+                <tr> <!-- For downloading data from SCDx -->
+                    <td width="95%">
+                        <br>
+                        <p><strong>3A4 backlog</strong></p>
+                        Download from UOV with 3A4 view of kw_PA. Default includes all DF sites and all BU; can limit to specific BU if only need to do allocation for certain BUs.
+                        <br><br><br>
+
+                        <p><strong>Supply data: SCR, DF OH, In-tranit, Sourcing rules</strong></p>
+                        <p>Download from SCDx-POC:</p>
+                        <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                            <tr>
+                                <td align="left" width="85%">
+                                    {{ form.pcba_site (class='form-control') }}
+                                </td>
+                                <td align="center" width="15%">
+                                    {{ form.submit_download_supply (class='btn-primary btn-sm') }}
+                                </td>
+                            </tr>
+                        </table>
+                        <br><br><br><br>
+
+                        <p><strong>Exceptional order priority</strong></p>
+                        Maintained by PSP as needed in this <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid"  target="_blank">smartsheet</a>. Order will be automatically removed after packed out.
+                        <br><br><br>
+
+                        <p><strong>Tan grouping</strong></p>
+                        Maintained by PSP as needed in this <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid"  target="_blank">smartsheet</a>.
+                        <br><br><br>
+
+                        <p><strong>Missing in-transit</strong></p>
+                        Short term workaround for missing in-transit currently happen with SRGBU from FOL to other partner.
+                        Maintained by Mandy or PSP as needed in this <a href="https://app.smartsheet.com/sheets/3vRm52gg8MMM2h6xH5vv7xjHRV8rH83v5j2w9r91?view=grid"  target="_blank">smartsheet</a>.
+                        <br><br>
+                    </td>
+                </tr>
+
+        </table>
+
+    </form>
+
+{% endblock %}
+
+{% block flash_message %}
+{% endblock %}

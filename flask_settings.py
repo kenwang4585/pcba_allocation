@@ -39,15 +39,11 @@ class UploadForm(FlaskForm):
 
 
 class FileDownloadForm(FlaskForm):
-    pcba_site = StringField('Download supply data file from SCDx:',
-                            default='put in PCBA org here (e.g. FOL)')
-    submit_download_supply=SubmitField('Download') # download from db
-
-    file_name_delete=StringField() # for deleting filename created by user self
+    file_name_delete=StringField('File to delete',default='put in filename here') # for deleting filename created by user self
     submit_delete=SubmitField('   Delete   ')
 
-    file_name_share=StringField() # share by email
-    email_msg=TextAreaField(default='Hello, the allocation result is ready to be downloaded from https://pcba-allocation.cisco.com/download')
+    file_name_share=StringField('File to share',default='put in filename here') # share by email
+    email_msg=TextAreaField(default='Hello, please find from attached the allocation result. \n(or download from https://pcba-allocation.cisco.com/download)')
     submit_share=SubmitField('   Share    ')
 
 
@@ -64,6 +60,11 @@ class EmailSettingForm(FlaskForm):
     submit_add=SubmitField('   Add email   ')
     email_to_remove=StringField('*Email to remove:')
     submit_remove=SubmitField('Remove email')
+
+class DataSourceForm(FlaskForm):
+    pcba_site = StringField('Download supply data file from SCDx:',
+                            default='put in PCBA org here')
+    submit_download_supply = SubmitField('Download')  # download from db
 
 
 # dummy form for config - temp

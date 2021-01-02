@@ -9,6 +9,7 @@
         <tr>
             <td>
                 <ul class="nav nav-tabs">
+                    <li style="font-size: large"><a href="{{ url_for('allocation_datasource')}}"><strong>Datasource</strong></a></li>
                     <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
                     <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
                     <li class="active" style="font-size: large"><a href="{{ url_for('email_settings')}}" style="font-size: large"><strong>Email-settings</strong></a></li>
@@ -40,7 +41,7 @@
                 <tr> <!-- For downloading data from SCDx -->
                     <td width="95%">
                         <br>
-                        Allocation result notification will be sent based on below email settings. Data share with CM will not include backlog details.
+                        <strong>Allocation result notification will be sent based on below email settings.</strong>
                         <br><br><br>
                         <table width="800" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                             <tr>
