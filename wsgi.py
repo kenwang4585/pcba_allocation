@@ -239,7 +239,7 @@ def allocation_download():
 
             email_option = 'to_all'  # use "to_me" when testing.
 
-            send_allocation_result(email_option, email_msg, fname_share, login_user)
+            send_allocation_result(email_option, email_msg, fname_share, login_user,login_name)
 
             add_user_log(user=login_user, location='Download', user_action='Share file',
                          summary='Success: {}'.format(fname_share))

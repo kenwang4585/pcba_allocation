@@ -1300,7 +1300,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     return df_scr
 
 
-def send_allocation_result(email_option,email_msg,share_filename,login_user):
+def send_allocation_result(email_option,email_msg,share_filename,login_user,login_name):
     """
     Send the allocation result to defined users by email
     """
@@ -1314,7 +1314,7 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user):
         else:
             to_address = [login_user + '@cisco.com']
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
-                                         embeded_filenames=None, sender=login_user + ' via PCBA allocation tool',
+                                         embeded_filenames=None, sender=login_name + ' via PCBA allocation tool',
                                          share_filename=share_filename,
                                          email_msg=email_msg)
 
@@ -1322,7 +1322,7 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user):
     elif email_option=='to_all':
         to_address = cisco_recipients.append(login_user + '@cisco.com')
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
-                                         embeded_filenames=None, sender=login_user + ' via PCBA allocation tool',
+                                         embeded_filenames=None, sender=login_name + ' via PCBA allocation tool',
                                          share_filename=share_filename,
                                          email_msg=email_msg)
 
