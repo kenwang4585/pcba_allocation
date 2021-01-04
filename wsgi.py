@@ -50,14 +50,12 @@ def allocation_run():
         pcba_site=form.org.data
         bu=form.bu.data
         bu_list=bu.strip().upper().split('/')
-        email_option=form.email_option.data
         f_3a4 = form.file_3a4.data
         f_supply= form.file_supply.data
         ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
 
         log_msg.append('PCBA_SITE: ' + pcba_site)
         log_msg.append('BU: ' + bu.strip().upper())
-        log_msg.append('Email option: ' + email_option)
 
         # 存储文件
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
@@ -358,8 +356,15 @@ def email_settings():
                 return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
 
             if email_to_remove in df_email_detail.Email.values:
+                df_remove = df_email_detail[(df_email_detail.Email == email_to_remove)&(df_email_detail.Added_by==login_user)]
+                if df_remove.shape[0]==0:
+                    msg = "You can't remove emails added by others!"
+                    flash(msg, 'warning')
+                    return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+
                 add_user_log(user=login_user, location='Email settings', user_action='Remove email',
                              summary=email_to_remove)
+
                 id_list=df_email_detail[df_email_detail.Email==email_to_remove].id.to_list()
                 delete_record('email_settings', id_list)
                 msg='This email has been removed: {}'.format(email_to_remove)
