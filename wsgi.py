@@ -235,7 +235,7 @@ def allocation_download():
             email_msg=form.email_msg.data
             email_msg = email_msg.format('Filename: ' + fname_share)
 
-            email_option = 'to_me'  # use "to_me" when testing.
+            email_option = 'to_all'  # use "to_me" when testing.
 
             send_allocation_result(email_option, email_msg, fname_share, login_user,login_name)
 

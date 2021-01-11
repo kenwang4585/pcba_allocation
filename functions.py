@@ -1320,7 +1320,8 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user,logi
 
         msg = 'Result sent to youself by email.'
     elif email_option=='to_all':
-        to_address = cisco_recipients.append(login_user + '@cisco.com')
+        cisco_recipients.append(login_user + '@cisco.com')
+        to_address = cisco_recipients
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
                                          embeded_filenames=None, sender=login_name + ' via PCBA allocation tool',
                                          share_filename=share_filename,
