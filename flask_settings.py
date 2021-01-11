@@ -43,7 +43,7 @@ class FileDownloadForm(FlaskForm):
     submit_delete=SubmitField('   Delete   ')
 
     file_name_share=StringField('File to share',default='put in filename here') # share by email
-    email_msg=TextAreaField(default='Hello, please find from attached the allocation result. \n(or download from https://pcba-allocation.cisco.com/download)')
+    email_msg=TextAreaField(default='Hello, please find from attached the allocation result. \n(or download from https://pcba-allocation.cisco.com/download) \nPSP pls review the result and let Mandy know if case you have any questions or concerns with the allocation result, we target to implete this for all BU in FOL from Feb if no issues or concerns.')
     submit_share=SubmitField('   Share    ')
 
 
