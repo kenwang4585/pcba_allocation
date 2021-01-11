@@ -43,7 +43,7 @@ class FileDownloadForm(FlaskForm):
     submit_delete=SubmitField('   Delete   ')
 
     file_name_share=StringField('File to share',default='put in filename here') # share by email
-    email_msg=TextAreaField(default='Hello, please find from attached the allocation result. \n(or download from https://pcba-allocation.cisco.com/download) \n\nPSP pls review the result and let Mandy know if you have any questions or concerns with the allocation tool or result, we target to implete this for all BU in FOL from Feb if no issues or concerns. Thanks.')
+    email_msg=TextAreaField(default='Hello, the PCBA allocation result for this week is ready to be downloaded from https://pcba-allocation.cisco.com/download \n\nPSP team, appreciate if you could review the result and let Mandy know if you have any questions or concerns with the allocation result, if possible we would like to implement this for all BU in FOL from Feb, but pls let us know if you see any issues or have any concerns. Thanks.\n\nPer planned process shared earlier, Mandy would do site level allocation on Monday for FOL to execute on; then if you want to make any adjustment during rest days of the week, pls self server by using the tool yourself to rerun for your BU. You can refer to the user-guideline, or feel free ask Mandy for any help. Hope this tool helps!')
     submit_share=SubmitField('   Share    ')
 
 

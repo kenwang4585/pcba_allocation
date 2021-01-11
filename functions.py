@@ -1304,7 +1304,7 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user,logi
     """
     Send the allocation result to defined users by email
     """
-    subject = share_filename[:-18]
+    subject = share_filename[:-5]
     html_template='allocation_email_notification.html'
     #att_files_allocation = [(base_dir_output, output_filename)]  # List of tuples (path, file_name)
 

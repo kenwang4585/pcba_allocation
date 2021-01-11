@@ -233,7 +233,7 @@ def allocation_download():
                 return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
 
             email_msg=form.email_msg.data
-            email_msg = email_msg + '\nFile name: {}'.format(fname_share)
+            email_msg = email_msg + '\n\nFile name: {}'.format(fname_share)
 
             email_option = 'to_all'  # use "to_me" when testing.
 
