@@ -77,5 +77,6 @@ cisco_recipients=['kogoh@cisco.com',
                   'brigwang@cisco.com',
                   'pspforum@cisco.com',
                   'irlee@cisco.com',
-                  'adwilkin@cisco.com'
+                  'adwilkin@cisco.com',
+                  'scn_pmm@cisco.com',
                   ]
