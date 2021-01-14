@@ -496,7 +496,7 @@ def allocation_datasource():
             try:
                 df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
                 data_to_write = {'scr': df_scr,
-                                 'oh': df_oh,
+                                 'df-oh': df_oh,
                                  'in-transit': df_intransit,
                                  'sourcing_rule': df_sourcing_rule}
 
