@@ -4,7 +4,7 @@ import getpass
 # use below or from user selelction on UI
 sheet_scr='scr'
 sheet_transit='in-transit'
-sheet_oh='oh'
+sheet_oh='df_oh'
 sheet_sourcing='sourcing_rule'
 #pcba_site='FOL'
 
@@ -64,9 +64,6 @@ ranking_col_cust = ['priority_rank_top', 'fcd_offset', 'priority_rank_mid','ossd
 
 # email options
 cisco_recipients=['kogoh@cisco.com',
-                  'emliu@cisco.com',
-                  'chaxu@cisco.com',
-                  'engng@cisco.com',
                   'manfan@cisco.com',
                   'kwang2@cisco.com',
                   'clarwang@cisco.com',

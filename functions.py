@@ -1308,6 +1308,9 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user,logi
     html_template='allocation_email_notification.html'
     #att_files_allocation = [(base_dir_output, output_filename)]  # List of tuples (path, file_name)
 
+    email_msg=email_msg.split('\r\n')
+    email_msg=[x for x in email_msg if x!='']
+
     if email_option=='to_me':
         if login_user=='':
             to_address = ['kwang2@cisco.com']

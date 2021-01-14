@@ -1,6 +1,8 @@
 <!-- saved from url=(0057)file:///Users/wangken/py/html/templates/config_result.htm -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"></head>
 <body>
-	    {{ email_msg }}
+    {%  for msg in email_msg %}
+	    {{ msg }} <br><br>
+    {% endfor %}
 </body>
 </html>

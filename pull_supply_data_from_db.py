@@ -1,3 +1,4 @@
+# supported by Pearlyn, Patty, Mandy.... updated by Ken
 from pymongo import MongoClient
 import pandas as pd
 import os
@@ -51,11 +52,20 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
                                         "planningOrg": 1.0,
                                         "TAN": "$itemNumber",
                                         "BU": "$attributes.cisco.pfDemandRatio.largestBU",
-                                        "OH": {"$add": [{"$ifNull": ["$measures.derivatives.siteOH.total", 0.0]},
-                                                        {"$ifNull": ["$measures.derivatives.hubOH.total",0.0]}]},}},
+                                        # use below condidtion for bombo sites and non-combo sites - need further validate Mexico site data
+                                        "OH":  {"$cond": {"if" : {"$or" : [{"$eq" : ["$planningOrg","FDO"]},
+                                                                           {"$eq" : ["$planningOrg","JPE"]},
+                                                                           {"$eq": ["$planningOrg", "FGU"]},
+                                                                           {"$eq": ["$planningOrg", "FJZ"]},
+                                                                           {"$eq": ["$planningOrg", "JMX"]},
+                                                                           ]},
+                                                         "then": {"$add" : [{"$ifNull" : ["$measures.derivatives.siteOH.totalByClassCode.FA&T",0.0]},
+                                                                           {"$ifNull" : ["$measures.derivatives.hubOH.totalByClassCode.FA&T",0.0]}]},
+                                                         "else" : {"$add" : [{"$ifNull" : ["$measures.derivatives.siteOH.total",0.0]},
+                                                                             {"$ifNull" : ["$measures.derivatives.hubOH.total",0.0]}]}},},}},
 
-                        {"$match": {"OH": {"$gt": 0} }},
-                    ]
+                        {"$match": {"OH": {"$gt": 0} }}
+                      ]
 
 
     pipeline_scr = [{"$match": {"archived": False,
@@ -120,7 +130,7 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
 
 
 if __name__=='__main__':
-    pcba_site='FOL'
+    pcba_site='JPE'
     a=pd.Timestamp.now()
     df_scr, df_oh, df_intransit, df_sourcing_rule=collect_scr_oh_transit_from_scdx(pcba_site)
 
@@ -128,7 +138,7 @@ if __name__=='__main__':
     writer = pd.ExcelWriter(outPath,engine='xlsxwriter')
     
     df_intransit.to_excel(writer, sheet_name='in-transit', index=False)
-    df_oh.to_excel(writer, sheet_name='oh', index=False)
+    df_oh.to_excel(writer, sheet_name='df_oh', index=False)
     df_scr.to_excel(writer, sheet_name='scr', index=False)
     df_sourcing_rule.to_excel(writer, sheet_name='sourcing_rule', index=False)
     writer.save()
