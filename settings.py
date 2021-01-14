@@ -4,7 +4,7 @@ import getpass
 # use below or from user selelction on UI
 sheet_scr='scr'
 sheet_transit='in-transit'
-sheet_oh='df_oh'
+sheet_oh='df-oh'
 sheet_sourcing='sourcing_rule'
 #pcba_site='FOL'
 
@@ -44,8 +44,8 @@ else:
     base_dir_logs = os.path.join(os.getcwd(), 'logs')
 
 output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','distinct_po_filter', 'PRODUCT_ID',
-           'TAN','BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
-           'CURRENT_FCD_NBD_DATE','fcd_offset','ORIGINAL_FCD_NBD_DATE','ossd_offset', 'TARGET_SSD','LT_TARGET_FCD','C_UNSTAGED_DOLLARS',
+           'BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
+           'ORIGINAL_FCD_NBD_DATE','ossd_offset', 'CURRENT_FCD_NBD_DATE','C_UNSTAGED_DOLLARS',
             'ss_unstg_rev','REVENUE_NON_REVENUE',
             'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN','PROGRAM']
 
@@ -59,12 +59,11 @@ col_oh_must_have=['planningOrg','TAN','BU','OH']
 col_scr_must_have=['planningOrg','TAN','BU','SCRDate','SCRQuantity']
 
 # rank sequences
-ranking_col_cust = ['priority_rank_top', 'fcd_offset', 'priority_rank_mid','ossd_offset',
+ranking_col_cust = ['priority_rank', 'ossd_offset', 'PROGRAM',
                            'C_UNSTAGED_QTY', 'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
 
 # email options
-cisco_recipients=['kogoh@cisco.com',
-                  'manfan@cisco.com',
+cisco_recipients=['manfan@cisco.com',
                   'kwang2@cisco.com',
                   'clarwang@cisco.com',
                   'seyang@cisco.com',
