@@ -52,17 +52,15 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
                                         "planningOrg": 1.0,
                                         "TAN": "$itemNumber",
                                         "BU": "$attributes.cisco.pfDemandRatio.largestBU",
-                                        # use below condidtion for bombo sites and non-combo sites - need further validate Mexico site data
-                                        "OH":  {"$cond": {"if" : {"$or" : [{"$eq" : ["$planningOrg","FDO"]},
-                                                                           {"$eq" : ["$planningOrg","JPE"]},
-                                                                           {"$eq": ["$planningOrg", "FGU"]},
-                                                                           {"$eq": ["$planningOrg", "FJZ"]},
-                                                                           {"$eq": ["$planningOrg", "JMX"]},
-                                                                           ]},
+                                        # if DF org=pcba_site, only take the FA&T inventory (WH+WIP); otherwise take Raw(WH) + FA&T(WIP)
+                                        "OH":  {"$cond": {"if" : {"$eq" : ["$planningOrg",pcba_site]},
                                                          "then": {"$add" : [{"$ifNull" : ["$measures.derivatives.siteOH.totalByClassCode.FA&T",0.0]},
                                                                            {"$ifNull" : ["$measures.derivatives.hubOH.totalByClassCode.FA&T",0.0]}]},
-                                                         "else" : {"$add" : [{"$ifNull" : ["$measures.derivatives.siteOH.total",0.0]},
-                                                                             {"$ifNull" : ["$measures.derivatives.hubOH.total",0.0]}]}},},}},
+                                                         "else" : {"$add" : [{"$ifNull" : ["$measures.derivatives.siteOH.totalByClassCode.FA&T",0.0]},
+                                                                             {"$ifNull" : ["$measures.derivatives.hubOH.totalByClassCode.FA&T",0.0]},
+                                                                             {"$ifNull": ["$measures.derivatives.siteOH.totalByClassCode.Raw",0.0]},
+                                                                             {"$ifNull": ["$measures.derivatives.hubOH.totalByClassCode.Raw",0.0]},
+                                                                            ]}},},}},
 
                         {"$match": {"OH": {"$gt": 0} }}
                       ]
@@ -123,6 +121,14 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
     df_oh=pd.DataFrame(cursor2)
     df_scr=pd.DataFrame(cursor3)
     df_sourcing_rule=pd.DataFrame(cursor4)
+
+    # remove non-relevant DF OH based on sourcing rules
+    df_sourcing_rule.loc[:,'org_pn']=df_sourcing_rule.DF_site+'_'+df_sourcing_rule.TAN
+    df_oh.loc[:,'org_pn']=df_oh.planningOrg+'_'+df_oh.TAN
+
+    df_oh=df_oh[df_oh.org_pn.isin(df_sourcing_rule.org_pn)]
+    df_sourcing_rule.drop('org_pn', axis=1, inplace=True)
+    df_oh.drop('org_pn', axis=1, inplace=True)
 
     client.close()
 

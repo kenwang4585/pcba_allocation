@@ -2,7 +2,7 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"></head>
 <body>
 	    <span style="font-size: large">
-            <strong>Below orders were removed from Exceptional priority SS smartsheet (executed by: {{ user }}):</strong>
+            <strong>Below orders were packed/cancelled so are removed from the Exceptional priority SS smartsheet (executed by: {{ user }}):</strong>
                 <table style="border-collapse:collapse; word-break:break-all; word-wrap: break-word " border="1" cellspacing="0px" align="left">
                     <tr>
                         {% for col in removal_ss_header %}
@@ -26,8 +26,7 @@
                     <td>
                         <strong>Note:</strong>
                         <li>This happens when the allocation app is run;</li>
-                        <li>The removal is based on SS shown as cancelled or fully packed in 3a4 used here;</li>
-                        <li>For SS not exist in 3a4 but which is also already packed/cancelled in reality, pls remove from smartsheet manually.</li>
+                        <li>The removal is based on SS shown as cancelled,fully packed or disappeared in 3a4 used here (as long the 3a4 includes that org and BU).</li>
                     </td>
                 </tr>
             </table>

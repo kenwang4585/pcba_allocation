@@ -38,13 +38,18 @@ def read_backlog_priority_from_smartsheet(df_3a4):
     smartsheet_client = SmartSheetClient(token, proxies)
     df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
-    # remove SS not in df_3a4
+    # SS disappeared from 3a4 - if the 3a4 include the org and BU
+    df_smart_w_org_bu_in_3a4=df_smart[(df_smart.ORG.isin(df_3a4.ORGANIZATION_CODE.unique())) & (df_smart.BU.isin(df_3a4.BUSINESS_UNIT.unique()))]
+    ss_not_in_3a4=np.setdiff1d(df_smart_w_org_bu_in_3a4.SO_SS.values,df_3a4.SO_SS.values)
+    # SS showing as packed or cancelled in 3a4
     ss_cancelled_or_packed_3a4=get_packed_or_cancelled_ss_from_3a4(df_3a4)
-    df_removal=df_smart[df_smart.SO_SS.isin(ss_cancelled_or_packed_3a4)]
+
+    df_removal=df_smart[(df_smart.SO_SS.isin(ss_cancelled_or_packed_3a4))|(df_smart.SO_SS.isin(ss_not_in_3a4))]
     removal_row_id=df_removal.row_id.values.tolist()
     removal_ss_email=list(set(df_removal['Created By'].values.tolist()))
     removal_ss_email = removal_ss_email + ['kwang2@cisco.com','manfan@cisco.com']
     if len(removal_row_id)>0:
+        #print(df_removal)
         smartsheet_client.delete_row(sheet_id=sheet_id, row_id=removal_row_id)
 
     # create the priority dict

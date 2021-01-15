@@ -47,15 +47,26 @@ def allocation_run():
         #log_msg.append('User info: ' + request.headers.get('User-agent'))
 
         # 通过条件判断及邮件赋值，开始执行任务
-        pcba_site=form.org.data
-        bu=form.bu.data
-        bu_list=bu.strip().upper().split('/')
+        pcba_site=form.org.data.strip().upper()
+        bu=form.bu.data.strip().upper()
+        bu_list=bu.split('/')
         f_3a4 = form.file_3a4.data
         f_supply= form.file_supply.data
         ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
 
+        # check input
+        if pcba_site not in pcba_site_list:
+            msg = "'{}' is not a PCBA org.".format(pcba_site)
+            flash(msg, 'warning')
+            return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
+
+        if pcba_site not in f_supply.filename.upper():
+            msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
+            flash(msg, 'warning')
+            return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
+
         log_msg.append('PCBA_SITE: ' + pcba_site)
-        log_msg.append('BU: ' + bu.strip().upper())
+        log_msg.append('BU: ' + bu)
 
         # 存储文件
         #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
@@ -435,6 +446,22 @@ def allocation_admin():
                            log_details=df_log_detail.values,
                            user=login_name)
 
+
+@app.route('/document', methods=['GET'])
+def document():
+    login_user=request.headers.get('Oidc-Claim-Sub')
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    if login_user == None:
+        login_user = ''
+        login_name = ''
+
+    if login_user!='' and login_user!='kwang2':
+        add_user_log(user=login_user, location='Admin', user_action='Visit', summary='Warning')
+        return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+
+    return render_template('allocation_document.html',
+                           user=login_name)
+
 # Below is a dummy one
 @app.route('/config',methods=['GET','POST'])
 def config():
@@ -489,7 +516,7 @@ def allocation_datasource():
             fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
             log_msg.append('Download supply from DB')
 
-            if pcba_site not in ['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']:
+            if pcba_site not in pcba_site_list:
                 msg = "'{}' is not a PCBA org.".format(pcba_site)
                 flash(msg, 'warning')
                 return redirect(url_for('allocation_datasource',_external=True,_scheme='https',viewarg1=1))
@@ -507,7 +534,7 @@ def allocation_datasource():
             except Exception as e:
                 msg = 'Error downloading supply data from database! ' + str(e)
                 flash(msg, 'warning')
-                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + e)
+                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + str(e))
                 return redirect(url_for('allocation_datasource', _external=True, _scheme='https', viewarg1=1))
 
     return render_template('allocation_datasource.html',user=login_name,form=form)
