@@ -50,9 +50,6 @@ def allocation_run():
         pcba_site=form.org.data.strip().upper()
         bu=form.bu.data.strip().upper()
         bu_list=bu.split('/')
-        f_3a4 = form.file_3a4.data
-        f_supply= form.file_supply.data
-        ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
 
         # check input
         if pcba_site not in pcba_site_list:
@@ -60,10 +57,16 @@ def allocation_run():
             flash(msg, 'warning')
             return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
 
+        f_supply= form.file_supply.data
+
+        # check input
         if pcba_site not in f_supply.filename.upper():
             msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
             flash(msg, 'warning')
             return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
+
+        f_3a4 = form.file_3a4.data
+        ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
 
         log_msg.append('PCBA_SITE: ' + pcba_site)
         log_msg.append('BU: ' + bu)

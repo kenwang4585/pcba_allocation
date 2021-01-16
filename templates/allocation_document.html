@@ -43,13 +43,30 @@
 
                 <h3>Intransit consumption:</h3>
                 <p>
-                    <li>ETA<=15days considered same as OH to fulfillbacklog</li>
-                    <li>ETA>15days can fulfill backlog backward by 10days onward based on OSSD date(without transit time offset).</li>
+                    <li>ETA<=15days considered same as OH to fulfill backlog</li>
+                    <li>ETA>15days (close_eta_cutoff_criteria) can fulfill backlog backward by 10days (eta_backward_offset_days) onward based on OSSD date(without transit time offset).</li>
 
                 </p>
                 <br><br>
 
+                <h3>Transit time:</h3>
+                <p>
+                    Read from the sourcing rules data and pick the shortest date.
+                    If transit time is 0 then change it 1. Affects sites like FOL to FOC, FDO to FDO, etc.
+                </p>
+                <br><br>
 
+                <h3>TODO:</h3>
+                <p>
+                    <li></li>
+                </p>
+                <br><br>
+
+                <h3>3A4:</h3>
+                <p>
+                    3A4 contents only keep those with BOM_PN in the sourcing rules. TAN_GROUPing is kept unconditionally so far but which may not be needed/relevant.
+                    TODO: above may be reviewed and further removed is not relevant.
+                </p>
                 <br><br>
 
 

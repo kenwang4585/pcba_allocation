@@ -21,7 +21,7 @@ db = SQLAlchemy(app)
 # Flask forms
 class UploadForm(FlaskForm):
     # 创建各种表单对象
-    org=StringField('PCBA Org code (e.g. FOL):',validators=[DataRequired()],default='FOL')
+    org=StringField('PCBA Org code (e.g. FOL):',validators=[DataRequired()],default='FDO')
     bu=StringField('Business units (e.g. PABU/ERBU; leave blank for all BU): ',default='')
 
     ranking_logic=SelectField('Select order ranking logic:',

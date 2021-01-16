@@ -9,6 +9,7 @@ sheet_sourcing='sourcing_rule'
 pcba_site_list=['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']
 
 # backlog offset by transit pad will not consider ocean ship - assuming ocean is to cocver fcst demand but not backlog demand
+"""
 transit_time={'FOL':{'FOC':1,
                      'FTX':7,
                      'FCZ':9,
@@ -36,6 +37,8 @@ transit_time={'FOL':{'FOC':1,
                      'SHK':4,
                     'other':7}
                 }
+"""
+
 # within below days transit ETA considered as OH
 close_eta_cutoff_criteria=15
 # Far ETA eligible to backward fulfill PO: offset OSSD by deducting below days

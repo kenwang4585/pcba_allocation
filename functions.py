@@ -292,6 +292,26 @@ def add_up_supply_by_pn(df,org_col='planningOrg', pn_col='TAN'):
 
     return df
 
+def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
+    """
+    Read the transit pad from the sourcing rules. Only pick the shortest LT which is air. For 0 transit, change it to 1.
+    """
+
+    df_transit_time=df_sourcing.sort_values(by=['DF_site','Transit_time'],ascending=True)
+    df_transit_time.drop_duplicates('DF_site',keep='first',inplace=True)
+
+    transit_time={}
+    transit_time_by_org={}
+    for row in df_transit_time.itertuples():
+        if row.Transit_time==0:
+            transit_time_by_org[row.DF_site] = 1
+        else:
+            transit_time_by_org[row.DF_site]=row.Transit_time
+
+    transit_time[pcba_site]=transit_time_by_org
+
+    return transit_time
+
 
 
 def update_date_with_transit_pad(x, y, transit_time, pcba_site):
@@ -301,7 +321,8 @@ def update_date_with_transit_pad(x, y, transit_time, pcba_site):
     if x in transit_time[pcba_site].keys():
         return y - pd.Timedelta(days=transit_time[pcba_site][x])
     else:
-        return y - pd.Timedelta(days=transit_time[pcba_site]['other'])
+        # do not offset date.. this should happen in case like unneeded sourcing added for DF not in sourcing - e.g. TAN_GROUPING for SJZ
+        return y
 
 
 def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
@@ -310,7 +331,7 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
     :param df_3a4:
     :return:
     """
-    regex_pn = re.compile(r'\d{2,3}-\d{4,7}')
+    regex_pn = re.compile(r'\d{2,3}-\d{3,7}')
     regex_usage = re.compile(r'\([0-9.]+\)')
 
     df_flb_tan = df_3a4[df_3a4.FLB_TAN.notnull()][['PO_NUMBER', 'PRODUCT_ID', 'ORDERED_QUANTITY', 'FLB_TAN']].copy()
@@ -665,7 +686,7 @@ def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_sit
 
     df_scr.reset_index(inplace=True)
     df_scr.sort_values(by=['TAN', 'ORG'], ascending=True, inplace=True)
-    df_scr.loc[:, 'ORG'] = df_scr.ORG.map(lambda x: pcba_site if 'A-' in x else x)
+    df_scr.loc[:, 'ORG'] = df_scr.ORG.map(lambda x: pcba_site+'-SCR' if 'A-' in x else x)
     df_scr.set_index(['TAN', 'ORG'], inplace=True)
 
     return df_scr
@@ -675,7 +696,7 @@ def extract_bu_from_scr(df_scr,tan_group):
     """
     Versionless the PN and extract the BU info from original scr before pivoting
     """
-    regex_pn = re.compile(r'\d{2,3}-\d{4,7}')
+    regex_pn = re.compile(r'\d{2,3}-\d{3,7}')
 
     tan_bu = {}
     for row in df_scr.itertuples(index=False):
@@ -1195,7 +1216,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     # add BU info
     df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu[x])
 
-
+    #print(df_scr[:10])
 
     # add backlog qty
     df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
@@ -1206,7 +1227,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     # add df OH
     df_oh.columns = ['OH']
     df_oh.reset_index(inplace=True)
-    df_oh = df_oh[df_oh.planningOrg != pcba_site]
+    #df_oh = df_oh[df_oh.planningOrg != pcba_site]  OH here is already for DF so no need to remove... combo site is changed to 'org-SCR'
     df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['planningOrg', 'TAN'], how='left')
     # drop the unneeded columns introduced by merge
     df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'planningOrg'], axis=1, inplace=True)
@@ -1223,21 +1244,21 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
    # ADD temp col oh+transit to calculate gap before
     df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
     df_scr['oh+transit'].fillna(0, inplace=True)
-    df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site,
+    df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site+'-SCR',
                                            df_scr['oh+transit'] - df_scr.Unpacked_blg,
                                            None)
     df_scr.drop('oh+transit', axis=1, inplace=True)
 
     # calculate and add in total allocation and recovery date
-    df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site,
+    df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site+'-SCR',
                                            df_scr.iloc[:, 2:-5].sum(axis=1),  # [3:-5] refer to the right data columns
                                            None)
 
-    df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site,
+    df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site+'-SCR',
                                           df_scr.Gap_before + df_scr.Allocation,
                                           None)
 
-    df_scr.loc[:, 'Blg_recovery'] = np.where((df_scr.ORG != pcba_site),
+    df_scr.loc[:, 'Blg_recovery'] = np.where((df_scr.ORG != pcba_site+'-SCR'),
                                          np.where(df_scr.Gap_before >= 0,
                                                   'No gap',
                                                   np.where(df_scr.Gap_after < 0,
@@ -1271,7 +1292,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
         ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
         inplace=True)
     df_scr.reset_index(inplace=True)
-    dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site)]
+    dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site+'-SCR')]
     dfx=dfx.iloc[:,:-9].copy() # -9 to excluded the last added columns
     dfx.set_index(['TAN', 'ORG'], inplace=True)
     df_scr.set_index(['TAN', 'ORG'], inplace=True)
@@ -1348,12 +1369,13 @@ def collect_available_sourcing(df_sourcing):
 
 def remove_unavailable_sourcing (df_3a4,sourcing_rules, tan_group_sourcing):
     """
-    Removed the unavaialbe sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
+    Removed the unavaialble sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
     Need to consider tan_group_sourcing as well.
     """
 
     df_3a4.loc[:,'org_pn']=df_3a4.ORGANIZATION_CODE+'-'+df_3a4.BOM_PN
 
+    # Note:tan_group_sourcing may introduce unneeded 3a4 remain here if certain site does not have those groupting
     sourcing_rules_combined=sourcing_rules+tan_group_sourcing
 
     df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules_combined)].copy()
@@ -1374,6 +1396,9 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     """
     # Read TAN group mapping from smartsheet
     df_grouping, tan_group,tan_group_sourcing = read_tan_group_mapping_from_smartsheet()
+
+    # read air transit pad from df_sourcing
+    transit_time=read_transit_from_sourcing_rules(df_sourcing,pcba_site)
 
     # extract BU info for TAN from SCR for final report processing use
     tan_bu = extract_bu_from_scr(df_scr,tan_group)
