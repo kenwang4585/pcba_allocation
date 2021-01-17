@@ -54,7 +54,7 @@ def allocation_run():
         if pcba_site not in pcba_site_list:
             msg = "'{}' is not a PCBA org.".format(pcba_site)
             flash(msg, 'warning')
-            print(msg)
+            print(login_user,msg)
             return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
         print('{} is correct PCBA site.'.format(pcba_site))
 
@@ -63,7 +63,7 @@ def allocation_run():
         if pcba_site not in f_supply.filename.upper():
             msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
             flash(msg, 'warning')
-            print(msg)
+            print(login_user,msg)
             return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
         print('{} is correct supply file for this allocation.'.format(f_supply.filename))
 
