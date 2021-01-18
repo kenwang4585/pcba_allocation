@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_wtf.file import FileField, FileRequired,FileAllowed
 from flask_wtf import FlaskForm
-from wtforms.validators import Email, DataRequired,input_required
+from wtforms.validators import Email, DataRequired,AnyOf
 from wtforms import SubmitField, BooleanField, StringField,IntegerField,SelectField,PasswordField,TextAreaField,RadioField
 import os
 from flask_sqlalchemy import SQLAlchemy
@@ -15,6 +15,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'secret string')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI') #os.getenv('DB_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAX_CONTENT_LENGTH']=150*1024*1024
 
 db = SQLAlchemy(app)
 
@@ -30,8 +31,8 @@ class UploadForm(FlaskForm):
                              default='cus_sat',
                              validators=[DataRequired()])
 
-    file_3a4 = FileField('Upload 3A4 file (.csv):',validators=[FileRequired(),FileAllowed(['csv'],'Only CSV file is allowed!')])
-    file_supply=FileField('Upload supply file (.xlsx):',validators=[FileRequired(),FileAllowed(['xlsx'],'Oly XLSX file is allowed!')])
+    file_3a4 = FileField('Upload 3A4 file (.csv):',validators=[FileRequired()])
+    file_supply=FileField('Upload supply file (.xlsx):',validators=[FileRequired()])
     use_blg_server=BooleanField('Use latest backlog loaded onto server')
     use_supply_server = BooleanField('Use latest supply loaded onto server')
     submit_allocation=SubmitField(' Make Allocation ')
@@ -63,6 +64,7 @@ class EmailSettingForm(FlaskForm):
 
 class DataSourceForm(FlaskForm):
     pcba_site = StringField('Download supply data file from SCDx:',
+                            validators=[DataRequired()],
                             default='put in PCBA org here')
     submit_download_supply = SubmitField('Download')  # download from db
 
