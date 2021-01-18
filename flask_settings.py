@@ -15,7 +15,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'secret string')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI') #os.getenv('DB_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH']=150*1024*1024
+#app.config['MAX_CONTENT_LENGTH']=150*1024*1024
 
 db = SQLAlchemy(app)
 
