@@ -33,6 +33,10 @@ def allocation_run():
     if login_user==None:
         login_user=''
         login_name=''
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
     #print(request.headers)
     #print(request.url)
 
@@ -59,7 +63,7 @@ def allocation_run():
             msg = "'{}' is not a PCBA org.".format(pcba_site)
             flash(msg, 'warning')
             print(login_user,msg)
-            return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
+            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
         print('{} is correct PCBA site.'.format(pcba_site))
 
         # check input
@@ -70,7 +74,7 @@ def allocation_run():
             summary = 'pcba_site ({}) and supply file({}) used not matching'.format(pcba_site,f_supply.filename)
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
-            return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
+            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
         print('{} is correct supply file for this allocation.'.format(f_supply.filename))
 
         log_msg.append('PCBA_SITE: ' + pcba_site)
@@ -85,14 +89,14 @@ def allocation_run():
             summary = 'Wong 3a4 formats: {}'.format(ext_3a4)
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
-            return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
+            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
         if ext_supply != '.xlsx':
             msg='The supply file must be xlsx format which you downloaded from the datasource tab!'
             flash(msg, 'warning')
             summary = 'Wong supply file formats: {}'.format(ext_supply)
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
-            return redirect(url_for('allocation_run', _external=True, _scheme='https', viewarg1=1))
+            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
 
 
         # 存储文件
@@ -138,7 +142,7 @@ def allocation_run():
 
         if sheet_name_msg!='' or msg_3a4!='' or msg_3a4_option!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
             print('error')
-            return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+            return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
        # 判断并定义ranking_col
         if ranking_logic == 'cus_sat':
@@ -155,11 +159,11 @@ def allocation_run():
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
             if df_3a4.shape[0] == 0:
                 flash('The 3a4 data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+                return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
             if df_scr.shape[0] == 0:
                 flash('The SCR data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+                return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
             #### main program
             module='Main program for allocation'
@@ -204,7 +208,7 @@ def allocation_run():
         except:
             print('')
 
-        return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+        return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
     return render_template('allocation_run.html', form=form, user=login_name)
 
@@ -217,6 +221,9 @@ def allocation_download():
     if login_user == None:
         login_user = ''
         login_name = ''
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
 
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user, location='Download', user_action='Visit', summary='')
@@ -249,26 +256,26 @@ def allocation_download():
                                  summary='Fail: {}'.format(fname))
                     msg = 'Error file name: {}'.format(fname)
                     flash(msg, 'warning')
-                    return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+                    return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
                 add_user_log(user=login_user, location='Download', user_action='Delete file',
                              summary='Success: {}'.format(fname))
             else:
                 msg='You are not allowed to delete this file created by others: {}'.format(fname)
                 flash(msg,'warning')
-                return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
 
-            return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+            return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
         elif submit_share_file:
             fname_share = form.file_name_share.data.strip()
             if fname_share not in df_output.File_name.values:
                 msg='This file you put in does not exist on server: {}'.format(fname_share)
                 flash(msg,'warning')
-                return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
 
             if login_user not in fname_share:
                 msg = 'You can only share file generated by yourself!'
                 flash(msg, 'warning')
-                return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
 
             email_msg=form.email_msg.data
 
@@ -284,7 +291,7 @@ def allocation_download():
 
             msg = '{} is sent to the defined users by email.'.format(fname_share)
             flash(msg, 'success')
-            return redirect(url_for('allocation_download', _external=True, _scheme='https', viewarg1=1))
+            return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
 
     return render_template('allocation_download.html',form=form,
                            files_output=df_output.values,
@@ -355,6 +362,10 @@ def email_settings():
     if login_user == None:
         login_user = ''
         login_name = ''
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user, location='Email settings', user_action='Visit',
                  summary='')
@@ -376,31 +387,31 @@ def email_settings():
             if len(pcba_org)==0 or len(email_to_add)==0:
                 msg='PCBA org and email are mandatory fields!'
                 flash(msg,'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
 
             if email_to_add in df_email_detail.Email.values:
                 update_email_data(identity, pcba_org, bu, email_to_add, login_user)
                 msg='This email already exists! Data has been updated: {}'.format(email_to_add)
                 flash(msg,'success')
-                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
             else:
                 add_email_data(identity, pcba_org, bu, email_to_add,login_user)
                 msg='This email is added: {}'.format(email_to_add)
                 flash(msg,'success')
-                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
         elif submit_remove:
             email_to_remove=form.email_to_remove.data.strip().lower()
             if len(email_to_remove)==0:
                 msg='Put in the email to remove!'
                 flash(msg,'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
 
             if email_to_remove in df_email_detail.Email.values:
                 df_remove = df_email_detail[(df_email_detail.Email == email_to_remove)&(df_email_detail.Added_by==login_user)]
                 if df_remove.shape[0]==0:
                     msg = "You can't remove emails added by others!"
                     flash(msg, 'warning')
-                    return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+                    return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
 
                 add_user_log(user=login_user, location='Email settings', user_action='Remove email',
                              summary=email_to_remove)
@@ -409,11 +420,11 @@ def email_settings():
                 delete_record('email_settings', id_list)
                 msg='This email has been removed: {}'.format(email_to_remove)
                 flash(msg,'success')
-                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
             else:
                 msg='This email does not exist: {}'.format(email_to_remove)
                 flash(msg,'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
 
     return render_template('allocation_email_settings.html', form=form,
                            email_details=df_email_detail.values,
@@ -428,10 +439,13 @@ def allocation_admin():
     if login_user == None:
         login_user = ''
         login_name = ''
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
 
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user, location='Admin', user_action='Visit', summary='Warning')
-        return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+        return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
     # get file info
     df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
@@ -463,7 +477,7 @@ def allocation_admin():
         else:
             msg = 'Error file name! Ensure it is in output folder,upload folder or supply folder: {}'.format(fname)
             flash(msg, 'warning')
-            return redirect(url_for('allocation_admin',_external=True,_scheme='https',viewarg1=1))
+            return redirect(url_for('allocation_admin',_external=True,_scheme=http_scheme,viewarg1=1))
 
     return render_template('allocation_admin.html',form=form,
                            files_output=df_output.values,
@@ -481,10 +495,13 @@ def document():
     if login_user == None:
         login_user = ''
         login_name = ''
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
 
     if login_user!='' and login_user!='kwang2':
         add_user_log(user=login_user, location='Admin', user_action='Visit', summary='Warning')
-        return redirect(url_for('allocation_run',_external=True,_scheme='https',viewarg1=1))
+        return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
     return render_template('allocation_document.html',
                            user=login_name)
@@ -525,6 +542,9 @@ def allocation_datasource():
     if login_user == None:
         login_user = ''
         login_name = ''
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
 
     if login_user != '' and login_user != 'kwang2':
         add_user_log(user=login_user, location='User-guide', user_action='Visit', summary='')
@@ -546,7 +566,7 @@ def allocation_datasource():
             if pcba_site not in pcba_site_list:
                 msg = "'{}' is not a PCBA org.".format(pcba_site)
                 flash(msg, 'warning')
-                return redirect(url_for('allocation_datasource',_external=True,_scheme='https',viewarg1=1))
+                return redirect(url_for('allocation_datasource',_external=True,_scheme=http_scheme))
             try:
                 df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
                 data_to_write = {'scr': df_scr,
@@ -562,6 +582,6 @@ def allocation_datasource():
                 msg = 'Error downloading supply data from database! ' + str(e)
                 flash(msg, 'warning')
                 add_user_log(user=login_user, location='Datasource', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + str(e))
-                return redirect(url_for('allocation_datasource', _external=True, _scheme='https', viewarg1=1))
+                return redirect(url_for('allocation_datasource', _external=True, _scheme=http_scheme, viewarg1=1))
 
     return render_template('allocation_datasource.html',user=login_name,form=form)
