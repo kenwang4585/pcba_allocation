@@ -161,7 +161,7 @@ def read_tan_group_mapping_from_smartsheet():
     return df_grouping, tan_group, tan_group_sourcing
 
 
-def read_exceptional_intransit_from_smartsheet():
+def read_exceptional_intransit_from_smartsheet(pcba_site):
     '''
     Read the exceptional in transit data from smartsheet for TAN shipping to other partner (like FOL to FGU)
     which is missing from the SCDx .
@@ -174,7 +174,7 @@ def read_exceptional_intransit_from_smartsheet():
     smartsheet_client = SmartSheetClient(token, proxies)
     df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
-    df_smart = df_smart[(df_smart.planningOrg.notnull()) & (df_smart.TAN.notnull())
+    df_smart = df_smart[(df_smart.From_Org==pcba_site)&(df_smart.planningOrg.notnull()) & (df_smart.TAN.notnull())
                         & (df_smart.ETA_date.notnull()) & (df_smart['In-transit_quantity'].notnull())]
 
     df_smart.loc[:,'ETA_date']=df_smart.ETA_date.astype('datetime64[ns]')
@@ -1469,7 +1469,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     blg_dic_tan = fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan)
 
     # read exceptional intransit from smartsheet and concat with df_transit
-    df_smart_intransit = read_exceptional_intransit_from_smartsheet()
+    df_smart_intransit = read_exceptional_intransit_from_smartsheet(pcba_site)
     df_transit=pd.concat([df_transit,df_smart_intransit],sort=False)
 
     # pivot df_transit and change to versionless
