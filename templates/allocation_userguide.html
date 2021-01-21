@@ -24,16 +24,16 @@
             <td>
                 <h3>Who can use this tool?</h3>
                 <p>
-                    PMM and PSP are eligible to run this tool. PMM representative for PCBA site runs PCBA allocation for the whole site every Monday for PCBA site execution; PSP can rerun the allocation for <strong>respective BU</strong> during other days of the week upon needs.
+                    PMM and PSP are eligible to run this tool. PMM representative for PCBA site runs PCBA allocation for the whole site every Monday for CM execution; PSP can rerun the allocation for <strong>respective BU</strong> during other days of the week upon needs of change.
                 </p>
 
-                <h3>What data are need to run the tool?</h3>
+                <h3>What data are needed to run the tool?</h3>
                     <ol type="1">
-                        <li>3a4 Backlog: download from UOV with view: kw_PA (default includes all DF sites and all BUs, user can limit to certain BUs if only do allocation for certain BUs);</li>
+                        <li>3a4 Backlog: download from UOV with view: kw_PA (default includes all DF sites and all BUs, PSP can limit to certain BUs if only do allocation for certain BUs);</li>
                         <li>Supply data file (includes SCR, in-transit, DF OH, sourcing rules): download from "Datasource" tab via "Download supply data file from SCDx-POC)";</li>
                         <li>Exceptional priority(optional): maintained in smartsheet by PSP as needed;</li>
                         <li>TAN grouping(optional): maintained in smartsheet by PSP as needed;</li>
-                        <li>Missing in-transit (for SRG only): maintained in smartsheet as needed by Mandy as short term fix of SCDx missing data.</li>
+                        <li>Missing in-transit (for SRG only): maintained in smartsheet as needed by Mandy as short term fix of SCDx missing data for cross partner intransit.</li>
                     </ol>
 
                 <h3>How PMM run the tool on Monday for whole site?</h3>
@@ -41,8 +41,8 @@
                         <li>Download 3a4 and supply data file;</li>
                         <li>Upload the 2 files from the "Allocation" tab;</li>
                         <li>Put in appropriate PCBA org;</li>
-                        <li>Select appropriate email option;</li>
                         <li>Click "Make Allocation".</li>
+                        <li>Download/Share the result from the "Download" tab.</li>
                     </ol>
 
 
@@ -52,22 +52,22 @@
                         <li><span style="color: #1a6dca">Adjust the supply data file as needed - if updated supply not reflected in SCDx;</span></li>
                         <li>Upload the 2 files from the "Allocation" tab;</li>
                         <li>Put in appropriate PCBA org <span style="color: #1a6dca">and BU</span>; </li>
-                        <li>Select appropriate email option;</li>
                         <li>Click "Make Allocation".</li>
+                        <li>Download/Share the result from the "Download" tab.</li>
                     </ol>
 
                 <h3>What is order ranking priority?</h3>
-                We follow service 17 guideline to rank the orders. This is the priority sequence we used: PR1/2/3/L4/BUP/OSSD/YE/QTY/Rev-non-revenue.
+                We follow service 17 guideline to rank the orders. This is the priority sequence we used: PR1/2/3/L4/BUP/OSSD/YE/QTY/REVENUE_NON_REVENUE.
 
 
                 <h3>What is Exceptional priority?</h3>
-                PSP can give an exceptional priority to a non-priority SS so they can also get an absolute high priority despite OSSD - this should be used only exceptionally.
+                PSP can give an exceptional priority to a non-priority SS so they can also get an absolute high priority despite OSSD and reflect in allocation - this should be used only exceptionally.
 
-                PSP can set the priority via this <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">smartsheet</a>.
-                Default priority ranking#: PR1:1; PR2:2; PR3:3; L4:4; BUP:5. If one SS is added with Rank#4.1, it will be ranked after L4; or if aded with Ranking# greater than 5, it will be after BUP; etc.
+                Default priority ranking#: PR1:1; PR2:2; PR3:3; L4:4; BUP:5. PSP can set exceptional priority via this <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">smartsheet</a>.
+                E.g., if one SS is added with Ranking# 4.1, this SS will be ranked after L4; or if added with Ranking# greater than 5, they will be after BUP; etc.
 
                 <h3>What is Tan grouping?</h3>
-                Some BU have different TAN supply to different DF sites but which share the same materials at PCBA level, by grouping them we can not only decide the allocation but also let PCBA site know how to allocate the materials between the different TANs in production. PSP can set the grouping as needed via this <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">smartsheet</a>.
+                Some BU have different TAN supply to different DF sites but which share the same materials at PCBA level, by grouping them we can not only decide the allocation between DF but also let PCBA site know how to allocate the materials between the different TANs to best optimize the production. PSP can set the grouping as needed via this <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">smartsheet</a>.
                 <br><br>
                 <br><br>
 
