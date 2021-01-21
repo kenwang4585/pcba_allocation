@@ -389,6 +389,16 @@ def email_settings():
                 flash(msg,'warning')
                 return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
 
+            if email_to_add.count('@')>1:
+                msg = 'Emails need to be added one by one only!'
+                flash(msg, 'warning')
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
+
+            if ',' in email_to_add or ';' in email_to_add:
+                msg = 'Pls input correct email address without , or ;'
+                flash(msg, 'warning')
+                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
+
             if email_to_add in df_email_detail.Email.values:
                 update_email_data(identity, pcba_org, bu, email_to_add, login_user)
                 msg='This email already exists! Data has been updated: {}'.format(email_to_add)
