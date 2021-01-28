@@ -1,14 +1,14 @@
-# supported by Pearlyn, Patty, Mandy.... updated by Ken
 from pymongo import MongoClient
 import pandas as pd
 import os
 
-def collect_scr_oh_transit_from_scdx(pcba_site):
+def collect_scr_oh_transit_from_scdx_poc(pcba_site):
     # %% connect to SCDx
+
     SCDX_URI=os.getenv('SCDX_URI')
     client = MongoClient(SCDX_URI)
     database = client["pmocscdb"]
-    table = database["commonVersion"]
+    collection = database["commonVersion"]
 
     # %% got query from MongoDB
     pipeline_in_transit = [{"$match": {"archived": False,
@@ -27,7 +27,7 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
 
                                 {"$project": {'_id':0,
                                             "version": 1.0,
-                                            "planningOrg": 1.0,
+                                            "DF_site": '$planningOrg',
                                             "TAN": "$itemNumber",
                                             "BU": "$attributes.cisco.pfDemandRatio.largestBU",
                                             "transfer": {
@@ -49,7 +49,7 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
 
                         {"$project": {'_id':0,
                                         "version": 1.0,
-                                        "planningOrg": 1.0,
+                                        "DF_site": "$planningOrg",
                                         "TAN": "$itemNumber",
                                         "BU": "$attributes.cisco.pfDemandRatio.largestBU",
                                         # if DF org=pcba_site, only take the FA&T inventory (WH+WIP); otherwise take Raw(WH) + FA&T(WIP)
@@ -77,11 +77,11 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
 
                     {"$project": {"_id":0,
                                 "version": 1.0,
-                                 "planningOrg": "$planningOrg",
+                                 "planningOrg": 1.0,
                                 "BU": "$attributes.cisco.pfDemandRatio.largestBU",
                                 "TAN": "$itemNumber",
-                                "SCRDate": "$measures.series.totalSupply.date",
-                                "SCRQuantity": "$measures.series.totalSupply.quantity",}}
+                                "date": "$measures.series.totalSupply.date",
+                                "quantity": "$measures.series.totalSupply.quantity",}}
                     ]
 
     pipeline_sourcing_rule = [{"$match": {"archived": False,
@@ -112,10 +112,10 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
                                            }}
                             ]
 
-    cursor1 = table.aggregate(pipeline_in_transit,allowDiskUse=False)
-    cursor2 = table.aggregate(pipeline_df_oh,allowDiskUse=False)
-    cursor3 = table.aggregate(pipeline_scr,allowDiskUse=False)
-    cursor4 = table.aggregate(pipeline_sourcing_rule,allowDiskUse=False)
+    cursor1 = collection.aggregate(pipeline_in_transit,allowDiskUse=False)
+    cursor2 = collection.aggregate(pipeline_df_oh,allowDiskUse=False)
+    cursor3 = collection.aggregate(pipeline_scr,allowDiskUse=False)
+    cursor4 = collection.aggregate(pipeline_sourcing_rule,allowDiskUse=False)
 
     df_intransit=pd.DataFrame(cursor1)
     df_oh=pd.DataFrame(cursor2)
@@ -124,7 +124,7 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
 
     # remove non-relevant DF OH based on sourcing rules
     df_sourcing_rule.loc[:,'org_pn']=df_sourcing_rule.DF_site+'_'+df_sourcing_rule.TAN
-    df_oh.loc[:,'org_pn']=df_oh.planningOrg+'_'+df_oh.TAN
+    df_oh.loc[:,'org_pn']=df_oh.DF_site+'_'+df_oh.TAN
 
     df_oh=df_oh[df_oh.org_pn.isin(df_sourcing_rule.org_pn)]
     df_sourcing_rule.drop('org_pn', axis=1, inplace=True)
@@ -138,15 +138,15 @@ def collect_scr_oh_transit_from_scdx(pcba_site):
 if __name__=='__main__':
     pcba_site='JPE'
     a=pd.Timestamp.now()
-    df_scr, df_oh, df_intransit, df_sourcing_rule=collect_scr_oh_transit_from_scdx(pcba_site)
+    df_scr, df_oh, df_intransit, df_sourcing_rule=collect_scr_oh_transit_from_scdx_poc(pcba_site)
 
-    outPath = os.path.join(os.getcwd(), 'SCR_OH_Intransit_' + a.strftime('%m%d %Hh%Mm') + '.xlsx')
+    outPath = os.path.join(os.getcwd(), pcba_site + ' SCR_OH_Intransit_' + a.strftime('%m%d %Hh%Mm') + '.xlsx')
     writer = pd.ExcelWriter(outPath,engine='xlsxwriter')
     
     df_intransit.to_excel(writer, sheet_name='in-transit', index=False)
-    df_oh.to_excel(writer, sheet_name='df_oh', index=False)
-    df_scr.to_excel(writer, sheet_name='scr', index=False)
-    df_sourcing_rule.to_excel(writer, sheet_name='sourcing_rule', index=False)
+    df_oh.to_excel(writer, sheet_name='df-oh', index=False)
+    df_scr.to_excel(writer, sheet_name='por', index=False)
+    df_sourcing_rule.to_excel(writer, sheet_name='sourcing-rule', index=False)
     writer.save()
     #writer.close()
     b = pd.Timestamp.now()

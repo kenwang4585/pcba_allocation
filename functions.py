@@ -174,7 +174,7 @@ def read_exceptional_intransit_from_smartsheet(pcba_site):
     smartsheet_client = SmartSheetClient(token, proxies)
     df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
-    df_smart = df_smart[(df_smart.From_Org==pcba_site)&(df_smart.planningOrg.notnull()) & (df_smart.TAN.notnull())
+    df_smart = df_smart[(df_smart.From_Org==pcba_site)&(df_smart.DF_site.notnull()) & (df_smart.TAN.notnull())
                         & (df_smart.ETA_date.notnull()) & (df_smart['In-transit_quantity'].notnull())]
 
     df_smart.loc[:,'ETA_date']=df_smart.ETA_date.astype('datetime64[ns]')
@@ -448,7 +448,7 @@ def created_oh_dict_per_df_oh(df_oh, pcba_site):
     df_oh.reset_index(inplace=True)
     oh_dic_tan = {}
     for row in df_oh.itertuples(index=False):
-        org = row.planningOrg
+        org = row.DF_site
         tan = row.TAN
         oh = row.OH
 
@@ -468,10 +468,16 @@ def create_transit_dict_per_df_transit(df_transit):
     for org_tan in df_transit.index:
         date_qty_list = []
         for date in df_transit.columns:
-            if not math.isnan(df_transit.loc[(org_tan[0], org_tan[1]), date]):  # 判断数值是否为空
-                if df_transit.loc[(org_tan[0], org_tan[1]), date] > 0:  # 不取0值
-                    date_qty = {date: df_transit.loc[(org_tan[0], org_tan[1]), date]}
-                    date_qty_list.append(date_qty)
+            try:
+                if not math.isnan(df_transit.loc[(org_tan[0], org_tan[1]), date]):  # 判断数值是否为空
+                    if df_transit.loc[(org_tan[0], org_tan[1]), date] > 0:  # 不取0值
+                        date_qty = {date: df_transit.loc[(org_tan[0], org_tan[1]), date]}
+                        date_qty_list.append(date_qty)
+            except:
+                print(org_tan)
+                print(date)
+                raise ValueError
+
         if len(date_qty_list) > 0:
             transit_dic_tan[(org_tan[0], org_tan[1])] = date_qty_list
 
@@ -936,7 +942,7 @@ def write_data_to_excel(output_file,data_to_write):
 
     writer.save()
 
-def write_excel_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_sourcing,df_grouping,login_user):
+def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_sourcing,df_grouping,login_user):
     # save the scr output file and 3a4 to excel
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
@@ -953,15 +959,18 @@ def write_excel_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_sourc
 
     df_3a4 = df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
     df_3a4.set_index(['ORGANIZATION_CODE'], inplace=True)
-    df_transit.set_index(['planningOrg', 'TAN', 'In-transit'], inplace=True)
+    df_transit.set_index(['DF_site', 'TAN', 'In-transit'], inplace=True)
     df_transit.reset_index(inplace=True)
-    df_transit.set_index(['planningOrg'], inplace=True)
+    df_transit.set_index(['DF_site'], inplace=True)
     df_transit.rename(columns={'In-transit':'Total'},inplace=True)
+
+    #df_scr.reset_index(inplace=True)
+
     data_to_write = {'pcba_allocation': df_scr,
-                     'backlog_ranked': df_3a4,
+                     'backlog-ranked': df_3a4,
                      'in-transit': df_transit,
-                     'sourcing_rule':df_sourcing,
-                     'tan_group':df_grouping}
+                     'sourcing-rule':df_sourcing,
+                     'tan-group':df_grouping}
 
     write_data_to_excel(output_path, data_to_write)
 
@@ -1024,14 +1033,11 @@ def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
     return blg_dic_tan, transit_dic_tan
 
 
-def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit,sheet_sourcing):
+def read_data(f_3a4,f_supply):
     """
     Read source data from excel files
     :param f_3a4:
     :param f_supply:
-    :param sheet_scr:
-    :param sheet_oh:
-    :param sheet_transit:
     :return:
     """
     # read 3a4
@@ -1039,16 +1045,18 @@ def read_data(f_3a4,f_supply,sheet_scr,sheet_oh,sheet_transit,sheet_sourcing):
                          low_memory=False)
 
     # read scr
-    df_scr = pd.read_excel(f_supply, sheet_name=sheet_scr)
+    df_scr = pd.read_excel(f_supply, sheet_name='por',parse_dates=['date'])
+    df_scr.loc[:,'date']=df_scr.date.map(lambda x: x.date())
 
     # read oh this includes PCBA SM, will be removed when creating DF OH dict
-    df_oh = pd.read_excel(f_supply, sheet_name=sheet_oh)
+    df_oh = pd.read_excel(f_supply, sheet_name='df-oh')
 
     # read in-transit
-    df_transit = pd.read_excel(f_supply, sheet_name=sheet_transit)
+    df_transit = pd.read_excel(f_supply, sheet_name='in-transit',parse_dates=['ETA_date'])
+    df_transit.loc[:, 'ETA_date'] = df_transit.ETA_date.map(lambda x: x.date())
 
     # read sourcing rules
-    df_sourcing=pd.read_excel(f_supply,sheet_name=sheet_sourcing)
+    df_sourcing=pd.read_excel(f_supply,sheet_name='sourcing-rule')
 
     return df_3a4, df_oh, df_transit, df_scr ,df_sourcing
 
@@ -1070,9 +1078,9 @@ def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col
     sheet_name_msg,msg_3a4, msg_3a4_option, msg_transit, msg_oh, msg_scr = '', '', '', '','',''
     df_3a4=pd.read_csv(file_path_3a4,nrows=2,encoding='iso-8859-1')
     try:
-        df_transit=pd.read_excel(file_path_supply,sheet_name=sheet_transit,nrows=2)
-        df_oh=pd.read_excel(file_path_supply,sheet_name=sheet_oh,nrows=2)
-        df_scr=pd.read_excel(file_path_supply,sheet_name=sheet_scr,nrows=2)
+        df_transit=pd.read_excel(file_path_supply,sheet_name='in-transit',nrows=2)
+        df_oh=pd.read_excel(file_path_supply,sheet_name='df-oh',nrows=2)
+        df_scr=pd.read_excel(file_path_supply,sheet_name='por',nrows=2)
 
         # 检查文件是否包含需要的列：
         if not np.all(np.in1d(col_3a4_must_have, df_3a4.columns)):
@@ -1228,18 +1236,18 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     df_oh.columns = ['OH']
     df_oh.reset_index(inplace=True)
     #df_oh = df_oh[df_oh.planningOrg != pcba_site]  OH here is already for DF so no need to remove... combo site is changed to 'org-SCR'
-    df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['planningOrg', 'TAN'], how='left')
+    df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['DF_site', 'TAN'], how='left')
     # drop the unneeded columns introduced by merge
-    df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'planningOrg'], axis=1, inplace=True)
+    df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'DF_site'], axis=1, inplace=True)
     # df_scr.rename(columns={'TAN_x':'TAN'},inplace=True)
 
     # add df transit
     df_transit.loc[:, 'In-transit'] = df_transit.sum(axis=1)
     df_transit.reset_index(inplace=True)
-    df_scr = pd.merge(df_scr, df_transit[['planningOrg', 'TAN', 'In-transit']], left_on=['ORG', 'TAN'],
-                      right_on=['planningOrg', 'TAN'], how='left')
+    df_scr = pd.merge(df_scr, df_transit[['DF_site', 'TAN', 'In-transit']], left_on=['ORG', 'TAN'],
+                      right_on=['DF_site', 'TAN'], how='left')
     # drop the unneeded columns introduced by merge
-    df_scr.drop(['planningOrg'], axis=1, inplace=True)
+    df_scr.drop(['DF_site'], axis=1, inplace=True)
 
    # ADD temp col oh+transit to calculate gap before
     df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
@@ -1363,7 +1371,7 @@ def collect_available_sourcing(df_sourcing):
         sourcing_rules.append(row.org_tan)
 
     df_sourcing.drop(['tan_versionless','org_tan'],axis=1,inplace=True)
-    df_sourcing.set_index('version',inplace=True)
+    #df_sourcing.set_index('version',inplace=True)
 
     return df_sourcing,sourcing_rules
 
@@ -1404,8 +1412,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     tan_bu = extract_bu_from_scr(df_scr,tan_group)
 
     # Pivot df_scr 并处理日期格式; change to versionless
-    df_scr = df_scr.pivot_table(index=['planningOrg', 'TAN'], columns='SCRDate', values='SCRQuantity', aggfunc=sum)
-    df_scr.columns = df_scr.columns.map(lambda x: x.date())
+    df_scr = df_scr.pivot_table(index=['planningOrg', 'TAN'], columns='date', values='quantity', aggfunc=sum)
+    #df_scr.columns = df_scr.columns.map(lambda x: x.date())
     df_scr=change_pn_to_versionless(df_scr,pn_col='TAN')
 
     # change TAN to group number based on group mapping
@@ -1453,14 +1461,14 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys())
 
     # pivot df_oh and versionless the TAN
-    df_oh = df_oh.pivot_table(index=['planningOrg', 'TAN'], values='OH', aggfunc=sum)
+    df_oh = df_oh.pivot_table(index=['DF_site', 'TAN'], values='OH', aggfunc=sum)
     df_oh=change_pn_to_versionless(df_oh,pn_col='TAN')
 
     # change TAN to group number based on group mapping
     df_oh=change_pn_to_group_number(df_oh,tan_group,pn_col='TAN')
 
     # add up supply by versionless TAN
-    df_oh=add_up_supply_by_pn(df_oh,org_col='planningOrg',pn_col='TAN')
+    df_oh=add_up_supply_by_pn(df_oh,org_col='DF_site',pn_col='TAN')
 
     # 生成OH dict；
     oh_dic_tan = created_oh_dict_per_df_oh(df_oh, pcba_site)
@@ -1473,16 +1481,16 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_transit=pd.concat([df_transit,df_smart_intransit],sort=False)
 
     # pivot df_transit and change to versionless
-    df_transit = df_transit.pivot_table(index=['planningOrg', 'TAN'], columns='ETA_date', values='In-transit_quantity',
+    df_transit = df_transit.pivot_table(index=['DF_site', 'TAN'], columns='ETA_date', values='In-transit_quantity',
                                         aggfunc=sum)
-    df_transit.columns = df_transit.columns.map(lambda x: x.date())
+
     df_transit=change_pn_to_versionless(df_transit,pn_col='TAN')
 
     # change TAN to group number based on group mapping
     df_transit=change_pn_to_group_number(df_transit,tan_group,pn_col='TAN')
 
     # add up supply by versionless TAN
-    df_transit=add_up_supply_by_pn(df_transit,org_col='planningOrg',pn_col='TAN')
+    df_transit=add_up_supply_by_pn(df_transit,org_col='DF_site',pn_col='TAN')
 
     # split df_transit by threshhold of 15 days
     close_eta_cutoff = pd.Timestamp.today().date() + pd.Timedelta(days=close_eta_cutoff_criteria)
@@ -1516,7 +1524,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
 
     # 存储文件
-    output_filename = write_excel_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_sourcing,df_grouping,login_user)
+    output_filename = write_allocation_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_sourcing,df_grouping,login_user)
 
     return output_filename
 

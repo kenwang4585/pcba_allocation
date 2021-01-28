@@ -11,7 +11,8 @@ from werkzeug.utils import secure_filename
 from flask import flash,send_from_directory,render_template, request,redirect,url_for
 from flask_settings import *
 from functions import *
-from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx
+from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx_poc
+from SCDx_API import collect_scr_oh_transit_from_scdx_prod
 from settings import *
 from sending_email import *
 from db_add import add_user_log,add_email_data
@@ -71,7 +72,7 @@ def allocation_run():
             msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
             flash(msg, 'warning')
             print(login_user,msg)
-            summary = 'pcba_site ({}) and supply file({}) used not matching'.format(pcba_site,f_supply.filename)
+            summary = 'pcba_site ({}) and supply file({}) not matching!'.format(pcba_site,f_supply.filename)
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
             return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
@@ -126,7 +127,7 @@ def allocation_run():
         sheet_name_msg, msg_3a4, msg_3a4_option, msg_transit, msg_oh, msg_scr = check_input_file_format(file_path_3a4, file_path_supply,
                                                                         col_3a4_must_have, col_transit_must_have,
                                                                         col_oh_must_have, col_scr_must_have,
-                                                                        sheet_transit,sheet_oh,sheet_scr)
+                                                                        'in-transit','df-oh','por')
         if sheet_name_msg!='':
             flash(sheet_name_msg,'warning')
         if msg_3a4!='':
@@ -153,7 +154,7 @@ def allocation_run():
         try:
             # 读取数据
             module='Reading input data'
-            df_3a4, df_oh, df_transit, df_scr, df_sourcing=read_data(file_path_3a4, file_path_supply, sheet_scr, sheet_oh, sheet_transit, sheet_sourcing)
+            df_3a4, df_oh, df_transit, df_scr, df_sourcing=read_data(file_path_3a4, file_path_supply)
 
             # limit BU from 3a4 and df_scr for allocation
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
@@ -560,38 +561,70 @@ def allocation_datasource():
         add_user_log(user=login_user, location='User-guide', user_action='Visit', summary='')
 
     if form.validate_on_submit():
-        submit_download_scdx=form.submit_download_supply.data
+        submit_download_scdx_poc=form.submit_download_supply_poc.data
+        submit_download_scdx_prod = form.submit_download_supply_prod.data
 
-        if submit_download_scdx:
+        if submit_download_scdx_poc:
+            pcba_site_poc=form.pcba_site_poc.data.strip().upper()
+
             log_msg = []
-            log_msg.append('\n\n[Download SCDx] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-            pcba_site=form.pcba_site.data.strip().upper()
+            log_msg.append('\n\n[Download SCDx-POC] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
 
             now = pd.Timestamp.now()
             f_path=base_dir_supply
-            fname=pcba_site + ' SCR_OH_Intransit ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
-            log_msg.append('Download supply from DB')
+            fname=pcba_site_poc + ' scr_oh_intransit(scdx-poc) ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
+            log_msg.append('Download supply from SCDx-POC')
 
-            if pcba_site not in pcba_site_list:
-                msg = "'{}' is not a PCBA org.".format(pcba_site)
+            if pcba_site_poc not in pcba_site_list:
+                msg = "'{}' is not a PCBA org.".format(pcba_site_poc)
                 flash(msg, 'warning')
                 return redirect(url_for('allocation_datasource',_external=True,_scheme=http_scheme))
             try:
-                df_scr, df_oh, df_intransit, df_sourcing_rule = collect_scr_oh_transit_from_scdx(pcba_site)
-                data_to_write = {'scr': df_scr,
+                df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_poc(pcba_site_poc)
+                data_to_write = {'por': df_scr,
                                  'df-oh': df_oh,
                                  'in-transit': df_intransit,
-                                 'sourcing_rule': df_sourcing_rule}
+                                 'sourcing-rule': df_sourcing}
 
                 write_data_to_excel(os.path.join(f_path, fname), data_to_write)
-                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx', summary='Success: ' + pcba_site)
+                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-POC', summary='Success: ' + pcba_site_poc)
 
                 return send_from_directory(f_path, filename=fname, as_attachment=True)
             except Exception as e:
-                msg = 'Error downloading supply data from database! ' + str(e)
+                msg = 'Error downloading supply data from SCDx-POC! ' + str(e)
                 flash(msg, 'warning')
-                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx', summary='Error: [' + pcba_site + '] ' + str(e))
+                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-POC', summary='Error: [' + pcba_site_poc + '] ' + str(e))
+                return redirect(url_for('allocation_datasource', _external=True, _scheme=http_scheme, viewarg1=1))
+        elif submit_download_scdx_prod:
+            pcba_site_prod=form.pcba_site_prod.data.strip().upper()
+
+            log_msg = []
+            log_msg.append('\n\n[Download SCDx-Production] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+            now = pd.Timestamp.now()
+            f_path=base_dir_supply
+            fname=pcba_site_prod + ' scr_oh_intransit(scdx-prod) ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
+            log_msg.append('Download supply from SCDx-POC')
+
+            if pcba_site_prod not in pcba_site_list:
+                msg = "'{}' is not a PCBA org.".format(pcba_site_prod)
+                flash(msg, 'warning')
+                return redirect(url_for('allocation_datasource',_external=True,_scheme=http_scheme))
+            try:
+                df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site_prod,'*')
+                data_to_write = {'por': df_scr,
+                                 'df-oh': df_oh,
+                                 'in-transit': df_intransit,
+                                 'sourcing-rule': df_sourcing}
+
+                write_data_to_excel(os.path.join(f_path, fname), data_to_write)
+                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-Prod', summary='Success: ' + pcba_site_prod)
+
+                return send_from_directory(f_path, filename=fname, as_attachment=True)
+            except Exception as e:
+                msg = 'Error downloading supply data from SCDx-Prod! ' + str(e)
+                flash(msg, 'warning')
+                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-Prod', summary='Error: [' + pcba_site_prod + '] ' + str(e))
                 return redirect(url_for('allocation_datasource', _external=True, _scheme=http_scheme, viewarg1=1))
 
     return render_template('allocation_datasource.html',user=login_name,form=form)

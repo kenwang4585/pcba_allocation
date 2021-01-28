@@ -63,10 +63,15 @@ class EmailSettingForm(FlaskForm):
     submit_remove=SubmitField('Remove email')
 
 class DataSourceForm(FlaskForm):
-    pcba_site = StringField('Download supply data file from SCDx:',
+    pcba_site_poc = StringField('Download supply data file from SCDx-POC:',
                             validators=[DataRequired()],
                             default='put in PCBA org here')
-    submit_download_supply = SubmitField('Download')  # download from db
+    submit_download_supply_poc = SubmitField('Download')  # download from db
+
+    pcba_site_prod = StringField('Download supply data file from SCDx-production:',
+                            validators=[DataRequired()],
+                            default='put in PCBA org here')
+    submit_download_supply_prod = SubmitField('Download')  # download from db
 
 
 # dummy form for config - temp

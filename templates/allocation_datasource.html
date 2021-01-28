@@ -50,10 +50,22 @@
                         <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                             <tr>
                                 <td align="left" width="85%">
-                                    {{ form.pcba_site(class='form-control') }}
+                                    {{ form.pcba_site_poc(class='form-control') }}
                                 </td>
                                 <td align="center" width="15%">
-                                    {{ form.submit_download_supply (class='btn-primary btn-sm') }}
+                                    {{ form.submit_download_supply_poc (class='btn-primary btn-sm') }}
+                                </td>
+                            </tr>
+                        </table>
+                        <br><br><br>
+                        <p>Download from SCDx-Production <span style="color: lightsalmon"> (under testing)</span>:</p>
+                        <table width="840" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                            <tr>
+                                <td align="left" width="85%">
+                                    {{ form.pcba_site_prod(class='form-control') }}
+                                </td>
+                                <td align="center" width="15%">
+                                    {{ form.submit_download_supply_prod (class='btn-primary btn-sm') }}
                                 </td>
                             </tr>
                         </table>
