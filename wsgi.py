@@ -383,6 +383,7 @@ def email_settings():
             identity=form.identity.data
             pcba_org=form.pcba_org.data.strip().upper()
             bu=form.bu.data.strip().upper()
+            pf = form.pf.data.strip().upper()
             email_to_add=form.email_to_add.data.strip().lower()
 
             if len(pcba_org)==0 or len(email_to_add)==0:
@@ -406,7 +407,7 @@ def email_settings():
                 flash(msg,'success')
                 return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
             else:
-                add_email_data(identity, pcba_org, bu, email_to_add,login_user)
+                add_email_data(identity, pcba_org, bu, pf, email_to_add,login_user)
                 msg='This email is added: {}'.format(email_to_add)
                 flash(msg,'success')
                 return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))

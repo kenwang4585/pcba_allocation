@@ -41,27 +41,31 @@
                 <tr> <!-- For downloading data from SCDx -->
                     <td width="95%">
                         <br>
-                        Allocation result sharing will be based on below email settings <strong>(to be enabled later after this is set).</strong>
+                        Allocation result sharing will be based on below email settings <span style="color: #007bff">(to be enabled later after this is set).</span>
                         <br><br><br>
-                        <table width="800" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                        <table width="980" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                             <tr>
-                                <td align="left" width="12%">
+                                <td align="left" width="10%">
                                     Identity:<br>
                                     {{ form.identity (class='form-control')}}
                                 </td>
-                                <td align="left" width="23%">
+                                <td align="left" width="14%">
                                     PCBA Org:<br>
                                     {{ form.pcba_org (class='form-control')}}
                                 </td>
-                                <td align="left" width="25%">
+                                <td align="left" width="22%">
                                     BU (optional):<br>
                                     {{ form.bu (class='form-control')}}
                                 </td>
-                                <td align="left" width="25%">
+                                <td align="left" width="22%">
+                                    PF (optional):<br>
+                                    {{ form.pf (class='form-control')}}
+                                </td>
+                                <td align="left" width="22%">
                                     Email address:<br>
                                     {{ form.email_to_add (class='form-control')}}
                                 </td>
-                                <td align="right" width="15%">
+                                <td align="right" width="10%">
                                     <br>
                                     {{ form.submit_add (class='btn-primary btn-sm')}}
                                 </td>
@@ -73,14 +77,14 @@
                         </table>
 
                         <br>
-                        <table width="800" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
+                        <table width="980" border="0" cellspacing="1px" align="left" style="border-color: #c5c5c5;">
                             <tr>
-                                <td align="left" width="85%">
+                                <td align="left" width="90%">
                                     <br><br>
                                     Email to remove:<br>
                                     {{ form.email_to_remove (class='form-control') }}
                                 </td>
-                                <td align="right" width="15%">
+                                <td align="right" width="10%">
                                     <br><br><br>
                                     {{ form.submit_remove (class='btn-primary btn-sm')}}
                                 </td>
@@ -100,6 +104,7 @@
                                             <td width="80"><span style="font-size: large;">&nbsp;&nbsp;Identity</span></td>
                                             <td width="120"><span style="font-size: large">&nbsp;&nbsp;PCBA_Org</span></td>
                                             <td width="180"><span style="font-size: large">&nbsp;&nbsp;BU</span></td>
+                                            <td width="180"><span style="font-size: large">&nbsp;&nbsp;PF</span></td>
                                             <td width="180"><span style="font-size: large">&nbsp;&nbsp;Email</span></td>
                                             <td width="100"><span style="font-size: large">&nbsp;&nbsp;Added_by</span></td>
                                             <td width="100"><span style="font-size: large">&nbsp;&nbsp;Added_on</span></td>

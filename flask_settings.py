@@ -57,6 +57,7 @@ class EmailSettingForm(FlaskForm):
                          choices=[('Cisco','Cisco'),('CM','CM')])
     pcba_org=StringField("*PCBA Org(multiple org separate by '/'):")
     bu=StringField("BU(multiple BU separate by '/')")
+    pf = StringField("PF(multiple PF separate by '/')")
     email_to_add=StringField('*Email address:')
     submit_add=SubmitField('   Add email   ')
     email_to_remove=StringField('*Email to remove:')
@@ -97,6 +98,7 @@ class ConfigForm(FlaskForm):
 
 
 # Database tables
+
 class UserLog(db.Model):
     '''
     User logs db table
@@ -117,6 +119,7 @@ class EmailSettings(db.Model):
     Identity=db.Column(db.String(5))
     PCBA_Org=db.Column(db.String())
     BU=db.Column(db.String(17))
+    PF=db.Column(db.String(30))
     Email=db.Column(db.String(30))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
