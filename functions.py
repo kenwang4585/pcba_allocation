@@ -698,20 +698,22 @@ def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_sit
     return df_scr
 
 
-def extract_bu_from_scr(df_scr,tan_group):
+def extract_bu_pf_from_scr(df_scr,tan_group):
     """
     Versionless the PN and extract the BU info from original scr before pivoting
     """
     regex_pn = re.compile(r'\d{2,3}-\d{3,7}')
 
-    tan_bu = {}
+    tan_bu_pf = {}
     for row in df_scr.itertuples(index=False):
         tan = regex_pn.search(row.TAN).group()
+
         if tan in tan_group.keys():#替换成group
             tan=tan_group[tan]
-        tan_bu[tan] = row.BU
 
-    return tan_bu
+        tan_bu_pf[tan] = (row.BU,row.PF)
+
+    return tan_bu_pf
 
 
 ### Below deprecated on Jan 14
@@ -1045,14 +1047,14 @@ def read_data(f_3a4,f_supply):
                          low_memory=False)
 
     # read scr
-    df_scr = pd.read_excel(f_supply, sheet_name='por',parse_dates=['date'])
+    df_scr = pd.read_excel(f_supply, sheet_name='por')
     df_scr.loc[:,'date']=df_scr.date.map(lambda x: x.date())
 
     # read oh this includes PCBA SM, will be removed when creating DF OH dict
     df_oh = pd.read_excel(f_supply, sheet_name='df-oh')
 
     # read in-transit
-    df_transit = pd.read_excel(f_supply, sheet_name='in-transit',parse_dates=['ETA_date'])
+    df_transit = pd.read_excel(f_supply, sheet_name='in-transit')
     df_transit.loc[:, 'ETA_date'] = df_transit.ETA_date.map(lambda x: x.date())
 
     # read sourcing rules
@@ -1196,7 +1198,7 @@ def calculate_x_weeks_allocation(df_scr,pcba_site, wk='wk1'):
     supply_cut_off = today + pd.Timedelta(sun_cutoff, 'd')
 
     # find out the col of cutoff :-10 with buffer to ensure too exclude all the newly added col which are not dates
-    date_col=df_scr.iloc[:,:-10].columns.astype('datetime64[ns]').tolist()
+    date_col=df_scr.iloc[:,:-10].columns.tolist()
     for date in date_col:
         if date>supply_cut_off:
             ind=date_col.index(date)-1
@@ -1215,14 +1217,15 @@ def calculate_x_weeks_allocation(df_scr,pcba_site, wk='wk1'):
 
     return tan_allocation_wk
     
-def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site):
+def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site):
     """
     Add back the BU, backlog,oh, intransit info into the final SCR with allocation result; and add the related columns based on calculations.
     """
     df_scr.reset_index(inplace=True)
 
     # add BU info
-    df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu[x])
+    df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][0])
+    df_scr.loc[:, 'PF'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][1])
 
     #print(df_scr[:10])
 
@@ -1296,8 +1299,9 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
 
     # update with the correct Blg_recovery date for TBD
     df_scr.reset_index(inplace=True)
+    df_scr.loc[:,'TAN_']=df_scr.TAN #add a TAN col at the back for filtering purpose
     df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
+        ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
         inplace=True)
     df_scr.reset_index(inplace=True)
     dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site+'-SCR')]
@@ -1315,7 +1319,7 @@ def process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pc
     # set final index
     df_scr.reset_index(inplace=True)
     df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
+        ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
         inplace=True)
 
     return df_scr
@@ -1409,7 +1413,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     transit_time=read_transit_from_sourcing_rules(df_sourcing,pcba_site)
 
     # extract BU info for TAN from SCR for final report processing use
-    tan_bu = extract_bu_from_scr(df_scr,tan_group)
+    tan_bu_pf = extract_bu_pf_from_scr(df_scr,tan_group)
 
     # Pivot df_scr 并处理日期格式; change to versionless
     df_scr = df_scr.pivot_table(index=['planningOrg', 'TAN'], columns='date', values='quantity', aggfunc=sum)
@@ -1521,7 +1525,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_site)
 
     # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
-    df_scr = process_final_allocated_output(df_scr, tan_bu, df_3a4, df_oh, df_transit, pcba_site)
+    df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site)
 
     # 存储文件
     output_filename = write_allocation_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_sourcing,df_grouping,login_user)

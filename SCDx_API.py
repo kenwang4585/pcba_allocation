@@ -16,6 +16,8 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
     """
     url='http://10.154.120.58:6543/SCDxScrData/'+ pcba_site + '/' + item
 
+    print('Download from SCDx-Production!')
+
     # API get invocation
     r = requests.get(url) # invokes API, stores response into varable r
     # Parsing message using json library
@@ -23,7 +25,7 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
     message=r.json()["message"]
     rowsReturned=r.json()["rowsReturned"]
     dataset=json.loads(r.json()['data']) # deserializes response into list
-
+    #dataset = json.loads(requests.get('http://10.154.120.58:6543/SCDxScrData/FOL/68-100465-04').json()['data'])
     #pprint.pprint(dataset)
 
     por_list,sr_org_list,sr_bu_list,sr_tan_list,sr_split_list,sr_lt_list=[],[],[],[],[],[]
@@ -34,14 +36,19 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
         tan=data['itemNumber']
         bu=data['largestBU']
         pf=data['largestPF']
-
+        sm_oh=data['siteOH']
+        porPlanDate=data['porPlanDate']
+        porBalance=data['porBalance']
+        porBalance.append({'date':pd.Timestamp.now(),'quantity':sm_oh}) # include SM OH
 
         # PCBA site POR
-        df_por=pd.DataFrame(data['porBalance'])
+        df_por=pd.DataFrame(porBalance)
         df_por.loc[:, 'planningOrg'] = pcba_site
         df_por.loc[:,'TAN']=tan
         df_por.loc[:, 'BU'] = bu
         df_por.loc[:,'PF']=pf
+
+        df_por.loc[:,'porPlanDate']=porPlanDate
         por_list.append(df_por)
 
         # df sites OH
@@ -114,10 +121,17 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
     df_sourcing=pd.DataFrame({'DF_site':sr_org_list,'BU':sr_bu_list,'TAN':sr_tan_list,'Split':sr_split_list,'Transit_time':sr_lt_list})
     df_transit=pd.DataFrame({'DF_site':transit_org_list,'BU':transit_bu_list,'TAN':transit_tan_list,'ETA_date':transit_eta_list,'In-transit_quantity':transit_qty_list})
 
+    df_por=df_por[['planningOrg','BU','PF','TAN','date','quantity','porPlanDate']]
+
+    df_por.loc[:,'date']=df_por.date.astype('datetime64[ns]')
+    df_transit.loc[:, 'ETA_date'] = df_transit.ETA_date.astype('datetime64[ns]')
+
+    df_por.sort_values(by=['TAN','planningOrg','date'],inplace=True)
+
     return df_por, df_oh, df_transit,df_sourcing
 
 if __name__=='__main__':
-    pcba_site='FDO'
+    pcba_site='FOL'
     start=time.time()
     df_por, df_oh, df_transit,df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site,'*')
 

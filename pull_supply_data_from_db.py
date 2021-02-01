@@ -79,6 +79,7 @@ def collect_scr_oh_transit_from_scdx_poc(pcba_site):
                                 "version": 1.0,
                                  "planningOrg": 1.0,
                                 "BU": "$attributes.cisco.pfDemandRatio.largestBU",
+                                  "PF": "$attributes.cisco.pfDemandRatio.largestPF",
                                 "TAN": "$itemNumber",
                                 "date": "$measures.series.totalSupply.date",
                                 "quantity": "$measures.series.totalSupply.quantity",}}
@@ -117,6 +118,8 @@ def collect_scr_oh_transit_from_scdx_poc(pcba_site):
     cursor3 = collection.aggregate(pipeline_scr,allowDiskUse=False)
     cursor4 = collection.aggregate(pipeline_sourcing_rule,allowDiskUse=False)
 
+    client.close()
+
     df_intransit=pd.DataFrame(cursor1)
     df_oh=pd.DataFrame(cursor2)
     df_scr=pd.DataFrame(cursor3)
@@ -126,11 +129,14 @@ def collect_scr_oh_transit_from_scdx_poc(pcba_site):
     df_sourcing_rule.loc[:,'org_pn']=df_sourcing_rule.DF_site+'_'+df_sourcing_rule.TAN
     df_oh.loc[:,'org_pn']=df_oh.DF_site+'_'+df_oh.TAN
 
-    df_oh=df_oh[df_oh.org_pn.isin(df_sourcing_rule.org_pn)]
+    df_oh=df_oh[df_oh.org_pn.isin(df_sourcing_rule.org_pn)] # removing no-relevant OH
     df_sourcing_rule.drop('org_pn', axis=1, inplace=True)
     df_oh.drop('org_pn', axis=1, inplace=True)
 
-    client.close()
+    df_scr.set_index('TAN',inplace=True)
+    df_oh.set_index('TAN', inplace=True)
+    df_intransit.set_index('TAN', inplace=True)
+    df_sourcing_rule.set_index('TAN', inplace=True)
 
     return df_scr,df_oh,df_intransit,df_sourcing_rule
 
