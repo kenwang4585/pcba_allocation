@@ -1331,7 +1331,7 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user,logi
     """
     subject = share_filename[:-5]
     html_template='allocation_email_notification.html'
-    #att_files_allocation = [(base_dir_output, output_filename)]  # List of tuples (path, file_name)
+    att_files = [(base_dir_output, share_filename)]  # List of tuples (path, file_name)
 
     email_msg=email_msg.split('\r\n')
     email_msg=[x for x in email_msg if x!='']
@@ -1341,12 +1341,12 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user,logi
             to_address = ['kwang2@cisco.com']
         else:
             to_address = [login_user + '@cisco.com']
-        send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
+        send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=att_files,
                                          embeded_filenames=None, sender=login_name + ' via PCBA allocation tool',
-                                         share_filename=share_filename,
+                                         #share_filename=share_filename,
                                          email_msg=email_msg)
 
-        msg = 'Result sent to youself by email.'
+        msg = 'Result sent to yourself by email.'
     elif email_option=='to_all':
         cisco_recipients.append(login_user + '@cisco.com')
         to_address = cisco_recipients

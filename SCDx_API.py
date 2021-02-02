@@ -28,7 +28,7 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
     #dataset = json.loads(requests.get('http://10.154.120.58:6543/SCDxScrData/FOL/68-100465-04').json()['data'])
     #pprint.pprint(dataset)
 
-    por_list,sr_org_list,sr_bu_list,sr_tan_list,sr_split_list,sr_lt_list=[],[],[],[],[],[]
+    por_list,sr_org_list,sr_bu_list,sr_pf_list,sr_tan_list,sr_split_list,sr_lt_list=[],[],[],[],[],[],[]
     transit_org_list,transit_tan_list,transit_bu_list,transit_qty_list,transit_eta_list=[],[],[],[],[]
     oh_org_list,oh_tan_list,oh_bu_list,oh_qty_list=[],[],[],[]
 
@@ -63,6 +63,7 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
 
                 sr_org_list.append(org)
                 sr_bu_list.append(bu)
+                sr_pf_list.append(pf)
                 sr_tan_list.append(tan)
                 sr_split_list.append(split)
                 sr_lt_list.append(leadtime)
@@ -118,7 +119,7 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
 
     df_por=pd.concat(por_list)
     df_oh=pd.DataFrame({'DF_site':oh_org_list,'TAN':oh_tan_list,'BU':oh_bu_list,'OH':oh_qty_list})
-    df_sourcing=pd.DataFrame({'DF_site':sr_org_list,'BU':sr_bu_list,'TAN':sr_tan_list,'Split':sr_split_list,'Transit_time':sr_lt_list})
+    df_sourcing=pd.DataFrame({'DF_site':sr_org_list,'BU':sr_bu_list,'PF':sr_pf_list,'TAN':sr_tan_list,'Split':sr_split_list,'Transit_time':sr_lt_list})
     df_transit=pd.DataFrame({'DF_site':transit_org_list,'BU':transit_bu_list,'TAN':transit_tan_list,'ETA_date':transit_eta_list,'In-transit_quantity':transit_qty_list})
 
     df_por=df_por[['planningOrg','BU','PF','TAN','date','quantity','porPlanDate']]
@@ -138,7 +139,7 @@ if __name__=='__main__':
     end=time.time()
     print('Total time: {}'.format(end-start))
 
-    outPath = os.path.join(os.getcwd(), pcba_site + '_por_oh_intransit_SCDx_Prod ' + pd.Timestamp.now().strftime('%m%d %Hh%Mm') + '.xlsx')
+    outPath = os.path.join(os.getcwd() + '/supply_file', pcba_site + '_por_oh_intransit_SCDx_Prod ' + pd.Timestamp.now().strftime('%m%d %Hh%Mm') + '.xlsx')
     writer = pd.ExcelWriter(outPath, engine='xlsxwriter')
 
     df_por.to_excel(writer, sheet_name='por', index=False)

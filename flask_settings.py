@@ -44,7 +44,7 @@ class FileDownloadForm(FlaskForm):
     submit_delete=SubmitField('   Delete   ')
 
     file_name_share=StringField('File to share',default='put in filename here') # share by email
-    email_msg=TextAreaField(default='Hello, the PCBA allocation result for this week is ready to be downloaded from https://pcba-allocation.cisco.com/download ({})')
+    email_msg=TextAreaField(default='Hello, pls find attached the PCBA allocation result.')
     submit_share=SubmitField('   Share    ')
 
 
