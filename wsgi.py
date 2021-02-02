@@ -32,8 +32,8 @@ def allocation_run():
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name=request.headers.get('Oidc-Claim-Fullname')
     if login_user==None:
-        login_user=''
-        login_name=''
+        login_user = 'kwang2'
+        login_name = 'Ken - debug'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -153,7 +153,6 @@ def allocation_run():
 
         try:
             # 读取数据
-            module='Reading input data'
             df_3a4, df_oh, df_transit, df_scr, df_sourcing=read_data(file_path_3a4, file_path_supply)
 
             # limit BU from 3a4 and df_scr for allocation
@@ -220,8 +219,8 @@ def allocation_download():
     login_name = request.headers.get('Oidc-Claim-Fullname')
 
     if login_user == None:
-        login_user = ''
-        login_name = ''
+        login_user = 'kwang2'
+        login_name = 'Ken - debug'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -361,8 +360,8 @@ def email_settings():
     login_user=request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = ''
-        login_name = ''
+        login_user = 'kwang2'
+        login_name = 'Ken - debug'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -449,8 +448,8 @@ def allocation_admin():
     login_user=request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = ''
-        login_name = ''
+        login_user = 'kwang2'
+        login_name = 'Ken - debug'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -505,8 +504,8 @@ def document():
     login_user=request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = ''
-        login_name = ''
+        login_user = 'kwang2'
+        login_name = 'Ken - debug'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -538,8 +537,8 @@ def user_guide():
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = ''
-        login_name = ''
+        login_user = 'kwang2'
+        login_name = 'Ken - debug'
 
     if login_user != '' and login_user != 'kwang2':
         add_user_log(user=login_user, location='User-guide', user_action='Visit', summary='')
@@ -552,8 +551,8 @@ def allocation_datasource():
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = ''
-        login_name = ''
+        login_user = 'kwang2'
+        login_name = 'Ken - debug'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
