@@ -4,7 +4,7 @@ from flask import Flask, render_template
 from flask_mail import Mail, Message
 import os
 import pandas as pd
-from send_sms import send_me_sms
+#from send_sms import send_me_sms
 
 
 def send_attachment_and_embded_image(to_address,subject,html_template,att_filenames=None, embeded_filenames=None,sender='APJC DF',bcc=None,**kwargs):
