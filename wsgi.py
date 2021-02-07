@@ -219,8 +219,8 @@ def allocation_download():
     login_name = request.headers.get('Oidc-Claim-Fullname')
 
     if login_user == None:
-        login_user = 'kwang2'
-        login_name = 'Ken - debug'
+        login_user = 'unknown'
+        login_name = 'unknown'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -281,15 +281,15 @@ def allocation_download():
 
             email_msg = email_msg.format('Filename: ' + fname_share)
 
-            email_option = 'to_me' # use "to_me" when testing.
-            #email_option = 'to_all'
-
-            send_allocation_result(email_option, email_msg, fname_share, login_user,login_name)
+            send_allocation_result(email_msg, fname_share, login_user,login_name)
 
             add_user_log(user=login_user, location='Download', user_action='Share file',
                          summary='Success: {}'.format(fname_share))
+            if login_user=='unknown' or login_user=='kwang2':
+                msg = 'Testing purpose - {} is sent to KW.'.format(fname_share)
+            else:
+                msg = '{} is sent to the defined users by email.'.format(fname_share)
 
-            msg = '{} is sent to the defined users by email.'.format(fname_share)
             flash(msg, 'success')
             return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
 
@@ -360,8 +360,8 @@ def email_settings():
     login_user=request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = 'kwang2'
-        login_name = 'Ken - debug'
+        login_user = 'unknown'
+        login_name = 'unknown'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -448,8 +448,8 @@ def allocation_admin():
     login_user=request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = 'kwang2'
-        login_name = 'Ken - debug'
+        login_user = 'unknown'
+        login_name = 'unknown'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -504,8 +504,8 @@ def document():
     login_user=request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = 'kwang2'
-        login_name = 'Ken - debug'
+        login_user = 'unknown'
+        login_name = 'unknown'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -537,8 +537,8 @@ def user_guide():
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = 'kwang2'
-        login_name = 'Ken - debug'
+        login_user = 'unknown'
+        login_name = 'unknown'
 
     if login_user != '' and login_user != 'kwang2':
         add_user_log(user=login_user, location='User-guide', user_action='Visit', summary='')
@@ -551,8 +551,8 @@ def allocation_datasource():
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
-        login_user = 'kwang2'
-        login_name = 'Ken - debug'
+        login_user = 'unknown'
+        login_name = 'unknown'
         http_scheme = 'http'
     else:
         http_scheme = 'https'

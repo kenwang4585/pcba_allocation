@@ -8,6 +8,7 @@ from settings import *
 from smartsheet_handler import SmartSheetClient
 from sending_email import *
 import time
+import pprint
 
 def get_packed_or_cancelled_ss_from_3a4(df_3a4):
     """
@@ -79,11 +80,6 @@ def read_backlog_priority_from_smartsheet(df_3a4,login_user):
     df_smart_w_org_bu_in_3a4 = df_smart_self[
         (df_smart_self.ORG.isin(df_3a4.ORGANIZATION_CODE.unique())) & (df_smart_self.BU.isin(df_3a4.BUSINESS_UNIT.unique()))]
     ss_not_in_3a4 = np.setdiff1d(df_smart_w_org_bu_in_3a4.SO_SS.values, df_3a4.SO_SS.values)
-
-    print('user',login_user)
-    print(df_smart)
-    print(df_smart_self)
-    print(ss_not_in_3a4)
 
     # SS showing as packed or cancelled in 3a4
     ss_cancelled_or_packed_3a4 = get_packed_or_cancelled_ss_from_3a4(df_3a4)
@@ -1336,7 +1332,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     return df_scr
 
 
-def send_allocation_result(email_option,email_msg,share_filename,login_user,login_name):
+def send_allocation_result(email_msg,share_filename,login_user,login_name):
     """
     Send the allocation result to defined users by email
     """
@@ -1347,28 +1343,19 @@ def send_allocation_result(email_option,email_msg,share_filename,login_user,logi
     email_msg=email_msg.split('\r\n')
     email_msg=[x for x in email_msg if x!='']
 
-    if email_option=='to_me':
-        if login_user=='':
-            to_address = ['kwang2@cisco.com']
-        else:
-            to_address = [login_user + '@cisco.com']
-        send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=att_files,
-                                         embeded_filenames=None, sender=login_name + ' via PCBA allocation tool',
-                                         #share_filename=share_filename,
-                                         email_msg=email_msg)
-
-        msg = 'Result sent to yourself by email.'
-    elif email_option=='to_all':
-        cisco_recipients.append(login_user + '@cisco.com')
+    if login_user=='unknown' or login_user=='kwang2':  # testing for KW
+        to_address = ['kwang2@cisco.com']
+    else:
         to_address = cisco_recipients
-        send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
-                                         embeded_filenames=None, sender=login_name + ' via PCBA allocation tool',
-                                         share_filename=share_filename,
-                                         email_msg=email_msg)
+        to_address.append([login_user + '@cisco.com'])
 
-        msg = '{} sent to predefined users.'
+    send_attachment_and_embded_image(to_address, subject, html_template,
+                                     att_filenames=att_files,
+                                     embeded_filenames=None,
+                                     sender=login_name + ' via PCBA allocation tool',
+                                     #share_filename=share_filename,
+                                    email_msg=email_msg)
 
-    return msg
 
 def collect_available_sourcing(df_sourcing):
     """
@@ -1523,8 +1510,9 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # 按照org将in-transit分配给自己的订单（forward consumption considering ETA per OSSD - ETA consider backward offset）
     # 并更新blg_dic_tan
     blg_dic_tan = fulfill_backlog_by_oh(transit_dic_tan_eta_early, blg_dic_tan)
-    blg_dic_tan, transit_dic_tan_eta_late = fulfill_backlog_by_transit_eta_late(transit_dic_tan_eta_late, blg_dic_tan)
 
+    blg_dic_tan, transit_dic_tan_eta_late = fulfill_backlog_by_transit_eta_late(transit_dic_tan_eta_late, blg_dic_tan)
+    
     # Allocate SCR and 生成allocated supply dict
     supply_dic_tan_allocated = allocate_supply_per_supply_and_blg_dic(supply_dic_tan, blg_dic_tan)
 

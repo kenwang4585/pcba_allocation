@@ -4,10 +4,10 @@ from flask import Flask, render_template
 from flask_mail import Mail, Message
 import os
 import pandas as pd
-#from send_sms import send_me_sms
+from send_sms import send_me_sms
 
 
-def send_attachment_and_embded_image(to_address,subject,html_template,att_filenames=None, embeded_filenames=None,sender='APJC DF',**kwargs):
+def send_attachment_and_embded_image(to_address,subject,html_template,att_filenames=None, embeded_filenames=None,sender='APJC DF',bcc=None,**kwargs):
     '''
     Use Flask_mail to send the result to defined emails
     :param to_address:
@@ -40,6 +40,7 @@ def send_attachment_and_embded_image(to_address,subject,html_template,att_filena
 
         message = Message(subject= subject + ' - ' + time_stamp1,
                           recipients=to_address,
+                          bcc=bcc,
                           body='',
                           # body=render_template('email.txt',data=data),
                           html=render_template(html_template, **kwargs)
@@ -57,8 +58,8 @@ def send_attachment_and_embded_image(to_address,subject,html_template,att_filena
 
                 if att_size<=20000000:
                     with app.open_resource(full_fname) as at:
-                        dated_fname=short_fname[:-5]+' ('+time_stamp2 + ').xlsx'
-                        message.attach(dated_fname, 'excel/xlsx', at.read())
+                        #dated_fname=short_fname[:-5]+' ('+time_stamp2 + ').xlsx'
+                        message.attach(short_fname, 'excel/xlsx', at.read())
                 else:
                     size_over_limit=True
                     message.body='Attachment not added due to over size limit (20Mb).'
