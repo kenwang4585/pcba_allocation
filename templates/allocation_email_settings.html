@@ -26,7 +26,7 @@
          <!-- below for flashed messages -->
         <table style="border-collapse:collapse" border="0" cellspacing="0px" width="88%" align="center">
                 <tr>
-                  <td align="left" width="95%">
+                  <td align="left" width="70%">
                         {% if get_flashed_messages()|length>0 %}
                           {% for message in get_flashed_messages(with_categories=True) %}
                             <div class="alert alert-{{ message[0] }}" role="alert">
@@ -121,10 +121,13 @@
                     </td>
                 </tr>
         </table>
-
     </form>
-
 {% endblock %}
 
 {% block flash_message %}
+    <!-- set up falsh separately above -->
+{% endblock %}
+
+{% block empty_space %}
+    <br><br><br><br>
 {% endblock %}

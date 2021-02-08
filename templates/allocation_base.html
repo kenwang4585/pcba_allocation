@@ -2,20 +2,22 @@
 <!-- Ken wang, Jan, 2020 -->
 <html>
     <head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-
         {% block title %}
             <title>PCBA allocation</title>
         {% endblock %}
+
         {% block style %}
+            <!-- below give the right tab format -->
             <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
             <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
             <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-        {% endblock %}
+            <!-- below can add a line above footer -->
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+       {% endblock %}
     </head>
 
     <body>
-    <main>
-        {% block head %}
+        {% block header %}
             <!-- <div class="container"> -->
                 <table width="100%">
                     <tr>
@@ -34,8 +36,6 @@
                         </td>
                     </tr>
                 </table>
-            <!-- </div> -->
-        <br>
         {% endblock %}
         <br>
 
@@ -47,7 +47,7 @@
             <table style="border-collapse:collapse" border="0" cellspacing="0px" align="center">
                 <tbody>
                     <tr>
-                      <td width="98%" align="left">
+                      <td width="90%" align="left">
                           <main class="container">
                             {% if get_flashed_messages()|length>0 %}
                               {% for message in get_flashed_messages(with_categories=True) %}
@@ -63,20 +63,20 @@
                 </tbody>
             </table>
         {% endblock %}
-    </main>
 
-    <br><br>
-    {% block footer %}
-    <footer>
-        <p align="center" style="font-size: small">
-                2020-10   |
-                <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">Exceptional priority</a> |
-                <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">TAN grouping</a> |
-                <a href="https://app.smartsheet.com/sheets/3vRm52gg8MMM2h6xH5vv7xjHRV8rH83v5j2w9r91?view=grid" target="_blank">Missing in-transit</a>
+        {% block empty_space %}
+        {% endblock %}
 
-        </p>
-    </footer>
-    {% endblock %}
+        <br><br>
+        {% block footer %}
+            <footer>
+                <p align="center" style="font-size: small">
+                    <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">Exceptional priority</a> |
+                    <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">TAN grouping</a> |
+                    <a href="https://app.smartsheet.com/sheets/3vRm52gg8MMM2h6xH5vv7xjHRV8rH83v5j2w9r91?view=grid" target="_blank">Missing in-transit</a>
+               </p>
+            </footer>
+        {% endblock %}
 
     </body>
 </html>
