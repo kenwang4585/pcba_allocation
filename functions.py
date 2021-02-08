@@ -306,6 +306,7 @@ def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
 
     df_transit_time=df_sourcing.sort_values(by=['DF_site','Transit_time'],ascending=True)
     df_transit_time.drop_duplicates('DF_site',keep='first',inplace=True)
+    df_transit_time.loc[:,'Transit_time']=df_transit_time.Transit_time.fillna(0)
 
     transit_time={}
     transit_time_by_org={}
@@ -317,7 +318,7 @@ def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
 
     transit_time[pcba_site]=transit_time_by_org
 
-    return transit_time
+    return transit_time,df_transit_time
 
 
 
@@ -325,6 +326,7 @@ def update_date_with_transit_pad(x, y, transit_time, pcba_site):
     """
     offset transit time to a given date column
     """
+
     if x in transit_time[pcba_site].keys():
         return y - pd.Timedelta(days=transit_time[pcba_site][x])
     else:
@@ -951,7 +953,7 @@ def write_data_to_excel(output_file,data_to_write):
 
     writer.save()
 
-def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_sourcing,df_grouping,login_user):
+def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_transit_time,df_sourcing,df_grouping,login_user):
     # save the scr output file and 3a4 to excel
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
@@ -972,6 +974,7 @@ def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_
     df_transit.reset_index(inplace=True)
     df_transit.set_index(['DF_site'], inplace=True)
     df_transit.rename(columns={'In-transit':'Total'},inplace=True)
+    df_transit_time.set_index('TAN',inplace=True)
 
     #df_scr.reset_index(inplace=True)
 
@@ -979,7 +982,8 @@ def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_
                      'backlog-ranked': df_3a4,
                      'in-transit': df_transit,
                      'sourcing-rule':df_sourcing,
-                     'tan-group':df_grouping}
+                     'tan-group':df_grouping,
+                     'transit_time_from_sourcing_rule':df_transit_time}
 
     write_data_to_excel(output_path, data_to_write)
 
@@ -1050,7 +1054,7 @@ def read_data(f_3a4,f_supply):
     :return:
     """
     # read 3a4
-    df_3a4 = pd.read_csv(f_3a4, encoding='ISO-8859-1', parse_dates=['CURRENT_FCD_NBD_DATE', 'ORIGINAL_FCD_NBD_DATE','TARGET_SSD'],
+    df_3a4 = pd.read_csv(f_3a4, encoding='ISO-8859-1', parse_dates=['ORIGINAL_FCD_NBD_DATE','TARGET_SSD'],
                          low_memory=False)
 
     # read scr
@@ -1408,7 +1412,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_grouping, tan_group,tan_group_sourcing = read_tan_group_mapping_from_smartsheet()
 
     # read air transit pad from df_sourcing
-    transit_time=read_transit_from_sourcing_rules(df_sourcing,pcba_site)
+    transit_time,df_transit_time=read_transit_from_sourcing_rules(df_sourcing,pcba_site)
 
     # extract BU info for TAN from SCR for final report processing use
     tan_bu_pf = extract_bu_pf_from_scr(df_scr,tan_group)
@@ -1529,7 +1533,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site)
 
     # 存储文件
-    output_filename = write_allocation_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_sourcing,df_grouping,login_user)
+    output_filename = write_allocation_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_transit_time,df_sourcing,df_grouping,login_user)
 
     return output_filename
 

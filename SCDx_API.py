@@ -68,8 +68,8 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
                 sr_split_list.append(split)
                 sr_lt_list.append(leadtime)
 
-                if tan=='68-100233-01':
-                    pprint.pprint(dfsite)
+                #if tan=='68-100233-01':
+                #    pprint.pprint(dfsite)
 
             # below for intransit and df OH
             dfdigest = dfsite['dfDigest']
