@@ -456,7 +456,8 @@ def allocation_admin():
 
     if login_user!='unknown' and login_user!='kwang2':
         return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
-    add_user_log(user=login_user, location='Admin', user_action='Visit', summary='why this happens')
+    if login_user != 'unknown' and login_user != 'kwang2':
+        add_user_log(user=login_user, location='Admin', user_action='Visit', summary='why this happens')
 
     # get file info
     df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
@@ -512,7 +513,9 @@ def document():
 
     if login_user!='unknown' and login_user!='kwang2':
         return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
-    add_user_log(user=login_user, location='Document', user_action='Visit', summary='why this happens')
+
+    if login_user != 'unknown' and login_user != 'kwang2':
+        add_user_log(user=login_user, location='Document', user_action='Visit', summary='why this happens')
 
     return render_template('allocation_document.html',
                            user=login_name)
