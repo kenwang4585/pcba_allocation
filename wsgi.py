@@ -235,6 +235,10 @@ def allocation_download():
     df_upload=get_file_info_on_drive(base_dir_upload,keep_hours=upload_record_hours)
 
     if form.validate_on_submit():
+        start_time=pd.Timestamp.now()
+        log_msg = []
+        log_msg.append('\n\n[' + login_user + '] ' + start_time.strftime('%Y-%m-%d %H:%M'))
+
         submit_detete_file=form.submit_delete.data
         submit_share_file=form.submit_share.data
 
@@ -281,14 +285,28 @@ def allocation_download():
 
             email_msg = email_msg.format('Filename: ' + fname_share)
 
-            send_allocation_result(email_msg, fname_share, login_user,login_name)
+            try:
+                send_allocation_result(email_msg, fname_share, login_user,login_name)
 
-            add_user_log(user=login_user, location='Download', user_action='Share file',
-                         summary='Success: {}'.format(fname_share))
-            if login_user=='unknown' or login_user=='kwang2':
-                msg = 'Testing purpose - {} is sent to KW.'.format(fname_share)
-            else:
-                msg = '{} is sent to the defined users by email.'.format(fname_share)
+                add_user_log(user=login_user, location='Download', user_action='Share file',
+                             summary='Success: {}'.format(fname_share))
+                if login_user == 'unknown' or login_user == 'kwang2':
+                    msg = 'Testing purpose - {} is sent to KW.'.format(fname_share)
+                else:
+                    msg = '{} is sent to the defined users by email.'.format(fname_share)
+
+            except Exception as e:
+                traceback.print_exc()
+                msg='Error encountered in sharing result:{}'.format(e)
+                flash(msg, 'warning')
+                # Write the log file
+                add_user_log(user=login_user, location='Download', user_action='Share file', summary=str(e))
+
+                # write details to error_log.txt
+                log_msg = '\n'.join(log_msg)
+                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                    file_object.write(log_msg)
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
 
             flash(msg, 'success')
             return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))

@@ -1351,7 +1351,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
         to_address = ['kwang2@cisco.com']
     else:
         to_address = cisco_recipients
-        to_address.append([login_user + '@cisco.com'])
+        to_address.append(login_user + '@cisco.com')
 
     send_attachment_and_embded_image(to_address, subject, html_template,
                                      att_filenames=att_files,
