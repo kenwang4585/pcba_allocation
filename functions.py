@@ -1231,8 +1231,15 @@ def calculate_x_weeks_allocation(df_scr,pcba_site, wk='wk1'):
 def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site):
     """
     Add back the BU, backlog,oh, intransit info into the final SCR with allocation result; and add the related columns based on calculations.
+    Note: adding columns will impact the summary as some iloc used below in calculation.
     """
+
     df_scr.reset_index(inplace=True)
+
+    # calculate and add in total allocation - do this before adding other non-date columns
+    df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site+'-SCR',
+                                           df_scr.iloc[:,2:].sum(axis=1),
+                                           None)
 
     # add BU info
     df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][0])
@@ -1272,10 +1279,6 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     df_scr.drop('oh+transit', axis=1, inplace=True)
 
     # calculate and add in total allocation and recovery date
-    df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site+'-SCR',
-                                           df_scr.iloc[:, 2:-5].sum(axis=1),  # [3:-5] refer to the right data columns
-                                           None)
-
     df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site+'-SCR',
                                           df_scr.Gap_before + df_scr.Allocation,
                                           None)
@@ -1285,7 +1288,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
                                                   'No gap',
                                                   np.where(df_scr.Gap_after < 0,
                                                            'No recovery',
-                                                           'TBD')),
+                                                           'TBD')), # further decide later
                                          None)
 
 
@@ -1316,7 +1319,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
         inplace=True)
     df_scr.reset_index(inplace=True)
     dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site+'-SCR')]
-    dfx=dfx.iloc[:,:-9].copy() # -9 to excluded the last added columns
+    dfx=dfx.iloc[:,:-10].copy() # -10 to excluded the last added columns
     dfx.set_index(['TAN', 'ORG'], inplace=True)
     df_scr.set_index(['TAN', 'ORG'], inplace=True)
 

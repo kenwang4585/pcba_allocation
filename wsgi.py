@@ -166,7 +166,6 @@ def allocation_run():
                 return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
             #### main program
-            module='Main program for allocation'
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)
             flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
@@ -182,15 +181,14 @@ def allocation_run():
 
         except Exception as e:
             try:
-                del df_scr, df_3a4, df_oh, df_transit
+                del df_scr, df_3a4, df_oh, df_transit, df_sourcing
                 gc.collect()
             except:
                 print('')
 
-            print(module,': ', e)
             traceback.print_exc()
             log_msg.append(str(e))
-            flash('Error encountered in module : {} - {}'.format(module,e),'warning')
+            flash('Error encountered: {}'.format(str(e)),'warning')
             #Write the log file
             summary = '; '.join(log_msg)
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
@@ -203,7 +201,7 @@ def allocation_run():
 
         # clear memory
         try:
-            del df_scr, df_3a4, df_oh, df_transit
+            del df_scr, df_3a4, df_oh, df_transit, df_sourcing
             gc.collect()
         except:
             print('')
