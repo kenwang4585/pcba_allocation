@@ -32,8 +32,8 @@ def allocation_run():
     login_user = request.headers.get('Oidc-Claim-Sub')
     login_name=request.headers.get('Oidc-Claim-Fullname')
     if login_user==None:
-        login_user = 'kwang2'
-        login_name = 'Ken - debug'
+        login_user = 'unknown'
+        login_name = 'unknown'
         http_scheme = 'http'
     else:
         http_scheme = 'https'
@@ -41,7 +41,7 @@ def allocation_run():
     #print(request.headers)
     #print(request.url)
 
-    if login_user!='' and login_user!='kwang2':
+    if login_user!='kwang2':
         add_user_log(user=login_user,location='Allocation',user_action='visit',summary='')
 
     if form.validate_on_submit():
@@ -223,9 +223,6 @@ def allocation_download():
     else:
         http_scheme = 'https'
 
-    if login_user!='' and login_user!='kwang2':
-        add_user_log(user=login_user, location='Download', user_action='Visit', summary='')
-
     # read the files
     output_record_hours=360
     upload_record_hours=240
@@ -335,8 +332,8 @@ def download_file_output(filename):
     f_path=base_dir_output
     print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
-    if login_user != None:
-        add_user_log(user=login_user, location='Download', user_action='Download file',
+
+    add_user_log(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -345,8 +342,8 @@ def download_file_upload(filename):
     f_path=base_dir_upload
     print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
-    if login_user != None:
-        add_user_log(user=login_user, location='Download', user_action='Download file',
+
+    add_user_log(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -355,8 +352,8 @@ def download_file_supply(filename):
     f_path=base_dir_supply
     print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
-    if login_user != None:
-        add_user_log(user=login_user, location='Download', user_action='Download file',
+
+    add_user_log(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -365,8 +362,8 @@ def download_file_logs(filename):
     f_path=base_dir_logs
     print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
-    if login_user != None:
-        add_user_log(user=login_user, location='Download', user_action='Download file',
+
+    add_user_log(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -381,10 +378,6 @@ def email_settings():
         http_scheme = 'http'
     else:
         http_scheme = 'https'
-
-    if login_user!='' and login_user!='kwang2':
-        add_user_log(user=login_user, location='Email settings', user_action='Visit',
-                 summary='')
 
     # read emails
     df_email_detail = read_table('email_settings')
@@ -470,10 +463,9 @@ def allocation_admin():
     else:
         http_scheme = 'https'
 
-    if login_user!='unknown' and login_user!='kwang2':
-        return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
-    if login_user != 'unknown' and login_user != 'kwang2':
-        add_user_log(user=login_user, location='Admin', user_action='Visit', summary='why this happens')
+    if login_user!='kwang2':
+        raise ValueError
+        add_user_log(user=login_user, location='Admin', user_action='Visit', summary='why this happens??')
 
     # get file info
     df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
@@ -527,11 +519,9 @@ def document():
     else:
         http_scheme = 'https'
 
-    if login_user!='unknown' and login_user!='kwang2':
-        return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
-
-    if login_user != 'unknown' and login_user != 'kwang2':
-        add_user_log(user=login_user, location='Document', user_action='Visit', summary='why this happens')
+    if login_user!='kwang2':
+        raise ValueError
+        add_user_log(user=login_user, location='Document', user_action='Visit', summary='why this happens??')
 
     return render_template('allocation_document.html',
                            user=login_name)
@@ -559,9 +549,6 @@ def user_guide():
         login_user = 'unknown'
         login_name = 'unknown'
 
-    if login_user != '' and login_user != 'kwang2':
-        add_user_log(user=login_user, location='User-guide', user_action='Visit', summary='')
-
     return render_template('allocation_userguide.html',user=login_name)
 
 @app.route('/datasource',methods=['GET','POST'])
@@ -575,9 +562,6 @@ def allocation_datasource():
         http_scheme = 'http'
     else:
         http_scheme = 'https'
-
-    if login_user != '' and login_user != 'kwang2':
-        add_user_log(user=login_user, location='User-guide', user_action='Visit', summary='')
 
     if form.validate_on_submit():
         submit_download_scdx_poc=form.submit_download_supply_poc.data
