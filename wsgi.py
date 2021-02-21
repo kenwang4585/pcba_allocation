@@ -464,6 +464,7 @@ def allocation_admin():
         http_scheme = 'https'
 
     if login_user!='kwang2':
+        add_user_log(user=login_user, location='Admin', user_action='Visit', summary='')
         raise ValueError
         add_user_log(user=login_user, location='Admin', user_action='Visit', summary='why this happens??')
 
