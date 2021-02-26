@@ -1348,10 +1348,6 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     cisco_recipients = read_subscription_data()
     cisco_recipients = cisco_recipients['CISCO'][org] # currently only send to Cisco people and not consider BU/PF
 
-    print(cisco_recipients)
-
-    raise ValueError
-
     subject = share_filename[:-5]
     html_template='allocation_email_notification.html'
     att_files = [(base_dir_output, share_filename)]  # List of tuples (path, file_name)
