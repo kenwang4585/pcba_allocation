@@ -132,7 +132,7 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
     return df_por, df_oh, df_transit,df_sourcing
 
 if __name__=='__main__':
-    pcba_site='FOL'
+    pcba_site=input('Put in PCBA site:')
     start=time.time()
     df_por, df_oh, df_transit,df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site,'*')
 
