@@ -7,6 +7,7 @@ import math
 from settings import *
 from smartsheet_handler import SmartSheetClient
 from sending_email import *
+from db_read import read_table
 import time
 import pprint
 
@@ -1343,6 +1344,14 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     """
     Send the allocation result to defined users by email
     """
+    org=share_filename[:3]
+    cisco_recipients = read_subscription_data()
+    cisco_recipients = cisco_recipients['CISCO'][org] # currently only send to Cisco people and not consider BU/PF
+
+    print(cisco_recipients)
+
+    raise ValueError
+
     subject = share_filename[:-5]
     html_template='allocation_email_notification.html'
     att_files = [(base_dir_output, share_filename)]  # List of tuples (path, file_name)
@@ -1398,6 +1407,42 @@ def remove_unavailable_sourcing (df_3a4,sourcing_rules, tan_group_sourcing):
     df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules_combined)].copy()
 
     return df_3a4
+
+
+def read_subscription_data():
+    """
+    Read the subscrition db for emails
+    """
+    df_subscription = read_table('email_settings')
+
+    cisco_recipients = {}
+    fol_cisco,fdo_cisco=[],[]
+    fol_cm, fdo_cm = [], []
+
+    for row in df_subscription.itertuples():
+        orgs=row.PCBA_Org
+        org_list=orgs.split('/')
+        email=row.Email
+
+        if 'cisco' in email:
+            for org in org_list:
+                if org=='FOL':
+                    fol_cisco.append(email)
+                elif org=='FDO':
+                    fdo_cisco.append(email)
+        else:
+            for org in org_list:
+                if org=='FOL':
+                    fol_cm.append(email)
+                elif org=='FDO':
+                    fdo_cm.append(email)
+
+    cisco_recipients['CISCO']={'FOL':fol_cisco,
+                               'FDO':fdo_cisco}
+    cisco_recipients['CM'] = {'FOL': fol_cm,
+                                 'FDO': fdo_cm}
+
+    return cisco_recipients
 
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
     """

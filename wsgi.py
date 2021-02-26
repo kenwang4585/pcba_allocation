@@ -389,10 +389,10 @@ def email_settings():
 
         if submit_add:
             identity=form.identity.data
-            pcba_org=form.pcba_org.data.strip().upper()
-            bu=form.bu.data.strip().upper()
-            pf = form.pf.data.strip().upper()
-            email_to_add=form.email_to_add.data.strip().lower()
+            pcba_org=form.pcba_org.data.upper().replace(' ','')
+            bu=form.bu.data.upper().replace(' ','')
+            pf = form.pf.data.upper().replace(' ','')
+            email_to_add=form.email_to_add.data.lower().replace(' ','')
 
             if len(pcba_org)==0 or len(email_to_add)==0:
                 msg='PCBA org and email are mandatory fields!'
