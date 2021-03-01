@@ -1,0 +1,88 @@
+
+<html>
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+	{% block title %}
+        <title>title</title>
+    {% endblock %}
+
+    {% block style %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/%s.min.css' % request.cookies.get('theme', 'perfect_blue')) }}"
+              type="text/css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+    {% endblock %}
+</head>
+<body>
+
+{% block heading %}
+    <table align="center">
+        <tbody>
+        <tr align="center">
+            <td width="1200" bgcolor="#708090" align="left">
+                <br>
+                <span style="color: #f5f5f5; font-size: xx-large"><strong>&nbsp;Config Error Identification</strong></span>
+                <span style="color: #f5f5f5">&nbsp;  </span>
+
+                <!--<img src="{{ url_for('static', filename='banner_3a4_.png')}}" width='1102'> -->
+            </td>
+        </tr>
+        </tbody>
+    </table>
+{% endblock %}
+
+
+
+<form method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+
+    {% block content %}
+    <!-- form  -->
+    {% endblock %}
+
+    <br>
+    
+    {% block flash_message %}
+    <!-- below for flashed messages -->  
+    <table style="border-collapse:collapse" border="0" cellspacing="0px" align="center">       
+        <tbody>
+            <tr>
+              <td width="1255" align="left">
+                  <br>
+                  <main class="container">
+                    {% if get_flashed_messages()|length>0 %}
+                      {% for message in get_flashed_messages(with_categories=True) %}
+                        <div class="alert alert-{{ message[0] }}" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            {{ message[1] }}
+                        </div>
+                      {% endfor %}
+                    {% endif %}
+                  </main>
+                  <br><br>
+              </td>
+            </tr>
+        </tbody>        
+    </table>
+    {% endblock %}
+
+    {% block table_data %}
+    <!-- below for output data details -->
+    {% endblock %}
+
+
+
+
+</form>
+
+
+
+
+<br><br><br>
+
+{% block footer %}
+<footer>
+</footer>
+{% endblock %}
+
+</body>
+</html>

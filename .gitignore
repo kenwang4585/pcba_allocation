@@ -1,0 +1,6 @@
+.env
+output_file/*
+output_file/!.keep
+upload_file/
+supply_file/
+logs/

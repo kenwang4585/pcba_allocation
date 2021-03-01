@@ -1,0 +1,59 @@
+
+<!-- Ken wang, Oct, 2020 -->
+
+{% extends 'allocation_base.html' %}
+
+{% block content %}
+
+    <table width="90%" align="center">
+        <tr>
+            <td>
+                <ul class="nav nav-tabs">
+                    <li style="font-size: large"><a href="{{ url_for('allocation_datasource')}}"><strong>Datasource</strong></a></li>
+                    <li class="active" style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('email_settings')}}" style="font-size: large"><strong>Email-settings</strong></a></li>
+                    <li style="font-size: large"><a href="{{ url_for('user_guide')}}" style="font-size: large"><strong>User-guide</strong></a></li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+
+
+    <form method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+        <br>
+        <table style="border-collapse:collapse; background-color: #eeeeee" border="0" cellspacing="0px" width="90%" align="center">
+    		<tr align="center">
+                <td width="15%"></td>
+                <td width='30%' align="left">
+                        <br>
+                        <strong>{{ form.file_3a4.label }}</strong><br>{{ form.file_3a4 }}<br><br><br>
+                        <strong>{{ form.file_supply.label }}</strong><br>{{ form.file_supply }}<br><br>
+                </td>
+                <td width="10%"></td>
+                <td width="40%" align="left">
+                    <br>
+                    <strong>{{ form.org.label }}</strong><br>{{ form.org (class='form-control') }}<br><br>
+                    <strong>{{ form.bu.label }}</strong><br>{{ form.bu (class='form-control')}}<br><br>
+                </td>
+                <td width="5%"></td>
+            </tr>
+        </table>
+        <table style="border-collapse:collapse; " border="0" cellspacing="0px" width="90%" align="center">
+            <tr>
+                <td align="center" width="100%">
+                    <br>
+                    {{ form.submit_allocation(class='btn btn-default btn-lg')  }}
+                    <br><br>
+            	</td>
+        	</tr>
+	    </table>
+    </form>
+
+{% endblock %}
+
+
+{% block empty_space %}
+    <br><br><br><br><br><br><br><br><br><br>
+{% endblock %}

@@ -1,0 +1,105 @@
+
+<!-- saved from url=(0076)file:///Users/wangken/py/machine_learning/config/script/templates/upload.htm -->
+<html>
+<head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+	<title>Configuration</title>
+	{% block style %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/%s.min.css' % request.cookies.get('theme', 'perfect_blue')) }}"
+              type="text/css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+    {% endblock %}
+</head>
+<body>
+
+<p align="center">
+	<span style="color: #005AB5; font-size: xx-large; "><strong>  Config Error Identification Tool </strong></span><br>
+	<span style="font-size: large; ">Sales Order Configuration Validation Via Machine Learning and Config Rules</span>
+</p>
+<br><br>
+
+
+<!-- Run ML program -->
+<form method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+
+    <table bgcolor="#708090" style="border-collapse:collapse" border="0" cellspacing="0px" align="center">
+        <tbody>
+        	<tr><td width="1202"><br></td>
+
+        	</tr>
+        </tbody>
+    </table>
+
+
+    <table bgcolor="#B9D3EE" style="border-collapse:collapse" border="1" cellspacing="0px" align="center">
+        <tbody>
+           	<tr>
+            	<td width="400" align="left">
+            		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<big>{{ form.data_source.label}}</big>
+            		{{ form.data_source}}
+            		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ form.file }}
+            	</td>
+               	<td width="400" align="center">
+               		{{ form.org_selection.label }}<br> {{ form.org_selection }}
+
+
+               	</td>
+                <td width="400" align="center">
+					<br><br>
+					{{ form.user_id.label }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ form.user_id }}
+					<br><br>
+					{{ form.email_to.label }}<br>{{ form.email_to }}
+					<br><br>
+
+				</td>
+            </tr>
+		</tbody>
+	</table>
+	<br>
+	<table bgcolor="#C1C1C1" style="border-collapse:collapse" border="0" cellspacing="0px" align="center">
+        <tbody>
+           	<tr>
+           		
+            	<td width="1208" align="center">
+					<br>
+					{{ form.submit }}
+            		<br><br>
+            	</td>
+
+            </tr>
+		</tbody>
+	</table>
+
+
+</form>
+
+
+
+<br><br>
+
+<table align="center">
+        <tbody>
+           	<tr>
+            	<td width="1200" align="left">
+					<br>
+					{% if get_flashed_messages()|length>0 %}
+                      {% for message in get_flashed_messages(with_categories=True) %}
+                        <div class="alert alert-{{ message[0] }}" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            {{ message[1] }}
+                        </div>
+                      {% endfor %}
+                    {% endif %}
+            	</td>
+
+            </tr>
+		</tbody>
+	</table>
+
+
+<br><br><br><br><br><br><br><br><br>
+
+
+
+</body></html>
