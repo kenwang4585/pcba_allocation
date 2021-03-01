@@ -35,6 +35,9 @@ def get_file_info_on_drive(base_path,keep_hours=100):
     """
     now=time.time()
     file_list = os.listdir(base_path)
+    if '.keep' in file_list:
+        file_list.remove('.keep')
+
     files = []
     creation_time = []
     file_size = []
