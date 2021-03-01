@@ -1,7 +1,5 @@
 .env
-/output_file/*.xlsx
-/chart/*.png
-/upload_file/*.csv
-/upload_file/*.xlsx
-/supply_file/*.xlsx
-/logs/*.txt
+/output_file/*
+/upload_file/*
+/supply_file/*
+/logs/*
