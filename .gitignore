@@ -1,5 +1,5 @@
 .env
-!.keep
+output_file/!.keep
 output_file/*
 upload_file/*
 supply_file/*
