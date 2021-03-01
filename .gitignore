@@ -1,6 +1,7 @@
 .env
-output_file/!.keep
+output_file/*
 output_file/*
 upload_file/*
 supply_file/*
 logs/*
+!.keep
