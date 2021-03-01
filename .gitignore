@@ -1,5 +1,6 @@
 .env
-output_file/!.keep
-upload_file/
-supply_file/
-logs/
+!.keep
+output_file/*
+upload_file/*
+supply_file/*
+logs/*
