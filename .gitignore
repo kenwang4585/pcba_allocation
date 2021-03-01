@@ -1,6 +1,7 @@
 .env
 .idea
 .ipynb_checkpoints
+.DS_Store
 __pycache__/
 output_file/*
 output_file/*
