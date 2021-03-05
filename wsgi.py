@@ -639,9 +639,16 @@ def allocation_datasource():
 
                 return send_from_directory(f_path, filename=fname, as_attachment=True)
             except Exception as e:
-                msg = 'Error downloading supply data from SCDx-Prod! ' + str(e)
+                msg = 'Error downloading supply data from SCDx-Prod! Pls try again later.'
                 flash(msg, 'warning')
                 add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-Prod', summary='Error: [' + pcba_site_prod + '] ' + str(e))
+
+                # write details to error_log.txt
+                log_msg = '\n'.join(log_msg)
+                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                    file_object.write(log_msg)
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+
                 return redirect(url_for('allocation_datasource', _external=True, _scheme=http_scheme, viewarg1=1))
 
     return render_template('allocation_datasource.html',user=login_name,form=form)
