@@ -577,7 +577,7 @@ def allocation_datasource():
             pcba_site_poc=form.pcba_site_poc.data.strip().upper()
 
             log_msg = []
-            log_msg.append('\n\n[Download SCDx-POC] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
+            log_msg.append('\n\n[Download SCDx-POC] - ' + login_user + ' ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
 
             now = pd.Timestamp.now()
             f_path=base_dir_supply
@@ -600,9 +600,17 @@ def allocation_datasource():
 
                 return send_from_directory(f_path, filename=fname, as_attachment=True)
             except Exception as e:
-                msg = 'Error downloading supply data from SCDx-POC! ' + str(e)
+                msg = 'Error downloading supply data from SCDx-POC! Maybe SCDx issue, pls try again after a while.'
                 flash(msg, 'warning')
+                traceback.print_exc()
                 add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-POC', summary='Error: [' + pcba_site_poc + '] ' + str(e))
+
+                # write details to error_log.txt
+                log_msg = '\n'.join(log_msg)
+                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                    file_object.write(log_msg)
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+
                 return redirect(url_for('allocation_datasource', _external=True, _scheme=http_scheme, viewarg1=1))
         elif submit_download_scdx_prod:
             pcba_site_prod=form.pcba_site_prod.data.strip().upper()
