@@ -452,7 +452,7 @@ def created_supply_dict_per_scr(df_scr):
     return supply_dic_tan
 
 
-def created_oh_dict_per_df_oh(df_oh, pcba_site):
+def created_oh_dict_per_df_oh(df_oh):
     """
     (Also used for transit eta close dict)create OH dict based on DF OH (excluding PCBA site and only consider OH>0 items)
     oh_dic_tan={(FOC,'800-42373'):25,(FJZ,'800-42925'):100}
@@ -465,8 +465,7 @@ def created_oh_dict_per_df_oh(df_oh, pcba_site):
         tan = row.TAN
         oh = row.OH
 
-        if org != pcba_site:
-            oh_dic_tan[(org, tan)] = oh
+        oh_dic_tan[(org, tan)] = oh
 
     return oh_dic_tan
 
@@ -1529,8 +1528,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # add up supply by versionless TAN
     df_oh=add_up_supply_by_pn(df_oh,org_col='DF_site',pn_col='TAN')
 
-    # 生成OH dict；
-    oh_dic_tan = created_oh_dict_per_df_oh(df_oh, pcba_site)
+   # 生成OH dict；
+    oh_dic_tan = created_oh_dict_per_df_oh(df_oh)
 
     # Oh to fulfill backlog per site. update blg_dic_tan accordingly
     blg_dic_tan = fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan)
@@ -1559,7 +1558,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_transit_eta_late = df_transit.loc[:, col > close_eta_cutoff].copy()
 
     # 生成transit dict - for ETA close data use the OH dict function instead
-    transit_dic_tan_eta_early = created_oh_dict_per_df_oh(df_transit_eta_early, pcba_site)
+    transit_dic_tan_eta_early = created_oh_dict_per_df_oh(df_transit_eta_early)
     transit_dic_tan_eta_late = create_transit_dict_per_df_transit(df_transit_eta_late)
 
     # 按照org将in-transit分配给自己的订单（forward consumption considering ETA per OSSD - ETA consider backward offset）
