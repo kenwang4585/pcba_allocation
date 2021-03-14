@@ -324,11 +324,16 @@ def delete_file(file_path):
         os.remove(file_path)
         msg = 'File deleted!'
         flash(msg, 'success')
-        return redirect(url_for("allocation_admin"))
+        return redirect(url_for("allocation_admin", _external=True, _scheme=http_scheme, viewarg1=1))
     return render_template('allocation_admin.html',form=form)
 
 @app.route('/o/<login_user>/<filename>',methods=['GET'])
 def delete_file_output(login_user,filename):
+    if login_user == 'unknown':
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
     if login_user in filename:
         f_path = base_dir_output
         os.remove(os.path.join(f_path,filename))
@@ -338,10 +343,15 @@ def delete_file_output(login_user,filename):
         msg='You can only delete file created by yourself!'
         flash(msg,'warning')
 
-    return redirect(url_for("allocation_download"))
+    return redirect(url_for("allocation_download", _external=True, _scheme=http_scheme, viewarg1=1))
 
 @app.route('/u/<login_user>/<filename>',methods=['GET'])
 def delete_file_upload(login_user,filename):
+    if login_user == 'unknown':
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
     if login_user in filename:
         f_path = base_dir_upload
         os.remove(os.path.join(f_path,filename))
@@ -351,7 +361,7 @@ def delete_file_upload(login_user,filename):
         msg='You can only delete file uploaded by yourself!'
         flash(msg,'warning')
 
-    return redirect(url_for("allocation_download"))
+    return redirect(url_for("allocation_download", _external=True, _scheme=http_scheme, viewarg1=1))
 
 @app.route('/o/<filename>',methods=['GET'])
 def download_file_output(filename):
