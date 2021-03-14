@@ -311,7 +311,8 @@ def allocation_download():
                            output_record_days=int(output_record_hours/24),
                            files_uploaded=df_upload.values,
                            upload_record_days=int(upload_record_hours/24),
-                           user=login_name)
+                           user=login_name,
+                           login_user=login_user)
 
 
 # Below did now work out somehow - NOT USED
@@ -326,11 +327,35 @@ def delete_file(file_path):
         return redirect(url_for("allocation_admin"))
     return render_template('allocation_admin.html',form=form)
 
+@app.route('/o/<login_user>/<filename>',methods=['GET'])
+def delete_file_output(login_user,filename):
+    if login_user in filename:
+        f_path = base_dir_output
+        os.remove(os.path.join(f_path,filename))
+        msg='File removed: {}'.format(filename)
+        flash(msg,'success')
+    else:
+        msg='You can only delete file created by yourself!'
+        flash(msg,'warning')
+
+    return redirect(url_for("allocation_download"))
+
+@app.route('/u/<login_user>/<filename>',methods=['GET'])
+def delete_file_upload(login_user,filename):
+    if login_user in filename:
+        f_path = base_dir_upload
+        os.remove(os.path.join(f_path,filename))
+        msg='File removed: {}'.format(filename)
+        flash(msg,'success')
+    else:
+        msg='You can only delete file uploaded by yourself!'
+        flash(msg,'warning')
+
+    return redirect(url_for("allocation_download"))
 
 @app.route('/o/<filename>',methods=['GET'])
 def download_file_output(filename):
     f_path=base_dir_output
-    print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
 
     add_user_log(user=login_user, location='Download', user_action='Download file',
@@ -340,7 +365,6 @@ def download_file_output(filename):
 @app.route('/u/<filename>',methods=['GET'])
 def download_file_upload(filename):
     f_path=base_dir_upload
-    print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
 
     add_user_log(user=login_user, location='Download', user_action='Download file',
@@ -350,7 +374,6 @@ def download_file_upload(filename):
 @app.route('/s/<filename>',methods=['GET'])
 def download_file_supply(filename):
     f_path=base_dir_supply
-    print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
 
     add_user_log(user=login_user, location='Download', user_action='Download file',
@@ -360,7 +383,6 @@ def download_file_supply(filename):
 @app.route('/l/<filename>',methods=['GET'])
 def download_file_logs(filename):
     f_path=base_dir_logs
-    print(f_path)
     login_user = request.headers.get('Oidc-Claim-Sub')
 
     add_user_log(user=login_user, location='Download', user_action='Download file',
