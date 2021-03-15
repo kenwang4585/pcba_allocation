@@ -41,9 +41,6 @@ def allocation_run():
     #print(request.headers)
     #print(request.url)
 
-    if login_user!='kwang2':
-        add_user_log(user=login_user,location='Allocation',user_action='visit',summary='')
-
     if form.validate_on_submit():
         start_time = pd.Timestamp.now()
         print('start to run: {}'.format(start_time.strftime('%Y-%m-%d %H:%M')))
@@ -569,7 +566,7 @@ def document():
 
     if login_user!='kwang2':
         raise ValueError
-        add_user_log(user=login_user, location='Document', user_action='Visit', summary='why this happens??')
+        add_user_log(user=login_user, location='Document', user_action='Visit - trying', summary='why this happens??')
 
     return render_template('allocation_document.html',
                            user=login_name)
