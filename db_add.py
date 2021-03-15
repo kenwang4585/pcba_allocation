@@ -21,15 +21,13 @@ def add_user_log(user='', location='', user_action='',summary=''):
     db.session.commit()
     #print('User log added')
 
-def add_email_data(identity, pcba_org, bu, pf, email,login_user):
+def add_email_data(pcba_org, bu, email,login_user):
     '''
     Add the user log to db
     '''
 
-    log = EmailSettings(Identity=identity,
-                  PCBA_Org=pcba_org,
+    log = Subscription(PCBA_Org=pcba_org,
                   BU=bu,
-                  PF=pf,
                   Email=email,
                   Added_by=login_user,
                   Added_on=pd.Timestamp.now().date(),)

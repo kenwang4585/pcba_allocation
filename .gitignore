@@ -7,5 +7,6 @@ output_file/*
 output_file/*
 upload_file/*
 supply_file/*
+trash_file/*
 logs/*
 !.keep

@@ -18,7 +18,7 @@ from sending_email import *
 from db_add import add_user_log,add_email_data
 from db_read import read_table
 from db_update import update_email_data
-from db_delete import delete_record
+from db_delete import delete_email
 import traceback
 import gc
 
@@ -226,45 +226,19 @@ def allocation_download():
     # read the files
     output_record_hours=360
     upload_record_hours=240
+    trash_record_hours=240
     df_output=get_file_info_on_drive(base_dir_output,keep_hours=output_record_hours)
     df_upload=get_file_info_on_drive(base_dir_upload,keep_hours=upload_record_hours)
+    df_trash = get_file_info_on_drive(base_dir_trash, keep_hours=trash_record_hours)
 
     if form.validate_on_submit():
         start_time=pd.Timestamp.now()
         log_msg = []
         log_msg.append('\n\n[' + login_user + '] ' + start_time.strftime('%Y-%m-%d %H:%M'))
 
-        submit_detete_file=form.submit_delete.data
         submit_share_file=form.submit_share.data
 
-        if submit_detete_file:
-            fname = form.file_name_delete.data
-            if login_user in fname:
-                if fname in df_output.File_name.values:
-                    f_path = df_output[df_output.File_name == fname].File_path.values[0]
-                    os.remove(f_path)
-                    msg = '{} removed!'.format(fname)
-                    flash(msg, 'success')
-                elif fname in df_upload.File_name.values:
-                    f_path = df_upload[df_upload.File_name == fname].File_path.values[0]
-                    os.remove(f_path)
-                    msg = '{} removed!'.format(fname)
-                    flash(msg, 'success')
-                else:
-                    add_user_log(user=login_user, location='Download', user_action='Delete file',
-                                 summary='Fail: {}'.format(fname))
-                    msg = 'Error file name: {}'.format(fname)
-                    flash(msg, 'warning')
-                    return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
-                add_user_log(user=login_user, location='Download', user_action='Delete file',
-                             summary='Success: {}'.format(fname))
-            else:
-                msg='You are not allowed to delete this file created by others: {}'.format(fname)
-                flash(msg,'warning')
-                return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
-
-            return redirect(url_for('allocation_download', _external=True, _scheme=http_scheme, viewarg1=1))
-        elif submit_share_file:
+        if submit_share_file:
             fname_share = form.file_name_share.data.strip()
             if fname_share not in df_output.File_name.values:
                 msg='This file you put in does not exist on server: {}'.format(fname_share)
@@ -311,6 +285,8 @@ def allocation_download():
                            output_record_days=int(output_record_hours/24),
                            files_uploaded=df_upload.values,
                            upload_record_days=int(upload_record_hours/24),
+                           files_trash=df_trash.values,
+                           trash_record_days=int(trash_record_hours/24),
                            user=login_name,
                            login_user=login_user)
 
@@ -335,8 +311,7 @@ def delete_file_output(login_user,filename):
         http_scheme = 'https'
 
     if login_user in filename:
-        f_path = base_dir_output
-        os.remove(os.path.join(f_path,filename))
+        os.rename(os.path.join(base_dir_output,filename),os.path.join(base_dir_trash,filename))
         msg='File removed: {}'.format(filename)
         flash(msg,'success')
     else:
@@ -353,8 +328,7 @@ def delete_file_upload(login_user,filename):
         http_scheme = 'https'
 
     if login_user in filename:
-        f_path = base_dir_upload
-        os.remove(os.path.join(f_path,filename))
+        os.rename(os.path.join(base_dir_upload,filename),os.path.join(base_dir_trash,filename))
         msg='File removed: {}'.format(filename)
         flash(msg,'success')
     else:
@@ -362,6 +336,57 @@ def delete_file_upload(login_user,filename):
         flash(msg,'warning')
 
     return redirect(url_for("allocation_download", _external=True, _scheme=http_scheme, viewarg1=1))
+
+
+@app.route('/e/<login_user>/<added_by>/<email>/<email_id>',methods=['GET'])
+def delete_email_record(login_user,added_by,email,email_id):
+    if login_user == 'unknown':
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
+    if login_user in email or login_user in added_by:
+        id_list=[str(email_id)]
+        delete_email('subscription', id_list)
+        msg = 'Email deleted: {}'.format(email)
+        flash(msg, 'success')
+    else:
+        msg = 'You can only delete your email or email added by you!'
+        flash(msg,'warning')
+
+    return redirect(url_for("subscribe", _external=True, _scheme=http_scheme, viewarg1=1))
+
+
+@app.route('/recover/<login_user>/<filename>', methods=['GET'])
+def recover_file_trash(login_user, filename):
+    if login_user == 'unknown':
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
+    if 'SCR allocation' in filename:
+        dest_path=base_dir_output
+    else:
+        dest_path=base_dir_upload
+
+    if login_user in filename:
+        os.rename(os.path.join(base_dir_trash, filename), os.path.join(dest_path, filename))
+        msg = 'File put back to original place: {}'.format(filename)
+        flash(msg, 'success')
+    else:
+        msg = 'You can only operate file created by yourself!'
+        flash(msg, 'warning')
+
+    return redirect(url_for("allocation_download", _external=True, _scheme=http_scheme, viewarg1=1))
+
+@app.route('/t/<filename>',methods=['GET'])
+def download_file_trash(filename):
+    f_path=base_dir_trash
+    login_user = request.headers.get('Oidc-Claim-Sub')
+
+    add_user_log(user=login_user, location='Download', user_action='Download file',
+                 summary=filename)
+    return send_from_directory(f_path, filename=filename, as_attachment=True)
 
 @app.route('/o/<filename>',methods=['GET'])
 def download_file_output(filename):
@@ -399,9 +424,9 @@ def download_file_logs(filename):
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
-@app.route('/email',methods=['GET','POST'])
-def email_settings():
-    form = EmailSettingForm()
+@app.route('/subscribe',methods=['GET','POST'])
+def subscribe():
+    form = SubscriptionForm()
     login_user=request.headers.get('Oidc-Claim-Sub')
     login_name = request.headers.get('Oidc-Claim-Fullname')
     if login_user == None:
@@ -412,75 +437,59 @@ def email_settings():
         http_scheme = 'https'
 
     # read emails
-    df_email_detail = read_table('email_settings')
-    df_email_detail.sort_values(by=['Identity','BU'],inplace=True)
+    df_email_detail = read_table('subscription')
+    df_email_detail.sort_values(by=['PCBA_Org','BU'],inplace=True)
 
     if form.validate_on_submit():
         submit_add=form.submit_add.data
-        submit_remove=form.submit_remove.data
-
         if submit_add:
-            identity=form.identity.data
             pcba_org=form.pcba_org.data.upper().replace(' ','')
             bu=form.bu.data.upper().replace(' ','')
-            pf = form.pf.data.upper().replace(' ','')
-            email_to_add=form.email_to_add.data.lower().replace(' ','')
+            email_to_add=form.email_to_add.data.lower().replace(' ','').replace(',','').replace(';','')
 
             if len(pcba_org)==0 or len(email_to_add)==0:
                 msg='PCBA org and email are mandatory fields!'
                 flash(msg,'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
+                return render_template('subscription.html', form=form,
+                                       email_details=df_email_detail.values,
+                                       user=login_name,
+                                       login_user=login_user)
 
             if email_to_add.count('@')>1:
-                msg = 'Emails need to be added one by one only!'
+                msg = 'Input only one email each time!'
                 flash(msg, 'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
+                return render_template('subscribe.html', form=form,
+                                       email_details=df_email_detail.values,
+                                       user=login_name,
+                                       login_user=login_user)
 
-            if ',' in email_to_add or ';' in email_to_add:
-                msg = 'Pls input correct email address without , or ;'
-                flash(msg, 'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
+            if 'cisco' not in email_to_add:
+                if ('foxconn' in email_to_add and pcba_org not in ['FOL','FJZ']) or \
+                    ('jabil' in email_to_add and pcba_org not in ['JPE','JMX']) or \
+                    ('fab' in email_to_add and pcba_org not in ['NCB']) or \
+                    ('flex' in email_to_add and pcba_org not in ['FDO','FGU']):
+                    msg = 'Non-Cisco users can only subscribe to belonged org!'
+                    flash(msg, 'warning')
+                    return render_template('subscribe.html', form=form,
+                                           email_details=df_email_detail.values,
+                                           user=login_name,
+                                           login_user=login_user)
 
             if email_to_add in df_email_detail.Email.values:
-                update_email_data(identity, pcba_org, bu, email_to_add, login_user)
+                update_email_data(pcba_org, bu, email_to_add, login_user)
                 msg='This email already exists! Data has been updated: {}'.format(email_to_add)
                 flash(msg,'success')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
+                return redirect(url_for('subscribe', _external=True, _scheme=http_scheme, viewarg1=1))
             else:
-                add_email_data(identity, pcba_org, bu, pf, email_to_add,login_user)
+                add_email_data(pcba_org, bu, email_to_add,login_user)
                 msg='This email is added: {}'.format(email_to_add)
                 flash(msg,'success')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
-        elif submit_remove:
-            email_to_remove=form.email_to_remove.data.strip().lower()
-            if len(email_to_remove)==0:
-                msg='Put in the email to remove!'
-                flash(msg,'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
+                return redirect(url_for('subscribe', _external=True, _scheme=http_scheme, viewarg1=1))
 
-            if email_to_remove in df_email_detail.Email.values:
-                df_remove = df_email_detail[(df_email_detail.Email == email_to_remove)&(df_email_detail.Added_by==login_user)]
-                if df_remove.shape[0]==0:
-                    msg = "You can't remove emails added by others!"
-                    flash(msg, 'warning')
-                    return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
-
-                add_user_log(user=login_user, location='Email settings', user_action='Remove email',
-                             summary=email_to_remove)
-
-                id_list=df_email_detail[df_email_detail.Email==email_to_remove].id.to_list()
-                delete_record('email_settings', id_list)
-                msg='This email has been removed: {}'.format(email_to_remove)
-                flash(msg,'success')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
-            else:
-                msg='This email does not exist: {}'.format(email_to_remove)
-                flash(msg,'warning')
-                return redirect(url_for('email_settings', _external=True, _scheme=http_scheme, viewarg1=1))
-
-    return render_template('allocation_email_settings.html', form=form,
+    return render_template('subscribe.html', form=form,
                            email_details=df_email_detail.values,
-                           user=login_name)
+                           user=login_name,
+                           login_user=login_user)
 
 
 @app.route('/admin', methods=['GET','POST'])
@@ -509,6 +518,7 @@ def allocation_admin():
     df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
     df_upload=get_file_info_on_drive(base_dir_upload,keep_hours=240)
     df_supply=get_file_info_on_drive(base_dir_supply,keep_hours=240)
+    df_trash = get_file_info_on_drive(base_dir_trash, keep_hours=360)
     df_logs=get_file_info_on_drive(base_dir_logs,keep_hours=10000)
 
     # read logs

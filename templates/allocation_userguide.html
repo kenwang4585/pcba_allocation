@@ -5,26 +5,14 @@
 
 {% block content %}
     <!--<div class="card container"> -->
-    <table width="90%" align="center">
-        <tr>
-            <td>
-                <ul class="nav nav-tabs">
-                    <li style="font-size: large"><a href="{{ url_for('allocation_datasource')}}"><strong>Datasource</strong></a></li>
-                    <li style="font-size: large"><a href="{{ url_for('allocation_run')}}"><strong>Allocation</strong></a></li>
-                    <li style="font-size: large"><a href="{{ url_for('allocation_download')}}"><strong>Download</strong></a></li>
-                    <li style="font-size: large"><a href="{{ url_for('email_settings')}}" style="font-size: large"><strong>Email-settings</strong></a></li>
-                    <li class="active" style="font-size: large"><a href="{{ url_for('user_guide')}}" style="font-size: large"><strong>User-guide</strong></a></li>
-                </ul>
-            </td>
-        </tr>
-    </table>
+
     <!-- </div> -->
     <table width="85%" align="center">
         <tr>
             <td>
                 <h3>Who can use this tool?</h3>
                 <p>
-                    PMM and PSP are eligible to run this tool. Before we fully automate this program PMM representative for PCBA site runs PCBA allocation for the whole site every Friday for CM execution; PSP can rerun the allocation for <strong>respective BU</strong> during other days of the week upon needs of change.
+                    PMM and PSP are eligible to run this tool. Before we fully automate this program PMM representative for PCBA site runs PCBA allocation for the whole site every Friday for CM execution; PSP can rerun the allocation for <strong>respective BU during other days of the week if changes needed</strong>.
                 </p>
 
                 <h3>What data are needed to run the tool?</h3>

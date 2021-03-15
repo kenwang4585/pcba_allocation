@@ -1350,21 +1350,49 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     """
     Send the allocation result to defined users by email
     """
+    # Decide recipientes
+    regex = re.compile(r'\w+BU')
     org=share_filename[:3]
-    cisco_recipients = read_subscription_data()
-    cisco_recipients = cisco_recipients['CISCO'][org] # currently only send to Cisco people and not consider BU/PF
+    bu_list=regex.findall(share_filename)
+
+    recipients = read_subscription_data(org,bu_list=bu_list)
+
+    # save the file into share folder without the backlog tab data
+    f_path=os.path.join(base_dir_output,share_filename)
+    df_allocation=pd.read_excel(f_path,sheet_name='pcba_allocation')
+    df_transit=pd.read_excel(f_path,sheet_name='in-transit')
+    df_sourcing=pd.read_excel(f_path,sheet_name='sourcing-rule')
+    df_group=pd.read_excel(f_path,sheet_name='tan-group')
+    df_lt=pd.read_excel(f_path,sheet_name='transit_time_from_sourcing_rule')
+    df_allocation.set_index(
+        ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
+        inplace=True)
+    df_transit.set_index(['DF_site','TAN','Total'],inplace=True)
+    df_sourcing.set_index(['DF_site'], inplace=True)
+    df_group.set_index(['Group_name'], inplace=True)
+    df_lt.set_index(['TAN'], inplace=True)
+
+    data_to_write = {'pcba_allocation': df_allocation,
+                     'in-transit': df_transit,
+                     'sourcing-rule':df_sourcing,
+                     'tan-group':df_group,
+                     'transit_time_from_sourcing_rule':df_lt}
+
+    output_name=os.path.join(base_dir_share,share_filename)
+    write_data_to_excel(output_name, data_to_write)
 
     subject = share_filename[:-5]
     html_template='allocation_email_notification.html'
-    att_files = [(base_dir_output, share_filename)]  # List of tuples (path, file_name)
+    att_files = [(base_dir_share, share_filename)]  # List of tuples (path, file_name)
 
     email_msg=email_msg.split('\r\n')
     email_msg=[x for x in email_msg if x!='']
 
+    print(recipients)
     if login_user=='unknown' or login_user=='kwang2':  # testing for KW
         to_address = ['kwang2@cisco.com']
     else:
-        to_address = cisco_recipients
+        to_address = recipients
         to_address.append(login_user + '@cisco.com')
 
     send_attachment_and_embded_image(to_address, subject, html_template,
@@ -1373,6 +1401,8 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
                                      sender=login_name + ' via PCBA allocation tool',
                                      #share_filename=share_filename,
                                     email_msg=email_msg)
+    # remove the file after sent
+    os.remove(output_name)
 
 
 def collect_available_sourcing(df_sourcing):
@@ -1411,40 +1441,28 @@ def remove_unavailable_sourcing (df_3a4,sourcing_rules, tan_group_sourcing):
     return df_3a4
 
 
-def read_subscription_data():
+def read_subscription_data(org,bu_list):
     """
     Read the subscrition db for emails
     """
-    df_subscription = read_table('email_settings')
+    df_subscription = read_table('subscription')
+    df_sub=df_subscription[df_subscription.PCBA_Org.str.contains(org)].copy()
 
-    cisco_recipients = {}
-    fol_cisco,fdo_cisco=[],[]
-    fol_cm, fdo_cm = [], []
+    if bu_list!=[]:
+        dfx = pd.DataFrame()
+        for bu in bu_list:
+            dfy = df_sub[df_sub.BU.str.contains(bu)]
+            dfx=pd.concat([dfx,dfy],sort=False)
 
-    for row in df_subscription.itertuples():
-        orgs=row.PCBA_Org
-        org_list=orgs.split('/')
-        email=row.Email
+        dfx.drop_duplicates(inplace=True)
 
-        if 'cisco' in email:
-            for org in org_list:
-                if org=='FOL':
-                    fol_cisco.append(email)
-                elif org=='FDO':
-                    fdo_cisco.append(email)
-        else:
-            for org in org_list:
-                if org=='FOL':
-                    fol_cm.append(email)
-                elif org=='FDO':
-                    fdo_cm.append(email)
+        recipients=dfx.Email.values
+    else:
+        recipients = df_sub.Email.values
 
-    cisco_recipients['CISCO']={'FOL':fol_cisco,
-                               'FDO':fdo_cisco}
-    cisco_recipients['CM'] = {'FOL': fol_cm,
-                                 'FDO': fdo_cm}
+    recipients=list(recipients)
 
-    return cisco_recipients
+    return recipients
 
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
     """

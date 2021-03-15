@@ -24,16 +24,20 @@
                         <td width="10%"bgcolor="#1B4F72" align="center">
                             <a href="{{ url_for('allocation_admin') }}" target=''><img src="{{ url_for('static', filename='logo1.png')}}" width="60"></a>
                         </td>
-                        <td width="80%" bgcolor="#1B4F72" align="left">
+                        <td width="60%" bgcolor="#1B4F72" align="left">
                             <br>
                             <span style="color: #f5f5f5; font-size: x-large"><strong>&nbsp;&nbsp;PCBA Allocation Tool</strong></span>
                             <br><br>
                         </td>
-                        <td width="10%" bgcolor="#1B4F72" align="left">
-                            <br>
-                            <span style="color: #f5f5f5; font-size: small">Welcome, {{ user }}</span>
-                            <br><br>
+                        <td width="27%" bgcolor="#1B4F72" align="right" valign="middle">
+                            <span style="color: #f5f5f5; font-size: medium">
+                                {{ user }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <a href="{{ url_for('subscribe') }}" target=''>Subscribe</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <a href="{{ url_for('allocation_run') }}" target=''>Home</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <a href="{{ url_for('user_guide') }}" target=''>?</a>
+                            </span>
                         </td>
+                        <td width="3%" bgcolor="#1B4F72" align="right" valign="middle"></td>
                     </tr>
                 </table>
         {% endblock %}

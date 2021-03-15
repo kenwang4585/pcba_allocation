@@ -1,13 +1,12 @@
 from flask_settings import *
 import pandas as pd
 
-def update_email_data(identity,pcba_org,bu,email,login_user):
+def update_email_data(pcba_org,bu,email,login_user):
     '''
     Update table based on user input
     '''
-    records = EmailSettings.query.filter_by(Email=email).all()
+    records = Subscription.query.filter_by(Email=email).all()
     for record in records:
-        record.Identity =identity
         record.PCBA_Org=pcba_org
         record.BU=bu
         record.Email=email
