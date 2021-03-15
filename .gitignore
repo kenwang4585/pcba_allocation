@@ -4,9 +4,9 @@
 .DS_Store
 __pycache__/
 output_file/*
-output_file/*
 upload_file/*
 supply_file/*
 trash_file/*
+share_file/*
 logs/*
 !.keep
