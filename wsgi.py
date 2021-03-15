@@ -486,7 +486,8 @@ def subscribe():
     return render_template('subscribe.html', form=form,
                            email_details=df_email_detail.values,
                            user=login_name,
-                           login_user=login_user)
+                           login_user=login_user,
+                           subtitle=' - Subscribe')
 
 
 @app.route('/admin', methods=['GET','POST'])
@@ -571,21 +572,6 @@ def document():
     return render_template('allocation_document.html',
                            user=login_name)
 
-# Below is a dummy one
-@app.route('/config',methods=['GET','POST'])
-def config():
-    form = ConfigForm()
-    return render_template('config_control_panel_new.html', form=form)
-
-@app.route('/time')
-def index():
-    import datetime
-    dt = datetime.datetime.utcnow()
-    print(request)
-
-    return render_template('test.html',
-        dt=dt)
-
 @app.route('/user-guide')
 def user_guide():
     login_user = request.headers.get('Oidc-Claim-Sub')
@@ -594,7 +580,7 @@ def user_guide():
         login_user = 'unknown'
         login_name = 'unknown'
 
-    return render_template('allocation_userguide.html',user=login_name)
+    return render_template('allocation_userguide.html',user=login_name, subtitle=' - User guide')
 
 @app.route('/datasource',methods=['GET','POST'])
 def allocation_datasource():
