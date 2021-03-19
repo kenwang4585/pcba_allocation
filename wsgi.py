@@ -447,7 +447,7 @@ def subscribe():
             if len(pcba_org)==0 or len(email_to_add)==0:
                 msg='PCBA org and email are mandatory fields!'
                 flash(msg,'warning')
-                return render_template('subscription.html', form=form,
+                return render_template('subscribe.html', form=form,
                                        email_details=df_email_detail.values,
                                        user=login_name,
                                        login_user=login_user)
