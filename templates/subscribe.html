@@ -61,7 +61,7 @@
                         <br><br><br>
                                 {% if email_details|length>0 %}
                                     <table style="border-collapse:collapse; word-break:break-all; word-wrap: break-word " border="1" cellspacing="0px" align="center">
-                                        <tr>
+                                        <tr align="center">
                                             <td><span style="font-size: large;">&nbsp; id &nbsp;</span></td>
                                             <td><span style="font-size: large">&nbsp; Email &nbsp;</span></td>
                                             <td><span style="font-size: large">&nbsp; PCBA_Org &nbsp;</span></td>
@@ -73,7 +73,7 @@
                                         {% for row in email_details %}
                                             <tr>
                                                 {% for col in row %}
-                                                    <td align="center"><span style="font-size: small"> &nbsp;{{col}}</span></td>
+                                                    <td align="center"><span style="font-size: small"> &nbsp;{{col}} &nbsp;</span></td>
                                                 {% endfor %}
                                                 <td align="center">
                                                     <a href="{{ url_for('delete_email_record',login_user=login_user,email=row[1],added_by=row[4],email_id=row[0]) }}">remove</a>
