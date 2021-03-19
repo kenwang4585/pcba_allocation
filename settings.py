@@ -4,6 +4,9 @@ import getpass
 # use below or from user selelction on UI
 pcba_site_list=['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']
 
+super_user='kwang2'
+
+
 # within below days transit ETA considered as OH
 close_eta_cutoff_criteria=15
 # Far ETA eligible to backward fulfill PO: offset OSSD by deducting below days

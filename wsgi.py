@@ -342,7 +342,7 @@ def delete_email_record(login_user,added_by,email,email_id):
     else:
         http_scheme = 'https'
 
-    if login_user in email or login_user in added_by:
+    if login_user in email or login_user in added_by or login_user==super_user:
         id_list=[str(email_id)]
         delete_email('subscription', id_list)
         msg = 'Email deleted: {}'.format(email)

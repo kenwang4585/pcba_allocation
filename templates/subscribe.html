@@ -62,18 +62,18 @@
                                 {% if email_details|length>0 %}
                                     <table style="border-collapse:collapse; word-break:break-all; word-wrap: break-word " border="1" cellspacing="0px" align="center">
                                         <tr>
-                                            <td><span style="font-size: large;">id</span></td>
-                                            <td><span style="font-size: large">Email</span></td>
-                                            <td><span style="font-size: large">PCBA_Org</span></td>
-                                            <td><span style="font-size: large">BU</span></td>
-                                            <td><span style="font-size: large">Added_by</span></td>
-                                            <td><span style="font-size: large">Added_on</span></td>
-                                            <td><span style="font-size: large">Remove_email</span></td>
+                                            <td><span style="font-size: large;">&nbsp; id &nbsp;</span></td>
+                                            <td><span style="font-size: large">&nbsp; Email &nbsp;</span></td>
+                                            <td><span style="font-size: large">&nbsp; PCBA_Org &nbsp;</span></td>
+                                            <td><span style="font-size: large">&nbsp; BU &nbsp;</span></td>
+                                            <td><span style="font-size: large">&nbsp; Added_by &nbsp;</span></td>
+                                            <td><span style="font-size: large">&nbsp; Added_on &nbsp;</span></td>
+                                            <td><span style="font-size: large">&nbsp; Remove_email &nbsp;</span></td>
                                         </tr>
                                         {% for row in email_details %}
                                             <tr>
                                                 {% for col in row %}
-                                                    <td><span style="font-size: small">{{col}}</span></td>
+                                                    <td align="center"><span style="font-size: small"> &nbsp;{{col}}</span></td>
                                                 {% endfor %}
                                                 <td align="center">
                                                     <a href="{{ url_for('delete_email_record',login_user=login_user,email=row[1],added_by=row[4],email_id=row[0]) }}">remove</a>
