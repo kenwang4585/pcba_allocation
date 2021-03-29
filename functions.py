@@ -1474,23 +1474,19 @@ def summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg):
         tan_allocation_summary={}
 
         for date_allocation in allocation_dict:
-            date = list(date_allocation.keys())[0]
             allocation=list(date_allocation.values())[0]
             allocation_org=allocation[1]
 
             if allocation_org==[]:
                 break
             else:
+                date = list(date_allocation.keys())[0]
                 for org_qty in allocation_org:
                     org=org_qty[0]
                     qty=org_qty[1]
 
                     if org in tan_allocation_summary.keys():
-                        print(date)
-                        print(tan)
-                        print(tan_allocation_summary[org])
-
-                        tan_allocation_summary[org]=(tan_allocation_summary[org]+qty,date)
+                        tan_allocation_summary[org]=(tan_allocation_summary[org][0]+qty,date)
                     else:
                         tan_allocation_summary[org] = (qty,date)
 
@@ -1665,13 +1661,13 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # 生成聚合的allocated supply dict
     supply_dic_tan_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated)
 
-    print(supply_dic_tan_allocated_agg['68-4260'])
+    print(supply_dic_tan_allocated_agg)
     print('\n\n')
 
     #根据以上聚合结果汇总每一个TAN by ORG 的allocation总数（用于allocation report中）
     #TODO: add in recovery date for each TAN/ORG - error in put in date still
     allocation_summary_dict=summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg)
-    print(allocation_summary_dict['68-4260'])
+    print(allocation_summary_dict)
     print('\n\n')
 
     raise ValueError
