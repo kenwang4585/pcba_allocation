@@ -1,5 +1,5 @@
+### Ken wang, leveraging API created by Eli Rothbart - Jan 22, 2021
 ### Script to invoke POR Balance API @SCDx Direct
-### Supported by Eli Rothbart - Jan 22, 2021
 
 import requests, json
 import pandas as pd

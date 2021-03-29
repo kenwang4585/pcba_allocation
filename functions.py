@@ -1464,6 +1464,77 @@ def read_subscription_data(org,bu_list):
 
     return recipients
 
+
+def summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg):
+    """
+    Summarize by site the total allocation qty by TAN, by DF site
+    """
+    allocation_summary_dict={}
+    for tan,allocation_dict in supply_dic_tan_allocated_agg.items():
+        tan_allocation_summary={}
+
+        for date_allocation in allocation_dict:
+            date = list(date_allocation.keys())[0]
+            allocation=list(date_allocation.values())[0]
+            allocation_org=allocation[1]
+
+            if allocation_org==[]:
+                break
+            else:
+                for org_qty in allocation_org:
+                    org=org_qty[0]
+                    qty=org_qty[1]
+
+                    if org in tan_allocation_summary.keys():
+                        print(date)
+                        print(tan)
+                        print(tan_allocation_summary[org])
+
+                        tan_allocation_summary[org]=(tan_allocation_summary[org]+qty,date)
+                    else:
+                        tan_allocation_summary[org] = (qty,date)
+
+        allocation_summary_dict[tan]=tan_allocation_summary
+
+    return allocation_summary_dict
+
+
+def allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg,org_split):
+    """
+    Further allocate the remaining SCR per org split as long as it exist
+    """
+    supply_dic_tan_allocated_agg_edi_allocated={}
+    for tan, tan_allocation in supply_dic_tan_allocated_agg.items():
+        tan_allocation_updated=[]
+        for date_allocation in tan_allocation:
+            date_allocation_updated={}
+            date=list(date_allocation.keys())[0]
+            allocation_group = list(date_allocation.values())[0]
+            scr_qty=allocation_group[0]
+            org_allocation=allocation_group[1]
+            allocated_qty=0
+            for alloc in org_allocation:
+                allocated_qty+=alloc[1]
+            scr_balance=scr_qty - allocated_qty
+
+            if tan in org_split.keys(): # if exist then update. if not keep the same unchanged
+                tan_split = org_split[tan]
+
+                if scr_balance>0:
+                    for org,split in tan_split.items():
+                        split_qty=int(split * scr_balance)
+                        org_allocation.append((org,split_qty))
+
+            date_allocation_updated[date]=(scr_qty,org_allocation)
+
+            tan_allocation_updated.append(date_allocation_updated)
+
+        supply_dic_tan_allocated_agg_edi_allocated[tan]=tan_allocation_updated
+
+    return supply_dic_tan_allocated_agg_edi_allocated
+
+
+
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
     """
     Main program to process the data and PCBA allocation.
@@ -1593,6 +1664,39 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
 
     # 生成聚合的allocated supply dict
     supply_dic_tan_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated)
+
+    print(supply_dic_tan_allocated_agg['68-4260'])
+    print('\n\n')
+
+    #根据以上聚合结果汇总每一个TAN by ORG 的allocation总数（用于allocation report中）
+    #TODO: add in recovery date for each TAN/ORG - error in put in date still
+    allocation_summary_dict=summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg)
+    print(allocation_summary_dict['68-4260'])
+    print('\n\n')
+
+    raise ValueError
+
+    #TODO: 2) 根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org (后面程序中调整allocation总数的获取方法）
+    print('\n\n')
+    print(supply_dic_tan_allocated_agg['68-4908'])
+    print('\n\n')
+        #TODO: current SCR only include those with backlog... need to add all back per org split even no backlog
+
+    org_split={'68-4908':{'FOC':0.4,'FJZ':0.6}}
+    supply_dic_tan_allocated_agg_edi_allocated=allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg, org_split)
+
+    print(supply_dic_tan_allocated_agg_edi_allocated['68-4908'])
+    print('\n\n')
+
+
+    #TODO: do aggregation again
+    supply_dic_tan_allocated_agg_edi_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated_agg_edi_allocated)
+    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-4908'])
+    print('\n\n')
+
+
+
+
 
     # 在df_scr中加入allocation结果
     df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_site)
