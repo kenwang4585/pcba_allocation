@@ -673,7 +673,7 @@ def fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan):
     return blg_dic_tan
 
 
-def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_site):
+def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_allocated_agg, pcba_site):
     """
     Add up the allocation results to scr and create the final output file
     """
@@ -695,8 +695,8 @@ def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_sit
     df_scr.drop('count', axis=1, inplace=True)
 
     # add in allocated qty
-    for tan in supply_dic_tan_allocated_agg.keys():
-        for date_supply in supply_dic_tan_allocated_agg[tan]:
+    for tan in supply_dic_tan_allocated_agg_edi_allocated_agg.keys():
+        for date_supply in supply_dic_tan_allocated_agg_edi_allocated_agg[tan]:
             date = list(date_supply.keys())[0]
             org_qty = list(date_supply.values())[0][1]
             for x in org_qty:
@@ -1235,24 +1235,41 @@ def calculate_x_weeks_allocation(df_scr,pcba_site, wk='wk1'):
 
     return tan_allocation_wk
     
-def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site):
+def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict):
     """
-    Add back the BU, backlog,oh, intransit info into the final SCR with allocation result; and add the related columns based on calculations.
+    Add back the BU, backlog,oh, intransit info into the final SCR with allocation result;
+    Add total allocation and recovery date by org via allocation_summary_dict;
+    and add the related columns based on calculations.
     Note: adding columns will impact the summary as some iloc used below in calculation.
     """
 
-    df_scr.reset_index(inplace=True)
+    #df_scr.reset_index(inplace=True)
+    print(df_scr.head())
+    print(allocation_summary_dict)
 
     # calculate and add in total allocation - do this before adding other non-date columns
-    df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site+'-SCR',
-                                           df_scr.iloc[:,2:].sum(axis=1),
-                                           None)
+    #df_scr.loc[:, 'Allocation'] = np.where(df_scr.ORG != pcba_site+'-SCR',
+    #                                       df_scr.iloc[:,2:].sum(axis=1),
+    #                                       None)
+    # new method:
+    for row in df_scr.itertuples():
+        #print(row)
+        tan=row.Index[0]
+        org=row.Index[1]
+
+        allocation=allocation_summary_dict[tan]
+        if org in allocation.keys():
+            allocation_qty=allocation[org][0]
+            blg_recovery = allocation[org][1]
+
+            df_scr.loc[(tan,org),'Allocation']=allocation_qty
+            df_scr.loc[(tan, org), 'Blg_recovery'] = blg_recovery
+
 
     # add BU info
+    df_scr.reset_index(inplace=True)
     df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][0])
     df_scr.loc[:, 'PF'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][1])
-
-    #print(df_scr[:10])
 
     # add backlog qty
     df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
@@ -1263,6 +1280,8 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     # add df OH
     df_oh.columns = ['OH']
     df_oh.reset_index(inplace=True)
+
+
     #df_oh = df_oh[df_oh.planningOrg != pcba_site]  OH here is already for DF so no need to remove... combo site is changed to 'org-SCR'
     df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['DF_site', 'TAN'], how='left')
     # drop the unneeded columns introduced by merge
@@ -1290,14 +1309,6 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
                                           df_scr.Gap_before + df_scr.Allocation,
                                           None)
 
-    df_scr.loc[:, 'Blg_recovery'] = np.where((df_scr.ORG != pcba_site+'-SCR'),
-                                         np.where(df_scr.Gap_before >= 0,
-                                                  'No gap',
-                                                  np.where(df_scr.Gap_after < 0,
-                                                           'No recovery',
-                                                           'TBD')), # further decide later
-                                         None)
-
 
     # add in 7/14/21 days target_ssd backlog and wk0/wk1/wk2 allocation qty
     df_scr.set_index(['TAN','ORG'],inplace=True)
@@ -1321,24 +1332,6 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     # update with the correct Blg_recovery date for TBD
     df_scr.reset_index(inplace=True)
     df_scr.loc[:,'TAN_']=df_scr.TAN #add a TAN col at the back for filtering purpose
-    df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
-        inplace=True)
-    df_scr.reset_index(inplace=True)
-    dfx = df_scr[(df_scr.Blg_recovery == 'TBD') & (df_scr.ORG != pcba_site+'-SCR')]
-    dfx=dfx.iloc[:,:-10].copy() # -10 to excluded the last added columns
-    dfx.set_index(['TAN', 'ORG'], inplace=True)
-    df_scr.set_index(['TAN', 'ORG'], inplace=True)
-
-    for ind in dfx.index:
-        dfy = dfx.loc[ind, :]
-        dfy = dfy[dfy.notnull()]
-
-        last_allocation_date = dfy.index[-1]
-        df_scr.loc[ind, 'Blg_recovery'] = last_allocation_date
-
-    # set final index
-    df_scr.reset_index(inplace=True)
     df_scr.set_index(
         ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
         inplace=True)
@@ -1661,44 +1654,24 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # 生成聚合的allocated supply dict
     supply_dic_tan_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated)
 
-    print(supply_dic_tan_allocated_agg)
-    print('\n\n')
-
-    #根据以上聚合结果汇总每一个TAN by ORG 的allocation总数（用于allocation report中）
-    #TODO: add in recovery date for each TAN/ORG - error in put in date still
+    #根据以上聚合结果汇总每一个TAN by ORG 的allocation总数以及recovery date（用于allocation report中）
     allocation_summary_dict=summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg)
-    print(allocation_summary_dict)
-    print('\n\n')
 
-    raise ValueError
-
-    #TODO: 2) 根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org (后面程序中调整allocation总数的获取方法）
-    print('\n\n')
-    print(supply_dic_tan_allocated_agg['68-4908'])
-    print('\n\n')
-        #TODO: current SCR only include those with backlog... need to add all back per org split even no backlog
+    #根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org
 
     org_split={'68-4908':{'FOC':0.4,'FJZ':0.6}}
     supply_dic_tan_allocated_agg_edi_allocated=allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg, org_split)
 
-    print(supply_dic_tan_allocated_agg_edi_allocated['68-4908'])
-    print('\n\n')
 
-
-    #TODO: do aggregation again
+    #Do aggregation again to combine backlog allocation and EDI allocation for each date
     supply_dic_tan_allocated_agg_edi_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated_agg_edi_allocated)
-    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-4908'])
-    print('\n\n')
-
-
-
-
 
     # 在df_scr中加入allocation结果
-    df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg, pcba_site)
+    df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_allocated_agg, pcba_site)
 
     # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
-    df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site)
+    print(allocation_summary_dict)
+    df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict)
 
     # 存储文件
     output_filename = write_allocation_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_transit_time,df_sourcing,df_grouping,login_user)
