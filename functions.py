@@ -1306,7 +1306,9 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
 
     # calculate and add in total allocation and recovery date
     df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site+'-SCR',
-                                          df_scr.Gap_before + df_scr.Allocation,
+                                          np.where(~df_scr.Allocation.isnull(),
+                                                    df_scr.Gap_before + df_scr.Allocation,
+                                                   df_scr.Gap_before),
                                           None)
 
     # further update the blg_recovery col
@@ -1665,9 +1667,9 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     allocation_summary_dict=summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg)
 
     #根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org
-    org_split={'68-4908':{'FOC':0.4,'FJZ':0.6}}
+    #org_split={'68-4908':{'FOC':0.4,'FJZ':0.6}}
+    org_split={}
     supply_dic_tan_allocated_agg_edi_allocated=allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg, org_split)
-
 
     #Do aggregation again to combine backlog allocation and EDI allocation for each date
     supply_dic_tan_allocated_agg_edi_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated_agg_edi_allocated)
@@ -1676,7 +1678,6 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_allocated_agg, pcba_site)
 
     # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
-    print(allocation_summary_dict)
     df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,org_split)
 
     # 存储文件
