@@ -496,7 +496,7 @@ def create_transit_dict_per_df_transit(df_transit):
     return transit_dic_tan
 
 
-def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan):
+def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan,qty_col='C_UNSTAGED_QTY'):
     """
     create backlog dict for selected tan list from the sorted 3a4 df (considered order prioity and rank)
     blg_ic_tan={'800-42373':{'FJZ':(5,'1234567-1','2020-10-20')}}
@@ -506,7 +506,7 @@ def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan):
     for pn in tan:
         dfm = dfx[dfx.BOM_PN == pn]
         org_qty_po = []
-        for org, qty, po, ossd in zip(dfm.ORGANIZATION_CODE, dfm.C_UNSTAGED_QTY, dfm.PO_NUMBER, dfm.ORIGINAL_FCD_NBD_DATE): # use ORIGINAL_FCD_NBD_DATE instead of ossd_ofset
+        for org, qty, po, ossd in zip(dfm.ORGANIZATION_CODE, dfm[qty_col], dfm.PO_NUMBER, dfm.ORIGINAL_FCD_NBD_DATE): # use ORIGINAL_FCD_NBD_DATE instead of ossd_ofset
             if qty > 0:
                 org_qty_po.append({org: (qty, po, ossd.date())})
 
@@ -1273,9 +1273,15 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][0])
     df_scr.loc[:, 'PF'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][1])
 
-    # add backlog qty
+    # add backlog qty: unstaged, and unstaged considered split
     df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
-    df_3a4_p.columns = ['Unpacked_blg']
+    df_3a4_p.columns = ['Unstg_blg']
+    df_3a4_p.reset_index(inplace=True)
+    df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
+
+    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY_SPLIT', aggfunc=sum)
+    df_3a4_p.columns = ['Unstg_blg_split']
+    df_3a4_p = df_3a4_p.applymap(lambda x: int(x))
     df_3a4_p.reset_index(inplace=True)
     df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
 
@@ -1285,7 +1291,9 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     #df_oh = df_oh[df_oh.planningOrg != pcba_site]  OH here is already for DF so no need to remove... combo site is changed to 'org-SCR'
     df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['DF_site', 'TAN'], how='left')
     # drop the unneeded columns introduced by merge
-    df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'DF_site'], axis=1, inplace=True)
+    #df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'DF_site'], axis=1, inplace=True)
+    df_scr.drop(['ORGANIZATION_CODE_x','ORGANIZATION_CODE_y', 'BOM_PN_x','BOM_PN_y', 'DF_site'], axis=1, inplace=True)
+
     # df_scr.rename(columns={'TAN_x':'TAN'},inplace=True)
 
     # add df transit
@@ -1300,7 +1308,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
     df_scr['oh+transit'].fillna(0, inplace=True)
     df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site+'-SCR',
-                                           df_scr['oh+transit'] - df_scr.Unpacked_blg,
+                                           df_scr['oh+transit'] - df_scr.Unstg_blg_split,
                                            None)
     df_scr.drop('oh+transit', axis=1, inplace=True)
 
@@ -1340,7 +1348,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     # Below is a patch to avoid OH out a max value under the SCR row - unclear why that happens!!!
     df_scr.OH.fillna('',inplace=True)
     df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'PF', 'Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after',
+        ['TAN', 'ORG', 'BU', 'PF', 'Unstg_blg', 'Unstg_blg_split','OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after',
          'Blg_recovery'], inplace=True)
 
     return df_scr
@@ -1367,7 +1375,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     df_group=pd.read_excel(f_path,sheet_name='tan-group')
     df_lt=pd.read_excel(f_path,sheet_name='transit_time_from_sourcing_rule')
     df_allocation.set_index(
-        ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
+        ['TAN', 'ORG', 'BU', 'PF','Unstg_blg','Unstg_blg_split', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
         inplace=True)
     df_transit.set_index(['DF_site','TAN','Total'],inplace=True)
     df_sourcing.set_index(['DF_site'], inplace=True)
@@ -1418,9 +1426,11 @@ def collect_available_sourcing(df_sourcing):
     df_sourcing.loc[:, 'org_tan'] = df_sourcing.DF_site + '-' + df_sourcing.tan_versionless
 
     # create a simple list of the available sourcing rules
-    sourcing_rules=[]
+    #sourcing_rules=[]
+    sourcing_rules = {}
     for row in df_sourcing.itertuples():
-        sourcing_rules.append(row.org_tan)
+        #sourcing_rules.append(row.org_tan)
+        sourcing_rules[row.org_tan]=row.Split
 
     df_sourcing.drop(['tan_versionless','org_tan'],axis=1,inplace=True)
     #df_sourcing.set_index('version',inplace=True)
@@ -1433,10 +1443,8 @@ def remove_unavailable_sourcing (df_3a4,sourcing_rules, tan_group_sourcing):
     Need to consider tan_group_sourcing as well.
     """
 
-    df_3a4.loc[:,'org_pn']=df_3a4.ORGANIZATION_CODE+'-'+df_3a4.BOM_PN
-
     # Note:tan_group_sourcing may introduce unneeded 3a4 remain here if certain site does not have those groupting
-    sourcing_rules_combined=sourcing_rules+tan_group_sourcing
+    sourcing_rules_combined=list(sourcing_rules.keys())+tan_group_sourcing
 
     df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules_combined)].copy()
 
@@ -1532,6 +1540,17 @@ def allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg,org_split)
     return supply_dic_tan_allocated_agg_edi_allocated
 
 
+def create_unstage_qty_per_sourcing_split(df_3a4,sourcing_rules):
+    """
+    Ceate unstage qty per sourcing split for each row.
+    For grouped TAN, assume sourcing split =1 as the group only applies to WNBU currently.
+    """
+
+    df_3a4.loc[:, 'org_pn'] = df_3a4.ORGANIZATION_CODE + '-' + df_3a4.BOM_PN
+    df_3a4.loc[:, 'SPLIT'] = df_3a4.org_pn.map(lambda x: sourcing_rules[x]/100 if x in sourcing_rules.keys() else 1)
+    df_3a4.loc[:, 'C_UNSTAGED_QTY_SPLIT'] = df_3a4.C_UNSTAGED_QTY * df_3a4.SPLIT
+
+    return df_3a4
 
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
     """
@@ -1595,15 +1614,25 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # Rank the orders
     df_3a4 = ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
 
+
     # (do below after ranking) Process 3a4 BOM base on FLB_TAN col. BOM_PN refers to tan_group if exist, or SCR Tan if not.
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
-    # collect available sourcing rules
-    df_sourcing, sourcing_rules=collect_available_sourcing(df_sourcing) # Below need to consider tan grouping sourcing as well
+
+    # collect available sourcing rules and calculate split unstage qty(testing: add split in sourcing output)
+    df_sourcing, sourcing_rules = collect_available_sourcing(df_sourcing)
+
+    # apply sourcing to unstaged qty and create C_UNSTAGED_QTY_SPLIT - for grouped TAN (WNBU), assume split=1
+    df_3a4=create_unstage_qty_per_sourcing_split(df_3a4,sourcing_rules)
+
+    # Remove unneeded TAN from df_3a4
     df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rules,tan_group_sourcing) # consider tan group sourcing too
 
     # create backlog dict for Tan exists in SCR
-    blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys())
+    # - qty_col use C_UNSTAGED_QTY_SPLIT instead if considering sourcing split
+    #qty_col = 'C_UNSTAGED_QTY'
+    qty_col = 'C_UNSTAGED_QTY_SPLIT'
+    blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys(),qty_col=qty_col)
 
     # pivot df_oh and versionless the TAN
     df_oh = df_oh.pivot_table(index=['DF_site', 'TAN'], values='OH', aggfunc=sum)
