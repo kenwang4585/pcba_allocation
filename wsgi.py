@@ -56,13 +56,6 @@ def allocation_run():
         f_3a4 = form.file_3a4.data
         ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
 
-        # check input
-        if pcba_site not in pcba_site_list:
-            msg = "'{}' is not a PCBA org.".format(pcba_site)
-            flash(msg, 'warning')
-            print(login_user,msg)
-            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
-        print('{} is correct PCBA site.'.format(pcba_site))
 
         # check input
         if pcba_site not in f_supply.filename.upper():
@@ -609,10 +602,6 @@ def allocation_datasource():
             fname=pcba_site_poc + ' scr_oh_intransit(scdx-poc) ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
             log_msg.append('Download supply from SCDx-POC')
 
-            if pcba_site_poc not in pcba_site_list:
-                msg = "'{}' is not a PCBA org.".format(pcba_site_poc)
-                flash(msg, 'warning')
-                return redirect(url_for('allocation_datasource',_external=True,_scheme=http_scheme))
             try:
                 df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_poc(pcba_site_poc)
                 data_to_write = {'por': df_scr,
@@ -648,10 +637,6 @@ def allocation_datasource():
             fname=pcba_site_prod + ' scr_oh_intransit(scdx-prod) ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
             log_msg.append('Download supply from SCDx-POC')
 
-            if pcba_site_prod not in pcba_site_list:
-                msg = "'{}' is not a PCBA org.".format(pcba_site_prod)
-                flash(msg, 'warning')
-                return redirect(url_for('allocation_datasource',_external=True,_scheme=http_scheme))
             try:
                 df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site_prod,'*')
                 data_to_write = {'por': df_scr,

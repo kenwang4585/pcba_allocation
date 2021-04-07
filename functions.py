@@ -515,11 +515,87 @@ def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan,qty_col='C_UNSTA
     return blg_dic_tan
 
 
+def allocate_supply_per_supply_and_blg_dic_ver_aggregated_blg(supply_dic_tan, blg_dic_tan):
+    """
+    allocate supply based on supply dict and backlog dict
+    Different from the earlier stage, the blg_dic_tan now is aggregated so not include PO or date information. Previously
+    the po&ate details was required due to transit allocation consider the date.
+    supply dict is aranged in date order; backlog dict is aranged based on priority to fulfill
+
+    examples:
+        blg_dic_tan={'800-42373-01': [{'FJZ': (5, '110077267-1')},{'FJZ': (23, '110011089-4')},...]}
+        supply_dic_tan={'800-42373-01':[{'2/10':25},{'2/12':4},{'2/15':10},{'2/22':20},{'3/1':10},{'3/5':15}],
+                             '800-42925-01':[{'2/12':4},{'2/13':3},{'2/15':12},{'2/23':25},{'3/1':8},{'3/6':10}]}
+    """
+    supply_dic_tan_allocated = {}
+
+    for tan in supply_dic_tan.keys():
+        supply_list_tan = supply_dic_tan[tan]  # 每一个tan对应的supply list
+
+        if tan in blg_dic_tan.keys():  #
+            blg_list_tan = blg_dic_tan[tan]
+
+            # 对supply list中每一个值进行分配给一个或多个订单
+            for date_qty in supply_list_tan:
+                # print(date_qty)
+                #supply_date = list(date_qty.keys())[0]
+                supply_qty = list(date_qty.values())[0]
+                allocation = []  # 每一个supply的分配结果
+                blg_list_tan_fulfilled_ind = [] #被当前date_qty fulfill的blg index
+
+                # 对每一个需求进行scr分配
+                for ind,org_qty in enumerate(blg_list_tan):
+                    qty = list(org_qty.values())[0]
+                    org = list(org_qty.keys())[0]
+
+                    if qty < supply_qty:  # org_qty需求数量小于supply数量：org_qty需求被全额满足；supply数量被减掉；需求删除，进到下一个org_qty循环
+                        allocation.append((org, qty))
+                        supply_qty = supply_qty - qty
+                        #del blg_list_tan[ind]
+                        blg_list_tan_fulfilled_ind.append(ind)
+                    elif qty == supply_qty:  # org_qty需求数量等于supply数量：需求被全额满足；已分配的需求被记录；跳出本次循环(进到下一个supply循环)
+                        allocation.append((org, qty))
+                        #del blg_list_tan[ind]
+                        blg_list_tan_fulfilled_ind.append(ind)
+
+                        # remove the fulfilled blg before break to next supply cycle
+                        if len(blg_list_tan_fulfilled_ind) > 0:
+                            blg_list_tan_fulfilled_ind.reverse()
+                            for ind in blg_list_tan_fulfilled_ind:
+                                del blg_list_tan[ind]
+
+                        break
+                    else:  # org_qty需求数量大于supply数量：org_qty被部分（=supply qty）满足；org_qty数量被改小；跳出本次org_qty循环(进到下一个supply循环)
+                        allocation.append((org, supply_qty))
+                        new_qty = qty - supply_qty
+                        blg_list_tan[ind] = {org: new_qty}
+
+                        # remove the fulfilled blg before break to next supply cycle
+                        if len(blg_list_tan_fulfilled_ind) > 0:
+                            blg_list_tan_fulfilled_ind.reverse()
+                            for ind in blg_list_tan_fulfilled_ind:
+                                del blg_list_tan[ind]
+
+                        break
+
+                # 把supply列表中对应的supply改变成分配的结果
+                ind = supply_list_tan.index(date_qty)
+                supply_date = list(date_qty.keys())[0]
+                supply_qty = list(date_qty.values())[0]
+                supply_list_tan[ind] = {supply_date: (supply_qty, allocation)}
+
+            # 更新blg_dic_tan
+            blg_dic_tan[tan] = blg_list_tan
+
+        # 生成新的allocated supply dict
+        supply_dic_tan_allocated[tan] = supply_list_tan
+
+    return supply_dic_tan_allocated,blg_dic_tan
+
 def allocate_supply_per_supply_and_blg_dic(supply_dic_tan, blg_dic_tan):
     """
     allocate supply based on supply dict and backlog dict
     supply dict is aranged in date order; backlog dict is aranged based on priority to fulfill
-
     examples:
         blg_dic_tan={'800-42373-01': [{'FJZ': (5, '110077267-1')},{'FJZ': (23, '110011089-4')},...]}
         supply_dic_tan={'800-42373-01':[{'2/10':25},{'2/12':4},{'2/15':10},{'2/22':20},{'3/1':10},{'3/5':15}],
@@ -581,7 +657,7 @@ def allocate_supply_per_supply_and_blg_dic(supply_dic_tan, blg_dic_tan):
         # 生成新的allocated supply dict
         supply_dic_tan_allocated[tan] = supply_list_tan
 
-    return supply_dic_tan_allocated
+    return supply_dic_tan_allocated,blg_dic_tan
 
 
 def aggregate_allocation_for_each_date(a, date_supply_agg):
@@ -700,7 +776,7 @@ def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_alloc
             date = list(date_supply.keys())[0]
             org_qty = list(date_supply.values())[0][1]
             for x in org_qty:
-                df_scr.loc[(tan, x[0]), date] = x[1]
+                df_scr.loc[(tan, x[0]), date] = round(x[1])
 
     df_scr.reset_index(inplace=True)
     df_scr.sort_values(by=['TAN', 'ORG'], ascending=True, inplace=True)
@@ -1248,40 +1324,21 @@ def update_blg_recovery(gap_before,gap_after,blg_recovery):
             else:
                 return blg_recovery
     
-def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,org_split):
+def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,blg_summary_before_allocation,blg_summary_after_allocation,sourcing_rules,org_split):
     """
     Add back the BU, backlog,oh, intransit info into the final SCR with allocation result;
     Add total allocation and recovery date by org via allocation_summary_dict;
     and add the related columns based on calculations.
     Note: adding columns will impact the summary as some iloc used below in calculation.
     """
-
-    for row in df_scr.itertuples():
-        #print(row)
-        tan=row.Index[0]
-        org=row.Index[1]
-
-        allocation=allocation_summary_dict[tan]
-        if org in allocation.keys():
-            allocation_qty=allocation[org][0]
-            blg_recovery = allocation[org][1]
-            df_scr.loc[(tan,org),'Allocation']=allocation_qty
-            df_scr.loc[(tan, org), 'Blg_recovery'] = blg_recovery.strftime('%Y-%m-%d')
-
     # add BU info
     df_scr.reset_index(inplace=True)
     df_scr.loc[:, 'BU'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][0])
     df_scr.loc[:, 'PF'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][1])
 
-    # add backlog qty: unstaged, and unstaged considered split
+    # add backlog qty: unstaged
     df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
     df_3a4_p.columns = ['Unstg_blg']
-    df_3a4_p.reset_index(inplace=True)
-    df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
-
-    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY_SPLIT', aggfunc=sum)
-    df_3a4_p.columns = ['Unstg_blg_split']
-    df_3a4_p = df_3a4_p.applymap(lambda x: int(x))
     df_3a4_p.reset_index(inplace=True)
     df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
 
@@ -1292,7 +1349,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     df_scr = pd.merge(df_scr, df_oh, left_on=['ORG', 'TAN'], right_on=['DF_site', 'TAN'], how='left')
     # drop the unneeded columns introduced by merge
     #df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'DF_site'], axis=1, inplace=True)
-    df_scr.drop(['ORGANIZATION_CODE_x','ORGANIZATION_CODE_y', 'BOM_PN_x','BOM_PN_y', 'DF_site'], axis=1, inplace=True)
+    df_scr.drop(['ORGANIZATION_CODE', 'BOM_PN', 'DF_site'], axis=1, inplace=True)
 
     # df_scr.rename(columns={'TAN_x':'TAN'},inplace=True)
 
@@ -1307,20 +1364,58 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
    # ADD temp col oh+transit to calculate gap before
     df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
     df_scr['oh+transit'].fillna(0, inplace=True)
-    df_scr.loc[:, 'Gap_before'] = np.where(df_scr.ORG != pcba_site+'-SCR',
-                                           df_scr['oh+transit'] - df_scr.Unstg_blg_split,
+    df_scr.loc[:, 'Blg_gap_total'] = np.where(df_scr.ORG != pcba_site+'-SCR',
+                                           df_scr['oh+transit'] - df_scr.Unstg_blg,
                                            None)
     df_scr.drop('oh+transit', axis=1, inplace=True)
 
-    # calculate and add in total allocation and recovery date
-    df_scr.loc[:, 'Gap_after'] = np.where(df_scr.ORG != pcba_site+'-SCR',
-                                          np.where(~df_scr.Allocation.isnull(),
-                                                    df_scr.Gap_before + df_scr.Allocation,
-                                                   df_scr.Gap_before),
-                                          None)
+    # add below info into summary
+    for row in df_scr.itertuples():
+        #print(row)
+        ind=row.Index
+        tan=row.TAN
+        org=row.ORG
 
-    # further update the blg_recovery col
-    df_scr.loc[:,'Blg_recovery']=df_scr.apply(lambda x: update_blg_recovery(x.Gap_before,x.Gap_after,x.Blg_recovery),axis=1)
+        if tan in blg_summary_before_allocation.keys():
+            blg_summary_tan=blg_summary_before_allocation[tan]
+            if org in blg_summary_tan.keys():
+                df_scr.loc[ind, 'Blg_gap_split'] = - round(blg_summary_tan[org]) # make it minus
+
+        if tan in blg_summary_after_allocation.keys():
+            blg_summary_tan = blg_summary_after_allocation[tan]
+            if org in blg_summary_tan.keys():
+                df_scr.loc[ind, 'Blg_gap_final'] = - round(blg_summary_tan[org])  # make it minus
+
+        if tan in allocation_summary_dict.keys():
+            allocation_tan = allocation_summary_dict[tan]
+            if org in allocation_tan.keys():
+                allocation_qty = allocation_tan[org][0]
+                blg_recovery = allocation_tan[org][1]
+                df_scr.loc[ind, 'Allocation'] = round(allocation_qty)
+                df_scr.loc[ind, 'Blg_recovery'] = blg_recovery.strftime('%Y-%m-%d')
+
+        if tan in sourcing_rules.keys():
+            sourcing_rules_tan = sourcing_rules[tan]
+
+            if org in sourcing_rules_tan.keys():
+                df_scr.loc[ind, 'Sourcing_split'] = sourcing_rules_tan[org]
+
+    # make up the blg_gap_split,blg_gap_final,and blg_recovery
+    for row in df_scr.itertuples():
+        #print(row)
+        ind=row.Index
+        blg_gap_total=row.Blg_gap_total
+        blg_gap_final=row.Blg_gap_final
+
+        if blg_gap_total!=None:
+            if blg_gap_total>=0:
+                df_scr.loc[ind,'Blg_gap_split']=blg_gap_total
+                df_scr.loc[ind, 'Blg_gap_final'] = blg_gap_total
+                df_scr.loc[ind, 'Blg_recovery'] = 'No gap'
+            elif pd.isnull(blg_gap_final):
+                df_scr.loc[ind, 'Blg_gap_final'] = 0
+            elif blg_gap_final<0:
+                df_scr.loc[ind, 'Blg_recovery'] = 'No recovery'
 
     # add in 7/14/21 days target_ssd backlog and wk0/wk1/wk2 allocation qty
     df_scr.set_index(['TAN','ORG'],inplace=True)
@@ -1348,7 +1443,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     # Below is a patch to avoid OH out a max value under the SCR row - unclear why that happens!!!
     df_scr.OH.fillna('',inplace=True)
     df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'PF', 'Unstg_blg', 'Unstg_blg_split','OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after',
+        ['TAN', 'ORG', 'BU', 'PF', 'Unstg_blg','OH', 'In-transit', 'Blg_gap_total','Sourcing_split','Blg_gap_split', 'Allocation', 'Blg_gap_final',
          'Blg_recovery'], inplace=True)
 
     return df_scr
@@ -1425,27 +1520,37 @@ def collect_available_sourcing(df_sourcing):
     df_sourcing.loc[:, 'tan_versionless'] = df_sourcing.TAN.map(lambda x: regex.search(x).group())
     df_sourcing.loc[:, 'org_tan'] = df_sourcing.DF_site + '-' + df_sourcing.tan_versionless
 
-    # create a simple list of the available sourcing rules
-    #sourcing_rules=[]
+    # create a simple list of the available sourcing rules and a dict
+    sourcing_rule_list=df_sourcing.org_tan.values
+
     sourcing_rules = {}
+    sourcing = {}
     for row in df_sourcing.itertuples():
-        #sourcing_rules.append(row.org_tan)
-        sourcing_rules[row.org_tan]=row.Split
+        tan=row.tan_versionless
+        df_site=row.DF_site
+        split=row.Split
+
+        if tan not in sourcing_rules.keys():
+            sourcing={}
+
+        sourcing[df_site] = split
+        sourcing_rules[tan]=sourcing
 
     df_sourcing.drop(['tan_versionless','org_tan'],axis=1,inplace=True)
     #df_sourcing.set_index('version',inplace=True)
 
-    return df_sourcing,sourcing_rules
+    return sourcing_rule_list,sourcing_rules
 
-def remove_unavailable_sourcing (df_3a4,sourcing_rules, tan_group_sourcing):
+def remove_unavailable_sourcing (df_3a4,sourcing_rule_list, tan_group_sourcing):
     """
     Removed the unavaialble sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
     Need to consider tan_group_sourcing as well.
     """
 
     # Note:tan_group_sourcing may introduce unneeded 3a4 remain here if certain site does not have those groupting
-    sourcing_rules_combined=list(sourcing_rules.keys())+tan_group_sourcing
+    sourcing_rules_combined=sourcing_rule_list.tolist()+tan_group_sourcing
 
+    df_3a4.loc[:, 'org_pn'] = df_3a4.ORGANIZATION_CODE + '-' + df_3a4.BOM_PN
     df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules_combined)].copy()
 
     return df_3a4
@@ -1504,7 +1609,7 @@ def summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg):
 
     return allocation_summary_dict
 
-
+# BELOW NOT USED!!
 def allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg,org_split):
     """
     Further allocate the remaining SCR per org split as long as it exist
@@ -1540,17 +1645,93 @@ def allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg,org_split)
     return supply_dic_tan_allocated_agg_edi_allocated
 
 
-def create_unstage_qty_per_sourcing_split(df_3a4,sourcing_rules):
+def aggregate_blg_and_apply_split(blg_dic_tan,sourcing_rules):
     """
-    Ceate unstage qty per sourcing split for each row.
-    For grouped TAN, assume sourcing split =1 as the group only applies to WNBU currently.
+    Below aggregate the blg_dic_tan by adjacing same org PO (keep the ranking sequence even aggregation);
+    And also update the qty based on sourcing split
     """
+    for tan, org_blg_list in blg_dic_tan.items():
+        if tan in sourcing_rules.keys():
+            sourcing = sourcing_rules[tan]
+        else:  # if not in (e.g. WNBU grouping, assuems it's 100)
+            sourcing = {}
 
-    df_3a4.loc[:, 'org_pn'] = df_3a4.ORGANIZATION_CODE + '-' + df_3a4.BOM_PN
-    df_3a4.loc[:, 'SPLIT'] = df_3a4.org_pn.map(lambda x: sourcing_rules[x]/100 if x in sourcing_rules.keys() else 1)
-    df_3a4.loc[:, 'C_UNSTAGED_QTY_SPLIT'] = df_3a4.C_UNSTAGED_QTY * df_3a4.SPLIT
+        if org_blg_list != []:
+            org_blg_list_updated = []
+            org = list(org_blg_list[0].keys())[0]
+            qty = list(org_blg_list[0].values())[0][0]
 
-    return df_3a4
+            for org_blg in org_blg_list[1:] + [{'extra': (0, 0, 0)}]:
+                if org == list(org_blg.keys())[0]:
+                    qty += list(org_blg.values())[0][0]
+                else:
+                    # apply split
+                    if sourcing == {}:
+                        split = 1
+                    else:
+                        split = sourcing[org] / 100
+                    org_blg_list_updated.append({org: round(qty * split,3)})
+
+                    # assign the new org name
+                    org = list(org_blg.keys())[0]
+                    qty = list(org_blg.values())[0][0]
+
+            blg_dic_tan[tan] = org_blg_list_updated
+
+    return blg_dic_tan
+
+def apply_split_on_blg_dic_tan(blg_dic_tan,sourcing_rules):
+    """
+    Below aggregate the blg_dic_tan by adjacing same org PO (keep the ranking sequence even aggregation);
+    And also update the qty based on sourcing split
+    """
+    for tan, org_blg_list in blg_dic_tan.items():
+        if tan in sourcing_rules.keys():
+            sourcing = sourcing_rules[tan]
+        else:  # if not in (e.g. WNBU grouping, assuems it's 100)
+            sourcing = {}
+
+        for ind,org_blg in enumerate(org_blg_list):
+            org = list(org_blg.keys())[0]
+            qty = list(org_blg.values())[0][0]
+            po = list(org_blg.values())[0][1]
+            date = list(org_blg.values())[0][2]
+
+            try:
+                split=sourcing[org]/100
+            except:
+                split=1 # if not in (e.g. WNBU grouping, assuems it's 100)
+
+            if split!=1:
+                org_blg_list[ind] = {org: (round(qty * split,3), po, date)}
+
+        blg_dic_tan[tan] = org_blg_list
+
+    return blg_dic_tan
+
+
+
+def summarize_total_blg_qty_need_scr_allocation(blg_dic_tan):
+    """
+    Summarize the total blg_qty (already considered split) for each TAN/ORG - to be used in final report
+    """
+    blg_summary = {}
+    for tan, org_blg_list in blg_dic_tan.items():
+        if org_blg_list != []:
+            blg_summary_tan = {}
+
+            for org_blg in org_blg_list:
+                org = list(org_blg.keys())[0]
+                qty = list(org_blg.values())[0][0]
+
+                if org in blg_summary_tan.keys():
+                    blg_summary_tan[org] = blg_summary_tan[org] + qty
+                else:
+                    blg_summary_tan[org] = qty
+
+            blg_summary[tan] = blg_summary_tan
+
+    return blg_summary
 
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
     """
@@ -1606,7 +1787,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     ss_exceptional_priority, df_removal = read_backlog_priority_from_smartsheet(df_3a4,login_user)
 
     # Remove and send email notification for ss removal from exceptional priority smartsheet
-    remove_priority_ss_from_smtsheet_and_notify(df_removal, login_user, sender='PCBA allocation tool')
+    if login_user not in ['unknown'] + [super_user + '@cisco.com']:
+        remove_priority_ss_from_smtsheet_and_notify(df_removal, login_user, sender='PCBA allocation tool')
 
 
     # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
@@ -1620,18 +1802,19 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
 
     # collect available sourcing rules and calculate split unstage qty(testing: add split in sourcing output)
-    df_sourcing, sourcing_rules = collect_available_sourcing(df_sourcing)
+    sourcing_rule_list, sourcing_rules = collect_available_sourcing(df_sourcing)
 
     # apply sourcing to unstaged qty and create C_UNSTAGED_QTY_SPLIT - for grouped TAN (WNBU), assume split=1
-    df_3a4=create_unstage_qty_per_sourcing_split(df_3a4,sourcing_rules)
+    # Discard below and do this instead in the blg_dic_tan instead (after fulfilled with OH and intransit)
+    #df_3a4=create_unstage_qty_per_sourcing_split(df_3a4,sourcing_rules)
 
     # Remove unneeded TAN from df_3a4
-    df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rules,tan_group_sourcing) # consider tan group sourcing too
+    df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rule_list,tan_group_sourcing) # consider tan group sourcing too
 
     # create backlog dict for Tan exists in SCR
     # - qty_col use C_UNSTAGED_QTY_SPLIT instead if considering sourcing split
     #qty_col = 'C_UNSTAGED_QTY'
-    qty_col = 'C_UNSTAGED_QTY_SPLIT'
+    qty_col = 'C_UNSTAGED_QTY'
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys(),qty_col=qty_col)
 
     # pivot df_oh and versionless the TAN
@@ -1682,9 +1865,19 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     blg_dic_tan = fulfill_backlog_by_oh(transit_dic_tan_eta_early, blg_dic_tan)
 
     blg_dic_tan, transit_dic_tan_eta_late = fulfill_backlog_by_transit_eta_late(transit_dic_tan_eta_late, blg_dic_tan)
-    
-    # Allocate SCR and 生成allocated supply dict
-    supply_dic_tan_allocated = allocate_supply_per_supply_and_blg_dic(supply_dic_tan, blg_dic_tan)
+
+    # update the blg qty based on sourcing split
+    #blg_dic_tan = aggregate_blg_and_apply_split(blg_dic_tan, sourcing_rules)
+    blg_dic_tan = apply_split_on_blg_dic_tan(blg_dic_tan, sourcing_rules)
+
+    #summarize the total blg_qty (considered split) for each TAN/ORG - to be used in final report
+    blg_summary_before_allocation = summarize_total_blg_qty_need_scr_allocation(blg_dic_tan)
+
+    # Allocate SCR to the remainging backlog (after OH/Transit deduction)
+    supply_dic_tan_allocated,blg_dic_tan = allocate_supply_per_supply_and_blg_dic(supply_dic_tan, blg_dic_tan)
+
+    # summarize the total blg_qty (considered split) for each TAN/ORG - to be used in final report
+    blg_summary_after_allocation = summarize_total_blg_qty_need_scr_allocation(blg_dic_tan)
 
     # TODO: (enhancement) if transit_dic_tan not consumed, come back to judge if the allocation is needed or not(per ETA) - if not, take it back and allocate to others
     # currently using 7days (or 14days?) backward fulfillment for late ETA which partially covered this already.
@@ -1695,19 +1888,20 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     #根据以上聚合结果汇总每一个TAN by ORG 的allocation总数以及recovery date（用于allocation report中）
     allocation_summary_dict=summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg)
 
-    #根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org
+    #根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org - 暂时不用
     #org_split={'68-4908':{'FOC':0.4,'FJZ':0.6}}
     org_split={}
-    supply_dic_tan_allocated_agg_edi_allocated=allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg, org_split)
-
+    #supply_dic_tan_allocated_agg_edi_allocated=allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg, org_split)
     #Do aggregation again to combine backlog allocation and EDI allocation for each date
-    supply_dic_tan_allocated_agg_edi_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated_agg_edi_allocated)
+    #supply_dic_tan_allocated_agg_edi_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated_agg_edi_allocated)
+    supply_dic_tan_allocated_agg_edi_allocated_agg=supply_dic_tan_allocated_agg
+
 
     # 在df_scr中加入allocation结果
     df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_allocated_agg, pcba_site)
 
     # 把以下信息加回scr: BU, backlog, OH, intransit; 并做相应的计算处理
-    df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,org_split)
+    df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,blg_summary_before_allocation,blg_summary_after_allocation,sourcing_rules,org_split)
 
     # 存储文件
     output_filename = write_allocation_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_transit_time,df_sourcing,df_grouping,login_user)

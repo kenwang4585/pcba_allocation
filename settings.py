@@ -1,9 +1,6 @@
 import os
 import getpass
 
-# use below or from user selelction on UI
-pcba_site_list=['FOL', 'FDO', 'JPE', 'FJZ','NCB','FJZ','JMX','FGU']
-
 super_user='kwang2'
 
 
@@ -32,7 +29,7 @@ output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS',
            'BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
            'ORIGINAL_FCD_NBD_DATE','ossd_offset', 'CURRENT_FCD_NBD_DATE','C_UNSTAGED_DOLLARS',
             'ss_unstg_rev','REVENUE_NON_REVENUE',
-            'ORDERED_QUANTITY','C_UNSTAGED_QTY','SPLIT','C_UNSTAGED_QTY_SPLIT','PACKOUT_QUANTITY','FLB_TAN','PROGRAM']
+            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN','PROGRAM']
 
 col_3a4_must_have=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','PRODUCT_ID',
            'TAN','ADDRESSABLE_FLAG','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
