@@ -338,6 +338,8 @@ def update_date_with_transit_pad(x, y, transit_time, pcba_site):
         return y
 
 
+
+
 def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
     """
     Generate the BOM usage file from the FLB_TAN col
@@ -1510,36 +1512,6 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     os.remove(output_name)
 
 
-def collect_available_sourcing(df_sourcing):
-    """
-    Generate a list that contains all the available sourcings: [DF_org-TAN(verionless)].
-    """
-    regex = re.compile(r'\d{2,3}-\d{4,7}')
-
-    # convert to versionless and add temp col
-    df_sourcing.loc[:, 'tan_versionless'] = df_sourcing.TAN.map(lambda x: regex.search(x).group())
-    df_sourcing.loc[:, 'org_tan'] = df_sourcing.DF_site + '-' + df_sourcing.tan_versionless
-
-    # create a simple list of the available sourcing rules and a dict
-    sourcing_rule_list=df_sourcing.org_tan.values
-
-    sourcing_rules = {}
-    sourcing = {}
-    for row in df_sourcing.itertuples():
-        tan=row.tan_versionless
-        df_site=row.DF_site
-        split=row.Split
-
-        if tan not in sourcing_rules.keys():
-            sourcing={}
-
-        sourcing[df_site] = split
-        sourcing_rules[tan]=sourcing
-
-    df_sourcing.drop(['tan_versionless','org_tan'],axis=1,inplace=True)
-    #df_sourcing.set_index('version',inplace=True)
-
-    return sourcing_rule_list,sourcing_rules
 
 def remove_unavailable_sourcing (df_3a4,sourcing_rule_list, tan_group_sourcing):
     """
@@ -1733,6 +1705,77 @@ def summarize_total_blg_qty_need_scr_allocation(blg_dic_tan):
 
     return blg_summary
 
+def update_sourcing_split(x, y, exceptional_split):
+    """
+    Update split based on exceptional_sourcing
+    """
+
+    if x in exceptional_split.keys():
+        return int(exceptional_split[x])
+    else:
+        return y
+
+def update_exceptional_sourcing_split(df_sourcing,pcba_site):
+    """
+    Read exceptional sourcing split from smartsheet, and update the value into df_sourcing
+    This happens as some sourcing split could not be corrected due to impact to scheduling.
+    """
+    regex = re.compile(r'\d{2,3}-\d{4,7}')
+
+    # 从smartsheet读取backlog
+    token = os.getenv('ALLOCATION_TOKEN')
+    sheet_id = os.getenv('SOURCING_SPLIT_ID')
+    proxies = None  # for proxy server
+    smartsheet_client = SmartSheetClient(token, proxies)
+    df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
+
+    # pickout valid data
+    df_smart = df_smart[(df_smart.PCBA_site==pcba_site) &(df_smart.DF_site.notnull()) &  (df_smart.TAN.notnull())
+                        & (df_smart.Split.notnull())]
+
+    df_smart.loc[:, 'tan_versionless'] = df_smart.TAN.map(lambda x: regex.search(x).group())
+    df_smart.loc[:, 'org_tan'] = df_smart.DF_site + '-' + df_smart.tan_versionless
+
+    exceptional_split={}
+    for row in df_smart.itertuples():
+        exceptional_split[row.org_tan]=row.Split
+
+    # convert df_sourcing to versionless and add temp col
+    df_sourcing.loc[:, 'tan_versionless'] = df_sourcing.TAN.map(lambda x: regex.search(x).group())
+    df_sourcing.loc[:, 'org_tan'] = df_sourcing.DF_site + '-' + df_sourcing.tan_versionless
+
+    df_sourcing.loc[:,'Split']=df_sourcing.apply(lambda x: update_sourcing_split(x.org_tan, x.Split, exceptional_split),axis=1)
+
+    return df_sourcing
+
+def collect_available_sourcing(df_sourcing):
+    """
+    Generate a list that contains all the available sourcings: [DF_org-TAN(verionless)].
+    """
+
+    # create a simple list of the available sourcing rules and a dict
+    sourcing_rule_list=df_sourcing.org_tan.values
+
+    sourcing_rules = {}
+    sourcing = {}
+    for row in df_sourcing.itertuples():
+        tan=row.tan_versionless
+        df_site=row.DF_site
+        split=row.Split
+
+        if tan not in sourcing_rules.keys():
+            sourcing={}
+
+        sourcing[df_site] = split
+        sourcing_rules[tan]=sourcing
+
+    df_sourcing.drop(['tan_versionless','org_tan'],axis=1,inplace=True)
+    #df_sourcing.set_index('version',inplace=True)
+
+    return sourcing_rule_list,sourcing_rules
+
+
+
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
     """
     Main program to process the data and PCBA allocation.
@@ -1745,6 +1788,12 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     :param output_filename:
     :return: None
     """
+    # overwrite sourcing split based on exceptional value in smartsheet
+    df_sourcing=update_exceptional_sourcing_split(df_sourcing,pcba_site)
+
+    # collect available sourcing rules and calculate split unstage qty(testing: add split in sourcing output)
+    sourcing_rule_list, sourcing_rules = collect_available_sourcing(df_sourcing)
+
     # Read TAN group mapping from smartsheet
     df_grouping, tan_group,tan_group_sourcing = read_tan_group_mapping_from_smartsheet()
 
@@ -1801,8 +1850,6 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
 
-    # collect available sourcing rules and calculate split unstage qty(testing: add split in sourcing output)
-    sourcing_rule_list, sourcing_rules = collect_available_sourcing(df_sourcing)
 
     # apply sourcing to unstaged qty and create C_UNSTAGED_QTY_SPLIT - for grouped TAN (WNBU), assume split=1
     # Discard below and do this instead in the blg_dic_tan instead (after fulfilled with OH and intransit)

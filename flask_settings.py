@@ -40,10 +40,10 @@ class UploadForm(FlaskForm):
 
 
 class FileDownloadForm(FlaskForm):
-    file_name_delete=StringField('File to delete',default='put in filename here') # for deleting filename created by user self
+    file_name_delete=StringField('File to delete',render_kw={'placeholder':'put in filename here'}) # for deleting filename created by user self
     submit_delete=SubmitField('   Delete   ')
 
-    file_name_share=StringField('File to share',default='put in filename here') # share by email
+    file_name_share=StringField('File to share',render_kw={'placeholder':'put in filename here'}) # share by email
     email_msg=TextAreaField(default='Hello, pls find attached the PCBA allocation result.')
     submit_share=SubmitField('   Share    ')
 
@@ -60,13 +60,11 @@ class SubscriptionForm(FlaskForm):
 
 class DataSourceForm(FlaskForm):
     pcba_site_poc = StringField('Download supply data file from SCDx-POC:',
-                            validators=[DataRequired()],
-                            default='put in PCBA org here')
+                                render_kw={'placeholder':'put in PCBA org name here'})
     submit_download_supply_poc = SubmitField('Download')  # download from db
 
     pcba_site_prod = StringField('Download supply data file from SCDx-production:',
-                            validators=[DataRequired()],
-                            default='put in PCBA org here')
+                            render_kw={'placeholder':'put in PCBA org name here'})
     submit_download_supply_prod = SubmitField('Download')  # download from db
 
 
