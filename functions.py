@@ -1472,7 +1472,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     df_group=pd.read_excel(f_path,sheet_name='tan-group')
     df_lt=pd.read_excel(f_path,sheet_name='transit_time_from_sourcing_rule')
     df_allocation.set_index(
-        ['TAN', 'ORG', 'BU', 'PF','Unstg_blg','Unstg_blg_split', 'OH', 'In-transit', 'Gap_before', 'Allocation', 'Gap_after', 'Blg_recovery'],
+        ['TAN', 'ORG', 'BU', 'PF','Unstg_blg', 'OH', 'In-transit', 'Blg_gap_total', 'Sourcing_split','Blg_gap_split','Allocation', 'Blg_gap_final', 'Blg_recovery'],
         inplace=True)
     df_transit.set_index(['DF_site','TAN','Total'],inplace=True)
     df_sourcing.set_index(['DF_site'], inplace=True)
