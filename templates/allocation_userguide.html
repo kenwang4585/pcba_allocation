@@ -10,43 +10,27 @@
     <table width="85%" align="center">
         <tr>
             <td>
-                <h3>Who can use this tool?</h3>
-                <p>
-                    PMM and PSP are eligible to run this tool. Before we fully automate this program PMM representative for PCBA site runs PCBA allocation for the whole site every Friday for CM execution; PSP can rerun the allocation for <strong>respective BU during other days of the week if changes needed</strong>.
-                </p>
-
                 <h3>What data are needed to run the tool?</h3>
                     <ol type="1">
-                        <li>3a4 Backlog: download from UOV with view: kw_PA (default includes all DF sites and all BUs, PSP can limit to certain BUs if only do allocation for certain BUs);</li>
-                        <li>Supply data file (includes SCR, in-transit, DF OH, sourcing rules): download from "Datasource" tab)";</li>
-                        <li>Exceptional priority(optional): maintained in smartsheet by PSP as needed;</li>
-                        <li>TAN grouping(optional): maintained in smartsheet by PSP as needed;</li>
+                        <li>3a4 Backlog: download from UOV (under view: PCBA_ALLOCATION - default includes all DF sites and all BUs, PSP can limit to certain BUs if only do allocation for certain BUs);</li>
+                        <li>Supply data (includes SCR, in-transit, DF OH, sourcing rules): read from SCDx API during allocation; can also download as file if needed;</li>
+                        <li>Exceptional priority(optional): maintained in smartsheet by PSP as needed to overwrite default priority;</li>
+                        <li>TAN grouping(optional): maintained in smartsheet by PSP as needed to group same material TANs;</li>
+                        <li>Exceptional sourcing split(optional): maintained in smartsheet by PSP as needed to correct the sourcing split;</li>
                         <li>Missing in-transit (for SRG only): maintained in smartsheet as needed by Mandy as short term fix of SCDx missing data for cross partner intransit.</li>
                     </ol>
 
-                <h3>How PMM run the tool on Friday for whole site?</h3>
+                <h3>How to run the allocation?</h3>
                     <ol type="1">
-                        <li>Download 3a4 and supply data file;</li>
-                        <li>Upload the 2 files from the "Allocation" tab;</li>
-                        <li>Put in appropriate PCBA org;</li>
+                        <li>Download 3a4 from UOV (via view: PCBA_ALLOCATION) and upload to this tool; </li>
+                        <li>Supply data can be read from SCDx API directly during allocation run; or download from the API in advance - you can then manually adjust any data in the file if need to - and upload to this tool;</li>
+                        <li>Select PCBA org (mandatory), and BUs (optional);</li>
                         <li>Click "Make Allocation".</li>
                         <li>Download/Share the result from the "Download" tab.</li>
                     </ol>
 
-
-                <h3>How PSP run the tool for responsible BU on other days?</h3>
-                    <ol type="1">
-                        <li>Download 3a4 and supply data file;</li>
-                        <li><span style="color: #1a6dca">Adjust the supply data file as needed - if updated supply not reflected in SCDx;</span></li>
-                        <li>Upload the 2 files from the "Allocation" tab;</li>
-                        <li>Put in appropriate PCBA org <span style="color: #1a6dca">and BU</span>; </li>
-                        <li>Click "Make Allocation".</li>
-                        <li>Download/Share the result from the "Download" tab.</li>
-                    </ol>
-
-                <h3>What is order ranking priority?</h3>
-                We follow service 17 guideline to rank the orders. This is the priority sequence we used: PR1/2/3/L4/BUP/OSSD/YE/QTY/REVENUE_NON_REVENUE.
-
+                <h3>What is the order ranking priority we use?</h3>
+                We follow general service 17 order priority guideline to rank the orders. This is the priority sequence we used: PR1/2/3/L4/BUP/OSSD/YE/QTY/REVENUE_NON_REVENUE.
 
                 <h3>What is Exceptional priority?</h3>
                 PSP can give an exceptional priority to a non-priority SS so they can also get an absolute high priority despite OSSD and reflect in allocation - this should be used only exceptionally.
@@ -57,14 +41,16 @@
                 <h3>What is Tan grouping?</h3>
                 Some BU have different TAN supply to different DF sites but which share the same materials at PCBA level, by grouping them we can not only decide the allocation between DF but also let PCBA site know how to allocate the materials between the different TANs to best optimize the production. PSP can set the grouping as needed via this <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">smartsheet</a>.
 
+                <h3>What is Exceptional sourcing split?</h3>
+                Some TAN have wrong sourcing split in SCDx intentionally due to scheduling would be impacted if not in some cases. PSP can put in a correct sourcing split via this <a href="https://app.smartsheet.com/sheets/Mr5RxjxmMH76RwwFF2PrM54rcJfG4JHwqfc9hvc1" target="_blank">smartsheet</a> so the allocation will consider the right split.
+
                 <h3>Email sharing</h3>
-                Email sharing recipients is based on the <a href="{{ url_for('subscribe') }}" target="_blank"> subscription table</a> based on relative ORG and BU. If allocation file is for specific BUs, only people indicated BU in the subscription will receive the email.
+                Email sharing recipients is based on the <a href="{{ url_for('subscribe') }}" target="_blank"> subscription table</a> based on relative ORG and BU. If allocation file is for specific BUs, only people indicated BU in the subscription will receive the email. Backlog detail data will be removed from the shared file, internal users can download from this site to view the full data.
+
+
 
                 <br><br>
-                <br><br>
-
-
-
+                
             </td>
         </tr>
     </table>

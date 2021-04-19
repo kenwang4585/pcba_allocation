@@ -42,10 +42,6 @@
                 </table>
         {% endblock %}
         <br>
-
-        {% block content %}
-        {% endblock %}
-
         {% block flash_message %}
             <!-- below for flashed messages -->
             <table style="border-collapse:collapse" border="0" cellspacing="0px" align="center">
@@ -68,6 +64,11 @@
             </table>
         {% endblock %}
 
+        {% block content %}
+        {% endblock %}
+
+
+
         {% block empty_space %}
         {% endblock %}
 
@@ -75,6 +76,7 @@
         {% block footer %}
             <footer>
                 <p align="center" style="font-size: small">
+                    <a href="{{ url_for('scdx_api')}}" target="">SCDX_API</a> |
                     <a href="https://app.smartsheet.com/sheets/vMWf8q5CPR24P52rCpxMx6H5gcv3Hx4Q3mF82pG1?view=grid" target="_blank">Exceptional priority</a> |
                     <a href="https://app.smartsheet.com/sheets/Mr5RxjxmMH76RwwFF2PrM54rcJfG4JHwqfc9hvc1" target="_blank">Exceptional sourcing split</a> |
                     <a href="https://app.smartsheet.com/sheets/2pV79R447rFhGmXM9m4Phf4J9PPjhCrfXWPMX9r1?view=grid" target="_blank">TAN grouping</a> |

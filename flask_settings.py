@@ -20,10 +20,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Flask forms
-class UploadForm(FlaskForm):
+class RunAllocationForm(FlaskForm):
     # 创建各种表单对象
-    org=StringField('PCBA Org (e.g. FOL):',validators=[DataRequired()])
-    bu=StringField("BUs (separate by '/'; leave blank for all BU): ")
+    org=StringField('PCBA Org name:',validators=[DataRequired()],render_kw={'placeholder':'e.g. FOL'})
+    bu=StringField("Business units: ",render_kw={'placeholder':'e.g. ERBU/SRGBU; leave blank for all BU'})
 
     ranking_logic=SelectField('Select order ranking logic:',
                              choices=[('cus_sat','Customer focus: Top priority->OSSD->FCD->Qty->Rev/non-rev'),
@@ -32,14 +32,12 @@ class UploadForm(FlaskForm):
                              validators=[DataRequired()])
 
     file_3a4 = FileField('Upload 3A4 file (.csv):',validators=[FileRequired()])
-    file_supply=FileField('Upload supply file (.xlsx):',validators=[FileRequired()])
-    use_blg_server=BooleanField('Use latest backlog loaded onto server')
-    use_supply_server = BooleanField('Use latest supply loaded onto server')
+    file_supply=FileField('Upload supply file (.xlsx):')
     submit_allocation=SubmitField(' Make Allocation ')
 
 
 
-class FileDownloadForm(FlaskForm):
+class ResultForm(FlaskForm):
     file_name_delete=StringField('File to delete',render_kw={'placeholder':'put in filename here'}) # for deleting filename created by user self
     submit_delete=SubmitField('   Delete   ')
 
@@ -58,7 +56,7 @@ class SubscriptionForm(FlaskForm):
     email_to_add=StringField('*Email address:')
     submit_add=SubmitField('   Add email   ')
 
-class DataSourceForm(FlaskForm):
+class ScdxAPIForm(FlaskForm):
     pcba_site_poc = StringField('Download supply data file from SCDx-POC:',
                                 render_kw={'placeholder':'put in PCBA org name here'})
     submit_download_supply_poc = SubmitField('Download')  # download from db
