@@ -11,8 +11,8 @@ from werkzeug.utils import secure_filename
 from flask import flash,send_from_directory,render_template, request,redirect,url_for
 from flask_settings import *
 from functions import *
-from pull_supply_data_from_db import collect_scr_oh_transit_from_scdx_poc
-from SCDx_API import collect_scr_oh_transit_from_scdx_prod
+from SCDx_POC import collect_scr_oh_transit_from_scdx_poc
+from SCDx_PROD_API import collect_scr_oh_transit_from_scdx_prod
 from settings import *
 from sending_email import *
 from db_add import add_user_log,add_email_data
@@ -55,25 +55,26 @@ def allocation_run():
         f_supply= form.file_supply.data
         f_3a4 = form.file_3a4.data
         ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
-
-
-        # check input
-        if pcba_site not in f_supply.filename.upper():
-            msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
-            flash(msg, 'warning')
-            print(login_user,msg)
-            summary = 'pcba_site ({}) and supply file({}) not matching!'.format(pcba_site,f_supply.filename)
-            add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
-
-            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
-        print('{} is correct supply file for this allocation.'.format(f_supply.filename))
-
         log_msg.append('PCBA_SITE: ' + pcba_site)
         log_msg.append('BU: ' + bu)
 
+        if f_supply!=None:
+            print('Supply data will be read from API directly.')
+            # check input
+            if pcba_site not in f_supply.filename.upper():
+                msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
+                flash(msg, 'warning')
+                print(login_user,msg)
+                summary = 'pcba_site ({}) and supply file({}) not matching!'.format(pcba_site,f_supply.filename)
+                add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
+
+                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+            else:
+                file_path_supply = os.path.join(base_dir_upload, login_user + '_' + secure_filename(f_supply.filename))
+                f_supply.save(file_path_supply)
+
         # 检查文件格式
         ext_3a4 = os.path.splitext(f_3a4.filename)[1]
-        ext_supply = os.path.splitext(f_supply.filename)[1]
         if ext_3a4 != '.csv':
             msg='3a4 file only accepts CSV formats here!'
             flash(msg, 'warning')
@@ -81,23 +82,10 @@ def allocation_run():
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
             return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
-        if ext_supply != '.xlsx':
-            msg='The supply file must be xlsx format which you downloaded from the datasource tab!'
-            flash(msg, 'warning')
-            summary = 'Wong supply file formats: {}'.format(ext_supply)
-            add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
-            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
-
-
-        # 存储文件
-        #file_path_3a4 = os.path.join(app.config['UPLOAD_PATH'],'3a4.csv')
-        #file_path_supply = os.path.join(app.config['UPLOAD_PATH'],'supply.xlsx')
+        # 存储3a4
         file_path_3a4 = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_3a4.filename))
-        file_path_supply = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_supply.filename))
-        # save the files to server
         f_3a4.save(file_path_3a4)
-        f_supply.save(file_path_supply)
 
         # check and store file size - after file is saved
         size_3a4=os.path.getsize(file_path_3a4)
@@ -105,35 +93,45 @@ def allocation_run():
             size_3a4=str(round(size_3a4/(1024*1024),1)) + 'Mb'
         else:
             size_3a4 = str(int(size_3a4 / 1024)) + 'Kb'
-        size_supply=os.path.getsize(file_path_supply)
-        if size_supply/1024>1:
-            size_supply=str(round(size_supply/(1024*1024),1)) + 'Mb'
-        else:
-            size_supply = str(int(size_supply / 1024)) + 'Kb'
         log_msg.append('File 3a4: ' + f_3a4.filename + '(size: ' + size_3a4 + ')')
-        log_msg.append('File supply: ' + f_supply.filename + '(size: ' + size_supply + ')')
+
+        if f_supply!=None:
+            size_supply=os.path.getsize(file_path_supply)
+            if size_supply/1024>1:
+                size_supply=str(round(size_supply/(1024*1024),1)) + 'Mb'
+            else:
+                size_supply = str(int(size_supply / 1024)) + 'Kb'
+            log_msg.append('File supply: ' + f_supply.filename + '(size: ' + size_supply + ')')
+        else:
+            log_msg.append('File supply: directly download through API')
 
         # check data format
-        sheet_name_msg, msg_3a4, msg_3a4_option, msg_transit, msg_oh, msg_scr = check_input_file_format(file_path_3a4, file_path_supply,
-                                                                        col_3a4_must_have, col_transit_must_have,
-                                                                        col_oh_must_have, col_scr_must_have,
-                                                                        'in-transit','df-oh','por')
-        if sheet_name_msg!='':
-            flash(sheet_name_msg,'warning')
+        msg_3a4, msg_3a4_option = check_3a4_input_file_format(file_path_3a4, col_3a4_must_have)
         if msg_3a4!='':
             flash(msg_3a4,'warning')
+            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
         if msg_3a4_option!='':
             flash(msg_3a4_option,'warning')
-        if msg_transit!='':
-            flash(msg_transit,'warning')
-        if msg_oh!='':
-            flash(msg_oh,'warning')
-        if msg_scr!='':
-            flash(msg_scr,'warning')
+            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
 
-        if sheet_name_msg!='' or msg_3a4!='' or msg_3a4_option!='' or msg_transit!='' or msg_oh!='' or msg_scr!='':
-            print('error')
-            return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
+        if f_supply!=None:
+            sheet_name_msg, msg_transit, msg_oh, msg_scr=check_supply_input_file_format(file_path_supply,
+                                                                                        col_transit_must_have,
+                                                                                        col_oh_must_have,
+                                                                                        col_scr_must_have,
+                                                                                        'in-transit','df-oh','por')
+            if sheet_name_msg!='':
+                flash(sheet_name_msg,'warning')
+                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+            if msg_transit!='':
+                flash(msg_transit,'warning')
+                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+            if msg_oh!='':
+                flash(msg_oh,'warning')
+                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+            if msg_scr!='':
+                flash(msg_scr,'warning')
+                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
 
        # 判断并定义ranking_col
         if ranking_logic == 'cus_sat':
@@ -143,7 +141,14 @@ def allocation_run():
 
         try:
             # 读取数据
-            df_3a4, df_oh, df_transit, df_scr, df_sourcing=read_data(file_path_3a4, file_path_supply)
+            df_3a4 = pd.read_csv(file_path_3a4, encoding='ISO-8859-1', parse_dates=['ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD'],
+                                 low_memory=False)
+
+            if f_supply!=None:
+                df_scr, df_oh, df_transit, df_sourcing=read_supply_data(file_path_supply)
+            else:
+                df_scr, df_oh, df_transit, df_sourcing=collect_scr_oh_transit_from_scdx_prod(pcba_site,'*')
+                df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
 
             # limit BU from 3a4 and df_scr for allocation
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
@@ -586,7 +591,7 @@ def user_guide():
         login_user = 'unknown'
         login_name = 'unknown'
 
-    return render_template('allocation_userguide.html',user=login_name, subtitle=' - User guide')
+    return render_template('allocation_userguide.html',user=login_name, subtitle=' - FAQ')
 
 @app.route('/datasource',methods=['GET','POST'])
 def allocation_datasource():

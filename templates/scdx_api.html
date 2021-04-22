@@ -7,26 +7,18 @@
     <form method="post" enctype="multipart/form-data">
         {{ form.csrf_token }}
          <!-- below for flashed messages -->
-        <h4 align="center">Download SCR(POR), OH, In-transit, Sourcing rules through SCDX API</h4><br><br>
-        <table style="border-collapse:collapse" border="0" cellspacing="0px" width="88%" align="center">
+
+        <table style="border-collapse:collapse" border="0" cellspacing="0px" width="80%" align="center">
 
                 <tr> <!-- For downloading data from SCDx -->
-                    <td width="40%">
-                        SCDx-Production:<br>
+                    <td width="85%">
+                        <br><br>
+                        Download SCR(POR), OH, In-transit, Sourcing rules through SCDx API (production db):<br><br>
                         {{ form.pcba_site_prod(class='form-control') }}
-                        <span style="color: #007bff"> (ready soon...under infosec final approval)</span>
                     </td>
-                    <td align="center" width="5%">
+                    <td align="center" width="15%">
+                        <br><br><br><br>
                         {{ form.submit_download_supply_prod (class='btn-primary btn-sm') }}
-                    </td>
-                    <td width="10%"></td>
-                    <td width="40%">
-                        SCDx-POC:
-                        {{ form.pcba_site_poc(class='form-control') }}<br>
-
-                    </td>
-                    <td align="center" width="5%">
-                        {{ form.submit_download_supply_poc (class='btn-primary btn-sm') }}
                     </td>
                 </tr>
         </table>
@@ -35,5 +27,5 @@
 {% endblock %}
 
 {% block empty_space %}
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 {% endblock %}

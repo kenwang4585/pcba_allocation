@@ -26,7 +26,13 @@
                         <li>Supply data can be read from SCDx API directly during allocation run; or download from the API in advance - you can then manually adjust any data in the file if need to - and upload to this tool;</li>
                         <li>Select PCBA org (mandatory), and BUs (optional);</li>
                         <li>Click "Make Allocation".</li>
-                        <li>Download/Share the result from the "Download" tab.</li>
+                        <li>Download/Share the result from the "Result" tab.</li>
+                    </ol>
+
+                <h3>Email sharing</h3>
+                    <ol type="1">
+                        <li>Backlog detail tab is removed when shared in email,internal users can download full report from this site.</li>
+                        <li>Recipient is based on the <a href="{{ url_for('subscribe') }}" target="_blank"> subscription</a> according to the defined ORG/BU.</li>
                     </ol>
 
                 <h3>What is the order ranking priority we use?</h3>
@@ -43,11 +49,6 @@
 
                 <h3>What is Exceptional sourcing split?</h3>
                 Some TAN have wrong sourcing split in SCDx intentionally due to scheduling would be impacted if not in some cases. PSP can put in a correct sourcing split via this <a href="https://app.smartsheet.com/sheets/Mr5RxjxmMH76RwwFF2PrM54rcJfG4JHwqfc9hvc1" target="_blank">smartsheet</a> so the allocation will consider the right split.
-
-                <h3>Email sharing</h3>
-                Email sharing recipients is based on the <a href="{{ url_for('subscribe') }}" target="_blank"> subscription table</a> based on relative ORG and BU. If allocation file is for specific BUs, only people indicated BU in the subscription will receive the email. Backlog detail data will be removed from the shared file, internal users can download from this site to view the full data.
-
-
 
                 <br><br>
                 

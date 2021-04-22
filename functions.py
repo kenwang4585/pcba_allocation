@@ -318,7 +318,7 @@ def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
         if row.Transit_time==0:
             transit_time_by_org[row.DF_site] = 1
         else:
-            transit_time_by_org[row.DF_site]=row.Transit_time
+            transit_time_by_org[row.DF_site]=int(row.Transit_time)
 
     transit_time[pcba_site]=transit_time_by_org
 
@@ -1131,22 +1131,17 @@ def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
     return blg_dic_tan, transit_dic_tan
 
 
-def read_data(f_3a4,f_supply):
+def read_supply_data(f_supply):
     """
     Read source data from excel files
-    :param f_3a4:
     :param f_supply:
     :return:
     """
-    # read 3a4
-    df_3a4 = pd.read_csv(f_3a4, encoding='ISO-8859-1', parse_dates=['ORIGINAL_FCD_NBD_DATE','TARGET_SSD'],
-                         low_memory=False)
-
     # read scr
     df_scr = pd.read_excel(f_supply, sheet_name='por')
     df_scr.loc[:,'date']=df_scr.date.map(lambda x: x.date())
 
-    # read oh this includes PCBA SM, will be removed when creating DF OH dict
+    # read oh
     df_oh = pd.read_excel(f_supply, sheet_name='df-oh')
 
     # read in-transit
@@ -1156,7 +1151,7 @@ def read_data(f_3a4,f_supply):
     # read sourcing rules
     df_sourcing=pd.read_excel(f_supply,sheet_name='sourcing-rule')
 
-    return df_3a4, df_oh, df_transit, df_scr ,df_sourcing
+    return df_scr, df_oh, df_transit, df_sourcing
 
 def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     """
@@ -1169,24 +1164,33 @@ def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     return df_3a4, df_scr
 
 
-def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col_transit_must_have,col_oh_must_have,col_scr_must_have,sheet_transit,sheet_oh,sheet_scr):
+def check_3a4_input_file_format(file_path_3a4,col_3a4_must_have):
     """
     Check if the input files contain the right columns
     """
-    sheet_name_msg,msg_3a4, msg_3a4_option, msg_transit, msg_oh, msg_scr = '', '', '', '','',''
+    msg_3a4, msg_3a4_option = '', ''
     df_3a4=pd.read_csv(file_path_3a4,nrows=2,encoding='iso-8859-1')
+    # 检查文件是否包含需要的列：
+    if not np.all(np.in1d(col_3a4_must_have, df_3a4.columns)):
+        msg_3a4='3A4 file format error! Following required columns not found in 3a4 data: {}'.format(
+            str(np.setdiff1d(col_3a4_must_have, df_3a4.columns)))
+    if 'OPTION_NUMBER' in df_3a4.columns:
+        msg_3a4_option='3A4 file format error! Pls download 3A4 without option PIDs!'
+
+    return msg_3a4, msg_3a4_option
+
+
+def check_supply_input_file_format(file_path_supply,col_transit_must_have,col_oh_must_have,col_scr_must_have,sheet_transit,sheet_oh,sheet_scr):
+    """
+    Check if the input files contain the right columns
+    """
+    sheet_name_msg,msg_transit, msg_oh, msg_scr = '', '', '', ''
     try:
         df_transit=pd.read_excel(file_path_supply,sheet_name='in-transit',nrows=2)
         df_oh=pd.read_excel(file_path_supply,sheet_name='df-oh',nrows=2)
         df_scr=pd.read_excel(file_path_supply,sheet_name='por',nrows=2)
 
         # 检查文件是否包含需要的列：
-        if not np.all(np.in1d(col_3a4_must_have, df_3a4.columns)):
-            msg_3a4='3A4 file format error! Following required columns not found in 3a4 data: {}'.format(
-                str(np.setdiff1d(col_3a4_must_have, df_3a4.columns)))
-        if 'OPTION_NUMBER' in df_3a4.columns:
-            msg_3a4_option='3A4 file format error! Pls download 3A4 without option PIDs!'
-
         if not np.all(np.in1d(col_transit_must_have, df_transit.columns)):
             msg_transit = 'In-transit data format error! Following required columns not found in transit data: {}'.format(
                 str(np.setdiff1d(col_transit_must_have, df_transit.columns)))
@@ -1202,7 +1206,9 @@ def check_input_file_format(file_path_3a4,file_path_supply,col_3a4_must_have,col
         print('sheet name error!')
         sheet_name_msg = 'Supply file format error! Ensure the correct sheet names are: {}, {}, {}'.format(sheet_transit,sheet_oh,sheet_scr)
 
-    return sheet_name_msg, msg_3a4, msg_3a4_option, msg_transit,msg_oh,msg_scr
+    return sheet_name_msg, msg_transit,msg_oh,msg_scr
+
+
 
 def redefine_addressable_flag_main_pid_version(df_3a4):
     '''
@@ -1805,7 +1811,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
 
     # Pivot df_scr 并处理日期格式; change to versionless
     df_scr = df_scr.pivot_table(index=['planningOrg', 'TAN'], columns='date', values='quantity', aggfunc=sum)
-    #df_scr.columns = df_scr.columns.map(lambda x: x.date())
+    #df_scr.columns = df_scr.columns.map(lambda x: x.date()) # already processed to date
     df_scr=change_pn_to_versionless(df_scr,pn_col='TAN')
 
     # change TAN to group number based on group mapping
@@ -1824,6 +1830,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     #df_3a4.loc[:, 'fcd_offset'] = df_3a4[['ORGANIZATION_CODE', 'CURRENT_FCD_NBD_DATE']].apply(
     #    lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.CURRENT_FCD_NBD_DATE, transit_time, pcba_site),
     #    axis=1)
+
     df_3a4.loc[:, 'ossd_offset'] = df_3a4.apply(
         lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),
         axis=1)
