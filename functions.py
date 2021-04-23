@@ -1843,7 +1843,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     ss_exceptional_priority, df_removal = read_backlog_priority_from_smartsheet(df_3a4,login_user)
 
     # Remove and send email notification for ss removal from exceptional priority smartsheet
-    if login_user not in ['unknown'] + [super_user + '@cisco.com']:
+    if login_user not in ['unknown'] + [super_user]:
         remove_priority_ss_from_smtsheet_and_notify(df_removal, login_user, sender='PCBA allocation tool')
 
 
