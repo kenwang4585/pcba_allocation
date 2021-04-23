@@ -245,17 +245,14 @@ def change_pn_to_versionless(df, pn_col='TAN'):
     :param pn_col: name of the PN col. In Cm supply file it's PN, in Kinaxis file it's TAN.
     :return:
     """
-    if df.shape[0]>0:
-        regex = re.compile(r'\d{2,3}-\d{4,7}')
 
-        df.reset_index(inplace=True)
+    regex = re.compile(r'\d{2,3}-\d{4,7}')
 
-        # convert to versionless and add temp col
-        df.loc[:, pn_col] = df[pn_col].map(lambda x: regex.search(x).group())
+    # convert to versionless and add temp col
+    df.reset_index(inplace=True)
+    df.loc[:, pn_col] = df[pn_col].map(lambda x: regex.search(x).group())
 
     return df
-
-
 
 def change_pn_to_group_number(df,tan_group,pn_col='TAN'):
     """
@@ -1043,9 +1040,6 @@ def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
 
-    if login_user=='':
-        login_user='(testing)'
-
     if bu_list != ['']:
         bu = ' '.join(bu_list)
         output_filename = pcba_site + ' SCR allocation (' + bu + ') ' + login_user + ' ' + dt + '.xlsx'
@@ -1059,7 +1053,9 @@ def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_
     df_transit.reset_index(inplace=True)
     df_transit.set_index(['DF_site'], inplace=True)
     df_transit.rename(columns={'In-transit':'Total'},inplace=True)
+
     df_transit_time.set_index('TAN',inplace=True)
+    df_sourcing.set_index('TAN',inplace=True)
 
     #df_scr.reset_index(inplace=True)
 
@@ -1891,28 +1887,34 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_smart_intransit = read_exceptional_intransit_from_smartsheet(pcba_site)
     df_transit=pd.concat([df_transit,df_smart_intransit],sort=False)
 
-    # pivot df_transit and change to versionless
-    df_transit = df_transit.pivot_table(index=['DF_site', 'TAN'], columns='ETA_date', values='In-transit_quantity',
+    # Process transit to dict - might be empty
+    if df_transit.shape[0]>0:
+        df_transit = df_transit.pivot_table(index=['DF_site', 'TAN'], columns='ETA_date', values='In-transit_quantity',
                                         aggfunc=sum)
 
-    df_transit=change_pn_to_versionless(df_transit,pn_col='TAN')
+        # versionless
+        df_transit=change_pn_to_versionless(df_transit,pn_col='TAN')
 
-    # change TAN to group number based on group mapping
-    df_transit=change_pn_to_group_number(df_transit,tan_group,pn_col='TAN')
+        # change TAN to group number based on group mapping
+        df_transit=change_pn_to_group_number(df_transit,tan_group,pn_col='TAN')
 
-    # add up supply by versionless TAN
-    df_transit=add_up_supply_by_pn(df_transit,org_col='DF_site',pn_col='TAN')
+        # add up supply by versionless TAN
+        df_transit=add_up_supply_by_pn(df_transit,org_col='DF_site',pn_col='TAN')
 
-    # split df_transit by threshhold of 15 days
-    close_eta_cutoff = pd.Timestamp.today().date() + pd.Timedelta(days=close_eta_cutoff_criteria)
-    col = df_transit.columns
-    df_transit_eta_early = df_transit.loc[:, col <= close_eta_cutoff].copy()
-    df_transit_eta_early.loc[:, 'OH'] = df_transit_eta_early.sum(axis=1)  # sum up as OH so can use the oh dict function
-    df_transit_eta_late = df_transit.loc[:, col > close_eta_cutoff].copy()
+        # split df_transit by threshhold of 15 days
+        close_eta_cutoff = pd.Timestamp.today().date() + pd.Timedelta(days=close_eta_cutoff_criteria)
+        col = df_transit.columns
 
-    # 生成transit dict - for ETA close data use the OH dict function instead
-    transit_dic_tan_eta_early = created_oh_dict_per_df_oh(df_transit_eta_early)
-    transit_dic_tan_eta_late = create_transit_dict_per_df_transit(df_transit_eta_late)
+        df_transit_eta_early = df_transit.loc[:, col <= close_eta_cutoff].copy()
+        df_transit_eta_early.loc[:, 'OH'] = df_transit_eta_early.sum(axis=1)  # sum up as OH so can use the oh dict function
+        df_transit_eta_late = df_transit.loc[:, col > close_eta_cutoff].copy()
+
+        # 生成transit dict - for ETA close data use the OH dict function instead
+        transit_dic_tan_eta_early = created_oh_dict_per_df_oh(df_transit_eta_early)
+        transit_dic_tan_eta_late = create_transit_dict_per_df_transit(df_transit_eta_late)
+    else:
+        transit_dic_tan_eta_early={}
+        transit_dic_tan_eta_late={}
 
     # 按照org将in-transit分配给自己的订单（forward consumption considering ETA per OSSD - ETA consider backward offset）
     # 并更新blg_dic_tan
