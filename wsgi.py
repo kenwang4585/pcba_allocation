@@ -58,8 +58,11 @@ def allocation_run():
         log_msg.append('PCBA_SITE: ' + pcba_site)
         log_msg.append('BU: ' + bu)
 
-        if f_supply!=None:
-            print('Supply data will be read from API directly.')
+        if f_supply==None:
+            msg = 'Pls upload the supply file! Reading directly from SCDx target to live from 5/5.'
+            flash(msg, 'warning')
+            return render_template('allocation_run.html', form=form, user=login_name)
+        else:
             # check input
             if pcba_site not in f_supply.filename.upper():
                 msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
@@ -68,10 +71,11 @@ def allocation_run():
                 summary = 'pcba_site ({}) and supply file({}) not matching!'.format(pcba_site,f_supply.filename)
                 add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
-                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
-            else:
-                file_path_supply = os.path.join(base_dir_upload, login_user + '_' + secure_filename(f_supply.filename))
-                f_supply.save(file_path_supply)
+                return render_template('allocation_run.html', form=form, user=login_name)
+            # save supply file
+            file_path_supply = os.path.join(base_dir_upload, login_user + '_' + secure_filename(f_supply.filename))
+            f_supply.save(file_path_supply)
+
 
         # 检查文件格式
         ext_3a4 = os.path.splitext(f_3a4.filename)[1]
@@ -81,7 +85,7 @@ def allocation_run():
             summary = 'Wong 3a4 formats: {}'.format(ext_3a4)
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
-            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+            return render_template('allocation_run.html', form=form, user=login_name)
 
         # 存储3a4
         file_path_3a4 = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_3a4.filename))
@@ -109,10 +113,10 @@ def allocation_run():
         msg_3a4, msg_3a4_option = check_3a4_input_file_format(file_path_3a4, col_3a4_must_have)
         if msg_3a4!='':
             flash(msg_3a4,'warning')
-            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+            return render_template('allocation_run.html', form=form, user=login_name)
         if msg_3a4_option!='':
             flash(msg_3a4_option,'warning')
-            return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+            return render_template('allocation_run.html', form=form, user=login_name)
 
         if f_supply!=None:
             sheet_name_msg, msg_transit, msg_oh, msg_scr=check_supply_input_file_format(file_path_supply,
@@ -122,16 +126,16 @@ def allocation_run():
                                                                                         'in-transit','df-oh','por')
             if sheet_name_msg!='':
                 flash(sheet_name_msg,'warning')
-                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+                return render_template('allocation_run.html', form=form, user=login_name)
             if msg_transit!='':
                 flash(msg_transit,'warning')
-                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+                return render_template('allocation_run.html', form=form, user=login_name)
             if msg_oh!='':
                 flash(msg_oh,'warning')
-                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+                return render_template('allocation_run.html', form=form, user=login_name)
             if msg_scr!='':
                 flash(msg_scr,'warning')
-                return redirect(url_for('allocation_run', _external=True, _scheme=http_scheme, viewarg1=1))
+                return render_template('allocation_run.html', form=form, user=login_name)
 
        # 判断并定义ranking_col
         if ranking_logic == 'cus_sat':
@@ -154,11 +158,11 @@ def allocation_run():
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
             if df_3a4.shape[0] == 0:
                 flash('The 3a4 data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
+                return render_template('allocation_run.html', form=form, user=login_name)
 
             if df_scr.shape[0] == 0:
                 flash('The SCR data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
+                return render_template('allocation_run.html', form=form, user=login_name)
 
             #### main program
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)

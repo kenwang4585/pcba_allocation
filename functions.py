@@ -245,13 +245,13 @@ def change_pn_to_versionless(df, pn_col='TAN'):
     :param pn_col: name of the PN col. In Cm supply file it's PN, in Kinaxis file it's TAN.
     :return:
     """
+    if df.shape[0]>0:
+        regex = re.compile(r'\d{2,3}-\d{4,7}')
 
-    regex = re.compile(r'\d{2,3}-\d{4,7}')
+        df.reset_index(inplace=True)
 
-    df.reset_index(inplace=True)
-
-    # convert to versionless and add temp col
-    df.loc[:, pn_col] = df[pn_col].map(lambda x: regex.search(x).group())
+        # convert to versionless and add temp col
+        df.loc[:, pn_col] = df[pn_col].map(lambda x: regex.search(x).group())
 
     return df
 
