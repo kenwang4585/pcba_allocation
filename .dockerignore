@@ -1,9 +1,3 @@
-.*
-!.env
 __pycache__/
-output_file/*
-upload_file/*
-supply_file/*
-trash_file/*
-share_file/*
-logs/*
+**/*.csv
+**/*.xlsx

@@ -150,6 +150,7 @@ def allocation_run():
 
             if f_supply!=None:
                 df_scr, df_oh, df_transit, df_sourcing=read_supply_data(file_path_supply)
+                df_scr, df_oh, df_transit, df_sourcing=patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit, df_sourcing)
             else:
                 df_scr, df_oh, df_transit, df_sourcing=collect_scr_oh_transit_from_scdx_prod(pcba_site,'*')
                 df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
@@ -190,7 +191,7 @@ def allocation_run():
             flash('Error encountered: {}'.format(str(e)),'warning')
             #Write the log file
             summary = '; '.join(log_msg)
-            add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
+            add_user_log(user=login_user, location='Allocation', user_action='Make allocation - ERROR', summary=summary)
 
             # write details to error_log.txt
             log_msg='\n'.join(log_msg)

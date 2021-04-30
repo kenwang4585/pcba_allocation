@@ -1,19 +1,20 @@
 FROM python:3
 
-MAINTAINER Kenwang
+LABEL maintainer="Kenwang"
 
-WORKDIR /pcba_allocation
+#WORKDIR /pcba_allocation
 
-#COPY Pipfile /pcba_allocation
-COPY Pipfile.lock ./
-COPY gunicorn.conf ./
-COPY .env /pcba_allocation
-#COPY ["Pipfile.lock","gunicorn.conf",".env"]
+COPY Pipfile .
+COPY Pipfile.lock .
+#COPY gunicorn.conf .
+COPY .env .
+#COPY [".env",".env"]
 RUN pip install pipenv
 RUN pipenv install --system --deploy --ignore-pipfile
 
 COPY . .
 
-CMD ["gunicorn", "wsgi:app", "-c", "gunicorn.conf"]
+EXPOSE 8083
 
-#CMD [ "python", "./wsgi.py" ]
+#CMD ["pipenv", "run","gunicorn","wsgi:app","-c", "gunicorn.conf"]
+CMD ["pipenv", "run","gunicorn", "-w", "2", "-b", "127.0.0.1:8083", "wsgi:app"]

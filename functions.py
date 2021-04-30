@@ -1149,6 +1149,21 @@ def read_supply_data(f_supply):
 
     return df_scr, df_oh, df_transit, df_sourcing
 
+def patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit, df_sourcing):
+    """
+    This is a patch to ensure the qty/number columns in those data are integer format,
+    just in case a string formatted data is input by user without notice.
+    """
+    df_scr.loc[:,'quantity']=df_scr.quantity.astype(int)
+    df_transit.loc[:, 'In-transit_quantity'] = df_transit['In-transit_quantity'].astype(int)
+    df_oh.loc[:, 'OH'] = df_oh.OH.astype(int)
+    df_sourcing.loc[:, 'Split'] = df_sourcing.Split.astype(int)
+    df_sourcing.loc[:, 'Transit_time'] = df_sourcing.Transit_time.astype(int)
+
+    return df_scr, df_oh, df_transit, df_sourcing
+
+
+
 def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     """
     Limit BU based on user input for allocation

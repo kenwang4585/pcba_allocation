@@ -2,9 +2,9 @@ from sqlalchemy import create_engine
 import pandas as pd
 import os
 
-
-engine = create_engine(os.getenv('DB_URI'))
+engine = create_engine('sqlite:///' + os.getcwd() + os.getenv('DB_URI'))
 #print(engine.table_names())
+
 
 def read_table(table_name,columns='*',show_last=False,criteria_string=None,records_limit=None):
     '''从表中按条件读取数据'''
