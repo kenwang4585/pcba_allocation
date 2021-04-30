@@ -1431,6 +1431,10 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
             if org in sourcing_rules_tan.keys():
                 df_scr.loc[ind, 'Sourcing_split'] = sourcing_rules_tan[org]
 
+    # exceptions - if all fulfilled
+    if blg_summary_after_allocation=={}:
+        df_scr.loc[:,'Blg_gap_final']=None
+
     # make up the blg_gap_split,blg_gap_final,and blg_recovery
     for row in df_scr.itertuples():
         #print(row)
