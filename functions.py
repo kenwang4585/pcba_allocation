@@ -1068,6 +1068,18 @@ def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_
 
     write_data_to_excel(output_path, data_to_write)
 
+    # write the output file for sharing - without backlog sheet
+    """
+    output_path = os.path.join(base_dir_output, output_filename)
+    data_to_write = {'pcba_allocation': df_scr,
+                     'backlog-ranked': df_3a4,
+                     'in-transit': df_transit,
+                     'sourcing-rule': df_sourcing,
+                     'tan-group': df_grouping,
+                     'transit_time_from_sourcing_rule': df_transit_time}
+
+    write_data_to_excel(output_path, data_to_write)
+    """
     return output_filename
 
 def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
@@ -1881,7 +1893,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     #qty_col = 'C_UNSTAGED_QTY'
     qty_col = 'C_UNSTAGED_QTY'
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys(),qty_col=qty_col)
-
+    #print(blg_dic_tan[''])
     # pivot df_oh and versionless the TAN
     df_oh = df_oh.pivot_table(index=['DF_site', 'TAN'], values='OH', aggfunc=sum)
     df_oh=change_pn_to_versionless(df_oh,pn_col='TAN')

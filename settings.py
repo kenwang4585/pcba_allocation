@@ -17,6 +17,7 @@ if getpass.getuser()=='ubuntu': # if it's on crate server
     base_dir_logs = '/home/ubuntu/logs'
     base_dir_trash = '/home/ubuntu/trash_file'
     base_dir_share=os.path.join(os.getcwd(), 'share_file')
+    base_dir_db = '/home/ubuntu/database'
 else:
     base_dir_output = os.path.join(os.getcwd(),'output_file')
     base_dir_upload = os.path.join(os.getcwd(),'upload_file')
@@ -24,6 +25,7 @@ else:
     base_dir_logs = os.path.join(os.getcwd(), 'logs')
     base_dir_trash= os.path.join(os.getcwd(), 'trash_file')
     base_dir_share=os.path.join(os.getcwd(), 'share_file')
+    base_dir_db = os.path.join(os.getcwd(), 'database')
 
 output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','distinct_po_filter', 'PRODUCT_ID',
            'BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',

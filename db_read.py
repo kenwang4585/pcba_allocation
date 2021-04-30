@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 import pandas as pd
 import os
+from settings import base_dir_db
 
-engine = create_engine('sqlite:///' + os.getcwd() + os.getenv('DB_URI'))
+engine = create_engine('sqlite:///' + base_dir_db + os.getenv('DB_URI'))
 #print(engine.table_names())
 
 

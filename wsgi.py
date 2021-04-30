@@ -515,7 +515,7 @@ def allocation_admin():
     else:
         http_scheme = 'https'
 
-    if login_user!='kwang2':
+    if login_user!='unknown':
         add_user_log(user=login_user, location='Admin', user_action='Visit - trying', summary='')
         log_msg='\n\n[' + login_user + '] attempting access ADMIN ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
         log_msg=log_msg + '\n' + str(request.headers)
