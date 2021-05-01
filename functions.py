@@ -9,8 +9,49 @@ from smartsheet_handler import SmartSheetClient
 from sending_email import *
 from db_read import read_table
 import time
-import pprint
+from functools import wraps
 
+def add_log_txt(msg=''):
+    with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
+        file_object.write(msg)
+
+def write_log_time_spent(f):
+    """
+    A decorator to write function time spent logs
+    """
+    @wraps(f)
+    def wrapTheFunction(*args, **kwargs):
+        start=time.time()
+        result = f(*args, **kwargs)
+        end=time.time()
+        time_spent_second=round(end-start,1)
+        func_name = f.__name__
+        msg='\n' + str(time_spent_second) + ' sec: ' + func_name
+        print(msg)
+
+        with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
+            file_object.write(msg)
+
+        return result
+
+    return wrapTheFunction
+
+# example decorator - 带参数的装饰器
+def logit(logfile='out.log'):
+    def logging_decorator(func):
+        @wraps(func)
+        def wrapped_function(*args, **kwargs):
+            log_string = func.__name__ + " was called"
+            print(log_string)
+            # 打开logfile，并写入内容
+            with open(logfile, 'a') as opened_file:
+                # 现在将日志打到指定的logfile
+                opened_file.write(log_string + '\n')
+            return func(*args, **kwargs)
+        return wrapped_function
+    return logging_decorator
+
+#@write_log_time_spent
 def get_packed_or_cancelled_ss_from_3a4(df_3a4):
     """
     Get the fully packed or canceleld SS from 3a4 - for deleting exceptional priority smartsheet purpose.
@@ -26,7 +67,6 @@ def get_packed_or_cancelled_ss_from_3a4(df_3a4):
     ss_cancelled_or_packed_3a4=ss_cancelled.tolist()+ss_packed_not_cancelled.tolist()
 
     return ss_cancelled_or_packed_3a4
-
 
 
 def get_file_info_on_drive(base_path,keep_hours=100):
@@ -65,7 +105,7 @@ def get_file_info_on_drive(base_path,keep_hours=100):
 
     return df_file_info
 
-
+@write_log_time_spent
 def read_backlog_priority_from_smartsheet(df_3a4,login_user):
     '''
     Read backlog priorities from smartsheet; remove SS showing packed/cancelled, or created by self but disappear from 34(if the org/BU also exist in 3a4.);
@@ -111,6 +151,7 @@ def read_backlog_priority_from_smartsheet(df_3a4,login_user):
 
     return ss_exceptional_priority,df_removal
 
+@write_log_time_spent
 def remove_priority_ss_from_smtsheet_and_notify(df_removal,login_user,sender='APJC DFPM'):
     """
     Remove the packed/cancelled SS from priority smartsheet and send email to corresponding people for whose SS are removed from the priority smartsheet
@@ -138,7 +179,7 @@ def remove_priority_ss_from_smtsheet_and_notify(df_removal,login_user,sender='AP
                                          removal_ss_details=df_removal.values,
                                          user=login_user)
 
-
+@write_log_time_spent
 def read_tan_group_mapping_from_smartsheet():
     '''
     Read TAN group mapping and tan-group sourcing from smartsheet; change to version during processing.
@@ -171,7 +212,7 @@ def read_tan_group_mapping_from_smartsheet():
 
     return df_grouping, tan_group, tan_group_sourcing
 
-
+@write_log_time_spent
 def read_exceptional_intransit_from_smartsheet(pcba_site):
     '''
     Read the exceptional in transit data from smartsheet for TAN shipping to other partner (like FOL to FGU)
@@ -194,7 +235,7 @@ def read_exceptional_intransit_from_smartsheet(pcba_site):
     return df_smart
 
 
-
+@write_log_time_spent
 def change_supply_to_versionless_and_addup_supply(df, org_col='planningOrg', pn_col='TAN'):
     """
     Change PN in supply or OH df into versionless. Add up the qty into the versionless PN.
@@ -237,7 +278,7 @@ def change_supply_to_versionless_and_addup_supply(df, org_col='planningOrg', pn_
 
     return df
 
-
+@write_log_time_spent
 def change_pn_to_versionless(df, pn_col='TAN'):
     """
     Change PN to versionless.
@@ -254,6 +295,7 @@ def change_pn_to_versionless(df, pn_col='TAN'):
 
     return df
 
+@write_log_time_spent
 def change_pn_to_group_number(df,tan_group,pn_col='TAN'):
     """
     Change PN to group for those with a group mapping
@@ -264,7 +306,7 @@ def change_pn_to_group_number(df,tan_group,pn_col='TAN'):
     return df
 
 
-
+@write_log_time_spent
 def add_up_supply_by_pn(df,org_col='planningOrg', pn_col='TAN'):
     """
     Add up qty (in pivoted format) for supply, OH, transit, etc.
@@ -300,6 +342,7 @@ def add_up_supply_by_pn(df,org_col='planningOrg', pn_col='TAN'):
 
     return df
 
+@write_log_time_spent
 def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
     """
     Read the transit pad from the sourcing rules. Only pick the shortest LT which is air. For 0 transit, change it to 1.
@@ -322,7 +365,6 @@ def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
     return transit_time,df_transit_time
 
 
-
 def update_date_with_transit_pad(x, y, transit_time, pcba_site):
     """
     offset transit time to a given date column
@@ -336,7 +378,7 @@ def update_date_with_transit_pad(x, y, transit_time, pcba_site):
 
 
 
-
+@write_log_time_spent
 def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
     """
     Generate the BOM usage file from the FLB_TAN col
@@ -386,7 +428,7 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
 
     return df_order_bom_from_flb
 
-
+@write_log_time_spent
 def update_order_bom_to_3a4(df_3a4, df_order_bom):
     """
     Add PN into 3a4 based on BOM
@@ -418,7 +460,7 @@ def update_order_bom_to_3a4(df_3a4, df_order_bom):
 
     return df_3a4
 
-
+@write_log_time_spent
 def created_supply_dict_per_scr(df_scr):
     """
     create supply dict based on scr
@@ -450,7 +492,7 @@ def created_supply_dict_per_scr(df_scr):
 
     return supply_dic_tan
 
-
+@write_log_time_spent
 def created_oh_dict_per_df_oh(df_oh):
     """
     (Also used for transit eta close dict)create OH dict based on DF OH (excluding PCBA site and only consider OH>0 items)
@@ -468,7 +510,7 @@ def created_oh_dict_per_df_oh(df_oh):
 
     return oh_dic_tan
 
-
+@write_log_time_spent
 def create_transit_dict_per_df_transit(df_transit):
     """
     Create transit dict based on df_transit_eta_late.
@@ -494,7 +536,7 @@ def create_transit_dict_per_df_transit(df_transit):
 
     return transit_dic_tan
 
-
+@write_log_time_spent
 def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan,qty_col='C_UNSTAGED_QTY'):
     """
     create backlog dict for selected tan list from the sorted 3a4 df (considered order prioity and rank)
@@ -513,7 +555,7 @@ def create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, tan,qty_col='C_UNSTA
 
     return blg_dic_tan
 
-
+@write_log_time_spent
 def allocate_supply_per_supply_and_blg_dic_ver_aggregated_blg(supply_dic_tan, blg_dic_tan):
     """
     allocate supply based on supply dict and backlog dict
@@ -591,6 +633,7 @@ def allocate_supply_per_supply_and_blg_dic_ver_aggregated_blg(supply_dic_tan, bl
 
     return supply_dic_tan_allocated,blg_dic_tan
 
+@write_log_time_spent
 def allocate_supply_per_supply_and_blg_dic(supply_dic_tan, blg_dic_tan):
     """
     allocate supply based on supply dict and backlog dict
@@ -689,7 +732,7 @@ def aggregate_allocation_for_each_date(a, date_supply_agg):
 
     return date_supply_agg
 
-
+@write_log_time_spent
 def aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated):
     """
     针对每一个tan按照每一个日期将分配的数量按照org汇总(引用函数aggregate_allocation_for_each_date)
@@ -706,7 +749,7 @@ def aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated):
 
     return supply_dic_tan_allocated_agg
 
-
+@write_log_time_spent
 def fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan):
     """
     Fulfill the backlog per DF site based on the DF site OH; deduct the backlog qty accordingly.
@@ -747,7 +790,7 @@ def fulfill_backlog_by_oh(oh_dic_tan, blg_dic_tan):
 
     return blg_dic_tan
 
-
+@write_log_time_spent
 def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_allocated_agg, pcba_site):
     """
     Add up the allocation results to scr and create the final output file
@@ -784,7 +827,7 @@ def add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_alloc
 
     return df_scr
 
-
+@write_log_time_spent
 def extract_bu_pf_from_scr(df_scr,tan_group):
     """
     Versionless the PN and extract the BU info from original scr before pivoting
@@ -920,6 +963,7 @@ def ss_ranking_overall_new_december(df_3a4, ss_exceptional_priority, ranking_col
 
     return df_3a4
 
+@write_log_time_spent
 def ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
     """
     根据priority_cat,OSSD,FCD, REVENUE_NON_REVENUE,C_UNSTAGED_QTY,按照ranking_col的顺序对SS进行排序。最后放MFG_HOLD订单.
@@ -1018,7 +1062,6 @@ def ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, ord
 
     return df_3a4
 
-
 def write_data_to_excel(output_file,data_to_write):
     '''
     Write the df into excel files as different sheets
@@ -1035,6 +1078,7 @@ def write_data_to_excel(output_file,data_to_write):
 
     writer.save()
 
+@write_log_time_spent
 def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_transit_time,df_sourcing,df_grouping,login_user):
     # save the scr output file and 3a4 to excel
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
@@ -1082,6 +1126,7 @@ def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_
     """
     return output_filename
 
+@write_log_time_spent
 def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
     """
     Fulfill the backlog per DF site based on the DF site transit that is ETA far out; deduct the backlog qty accordingly.
@@ -1138,7 +1183,7 @@ def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
 
     return blg_dic_tan, transit_dic_tan
 
-
+@write_log_time_spent
 def read_supply_data(f_supply):
     """
     Read source data from excel files
@@ -1161,6 +1206,7 @@ def read_supply_data(f_supply):
 
     return df_scr, df_oh, df_transit, df_sourcing
 
+@write_log_time_spent
 def patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit, df_sourcing):
     """
     This is a patch to ensure the qty/number columns in those data are integer format,
@@ -1175,7 +1221,7 @@ def patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit, df_sourcin
     return df_scr, df_oh, df_transit, df_sourcing
 
 
-
+@write_log_time_spent
 def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     """
     Limit BU based on user input for allocation
@@ -1186,7 +1232,7 @@ def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
 
     return df_3a4, df_scr
 
-
+@write_log_time_spent
 def check_3a4_input_file_format(file_path_3a4,col_3a4_must_have):
     """
     Check if the input files contain the right columns
@@ -1202,7 +1248,7 @@ def check_3a4_input_file_format(file_path_3a4,col_3a4_must_have):
 
     return msg_3a4, msg_3a4_option
 
-
+@write_log_time_spent
 def check_supply_input_file_format(file_path_supply,col_transit_must_have,col_oh_must_have,col_scr_must_have,sheet_transit,sheet_oh,sheet_scr):
     """
     Check if the input files contain the right columns
@@ -1232,7 +1278,7 @@ def check_supply_input_file_format(file_path_supply,col_transit_must_have,col_oh
     return sheet_name_msg, msg_transit,msg_oh,msg_scr
 
 
-
+@write_log_time_spent
 def redefine_addressable_flag_main_pid_version(df_3a4):
     '''
     Updated on Oct 27, 2020 to leveraging existing addressable definition of Y, and redefine the NO to MFG_HOLD,
@@ -1278,7 +1324,6 @@ def redefine_addressable_flag_main_pid_version(df_3a4):
     return df_3a4
 
 
-
 def calculate_x_days_target_ssd_backlog(df_3a4,days=7):
     """
     Calculate the backlog per target SSD by 7/14/21 days as needed.
@@ -1296,7 +1341,6 @@ def calculate_x_days_target_ssd_backlog(df_3a4,days=7):
         backlog_target_ssd[key]=value
 
     return backlog_target_ssd
-
 
 def calculate_x_weeks_allocation(df_scr,pcba_site, wk='wk1'):
     """
@@ -1342,6 +1386,7 @@ def calculate_x_weeks_allocation(df_scr,pcba_site, wk='wk1'):
 
     return tan_allocation_wk
 
+@write_log_time_spent
 def update_blg_recovery(gap_before,gap_after,blg_recovery):
     """
     Update the blg_recovery col
@@ -1354,7 +1399,8 @@ def update_blg_recovery(gap_before,gap_after,blg_recovery):
                 return 'No recovery'
             else:
                 return blg_recovery
-    
+
+@write_log_time_spent
 def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,blg_summary_before_allocation,blg_summary_after_allocation,sourcing_rules,org_split):
     """
     Add back the BU, backlog,oh, intransit info into the final SCR with allocation result;
@@ -1485,7 +1531,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
 
 
 
-
+@write_log_time_spent
 def send_allocation_result(email_msg,share_filename,login_user,login_name):
     """
     Send the allocation result to defined users by email
@@ -1545,7 +1591,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     os.remove(output_name)
 
 
-
+@write_log_time_spent
 def remove_unavailable_sourcing (df_3a4,sourcing_rule_list, tan_group_sourcing):
     """
     Removed the unavaialble sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
@@ -1560,7 +1606,7 @@ def remove_unavailable_sourcing (df_3a4,sourcing_rule_list, tan_group_sourcing):
 
     return df_3a4
 
-
+@write_log_time_spent
 def read_subscription_data(org,bu_list):
     """
     Read the subscrition db for emails
@@ -1584,7 +1630,7 @@ def read_subscription_data(org,bu_list):
 
     return recipients
 
-
+@write_log_time_spent
 def summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg):
     """
     Summarize by site the total allocation qty by TAN, by DF site
@@ -1650,6 +1696,7 @@ def allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg,org_split)
     return supply_dic_tan_allocated_agg_edi_allocated
 
 
+@write_log_time_spent
 def aggregate_blg_and_apply_split(blg_dic_tan,sourcing_rules):
     """
     Below aggregate the blg_dic_tan by adjacing same org PO (keep the ranking sequence even aggregation);
@@ -1685,6 +1732,7 @@ def aggregate_blg_and_apply_split(blg_dic_tan,sourcing_rules):
 
     return blg_dic_tan
 
+@write_log_time_spent
 def apply_split_on_blg_dic_tan(blg_dic_tan,sourcing_rules):
     """
     Below aggregate the blg_dic_tan by adjacing same org PO (keep the ranking sequence even aggregation);
@@ -1715,7 +1763,7 @@ def apply_split_on_blg_dic_tan(blg_dic_tan,sourcing_rules):
     return blg_dic_tan
 
 
-
+@write_log_time_spent
 def summarize_total_blg_qty_need_scr_allocation(blg_dic_tan):
     """
     Summarize the total blg_qty (already considered split) for each TAN/ORG - to be used in final report
@@ -1738,6 +1786,7 @@ def summarize_total_blg_qty_need_scr_allocation(blg_dic_tan):
 
     return blg_summary
 
+
 def update_sourcing_split(x, y, exceptional_split):
     """
     Update split based on exceptional_sourcing
@@ -1748,6 +1797,7 @@ def update_sourcing_split(x, y, exceptional_split):
     else:
         return y
 
+@write_log_time_spent
 def update_exceptional_sourcing_split(df_sourcing,pcba_site):
     """
     Read exceptional sourcing split from smartsheet, and update the value into df_sourcing
@@ -1781,6 +1831,7 @@ def update_exceptional_sourcing_split(df_sourcing,pcba_site):
 
     return df_sourcing
 
+@write_log_time_spent
 def collect_available_sourcing(df_sourcing):
     """
     Generate a list that contains all the available sourcings: [DF_org-TAN(verionless)].
@@ -1808,7 +1859,7 @@ def collect_available_sourcing(df_sourcing):
     return sourcing_rule_list,sourcing_rules
 
 
-
+#@write_log_time_spent
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
     """
     Main program to process the data and PCBA allocation.

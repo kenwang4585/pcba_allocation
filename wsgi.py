@@ -42,10 +42,12 @@ def allocation_run():
     #print(request.url)
 
     if form.validate_on_submit():
+        log_msg_main = []
         start_time = pd.Timestamp.now()
         print('start to run: {}'.format(start_time.strftime('%Y-%m-%d %H:%M')))
-        log_msg = []
-        log_msg.append('\n\n[' + login_user + '] ' + start_time.strftime('%Y-%m-%d %H:%M'))
+
+        log_msg='\n\n[' + login_user + '] ' + start_time.strftime('%Y-%m-%d %H:%M')
+        add_log_txt(msg=log_msg)
         #log_msg.append('User info: ' + request.headers.get('User-agent'))
 
         # 通过条件判断及邮件赋值，开始执行任务
@@ -55,8 +57,9 @@ def allocation_run():
         f_supply= form.file_supply.data
         f_3a4 = form.file_3a4.data
         ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
-        log_msg.append('PCBA_SITE: ' + pcba_site)
-        log_msg.append('BU: ' + bu)
+        log_msg_main.append(pcba_site + ' ' + bu)
+        log_msg = '\n' + pcba_site + ' ' + bu
+        add_log_txt(msg=log_msg)
 
         if f_supply==None:
             msg = 'Pls upload the supply file! Reading directly from SCDx target to live from 5/5.'
@@ -82,8 +85,8 @@ def allocation_run():
         if ext_3a4 != '.csv':
             msg='3a4 file only accepts CSV formats here!'
             flash(msg, 'warning')
-            summary = 'Wong 3a4 formats: {}'.format(ext_3a4)
-            add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
+            #summary = 'Wong 3a4 formats: {}'.format(ext_3a4)
+            #add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
             return render_template('allocation_run.html', form=form, user=login_name)
 
@@ -97,7 +100,9 @@ def allocation_run():
             size_3a4=str(round(size_3a4/(1024*1024),1)) + 'Mb'
         else:
             size_3a4 = str(int(size_3a4 / 1024)) + 'Kb'
-        log_msg.append('File 3a4: ' + f_3a4.filename + '(size: ' + size_3a4 + ')')
+        log_msg_main.append(f_3a4.filename + '(size: ' + size_3a4 + ')')
+        log_msg = '\nFile 3a4: ' + f_3a4.filename + '(size: ' + size_3a4 + ')'
+        add_log_txt(msg=log_msg)
 
         if f_supply!=None:
             size_supply=os.path.getsize(file_path_supply)
@@ -105,9 +110,13 @@ def allocation_run():
                 size_supply=str(round(size_supply/(1024*1024),1)) + 'Mb'
             else:
                 size_supply = str(int(size_supply / 1024)) + 'Kb'
-            log_msg.append('File supply: ' + f_supply.filename + '(size: ' + size_supply + ')')
+            log_msg_main.append(f_supply.filename + '(size: ' + size_supply + ')')
+            log_msg = '\nFile supply: ' + f_supply.filename + '(size: ' + size_supply + ')'
+            add_log_txt(msg=log_msg)
         else:
-            log_msg.append('File supply: directly download through API')
+            log_msg_main.append('Supply file directly download through API')
+            log_msg = '\nFile supply: directly download through API'
+            add_log_txt(msg=log_msg)
 
         # check data format
         msg_3a4, msg_3a4_option = check_3a4_input_file_format(file_path_3a4, col_3a4_must_have)
@@ -169,14 +178,15 @@ def allocation_run():
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)
             flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
-
-            finish_time = pd.Timestamp.now()
-            processing_time = round((finish_time - start_time).total_seconds() / 60, 1)
-            log_msg.append('Processing time: ' + str(processing_time) + ' min')
-            print('Finish run:',finish_time.strftime('%Y-%m-%d %H:%M'))
-
             # Write the log file
-            summary='; '.join(log_msg)
+            finish_time=pd.Timestamp.now()
+            processing_time = round((finish_time - start_time).total_seconds() / 60, 1)
+            msg='Total processing time:' + str(processing_time) + ' min'
+            log_msg_main.append(msg)
+            add_log_txt(msg)
+            print('\n' + msg + '\n')
+
+            summary='; '.join(log_msg_main)
             add_user_log(user=login_user,location='Allocation',user_action='Make allocation',summary=summary)
 
         except Exception as e:
@@ -187,17 +197,14 @@ def allocation_run():
                 print('')
 
             traceback.print_exc()
-            log_msg.append(str(e))
+            log_msg_main.append(str(e))
             flash('Error encountered: {}'.format(str(e)),'warning')
             #Write the log file
-            summary = '; '.join(log_msg)
+            summary = '; '.join(log_msg_main)
             add_user_log(user=login_user, location='Allocation', user_action='Make allocation - ERROR', summary=summary)
 
-            # write details to error_log.txt
-            log_msg='\n'.join(log_msg)
-            with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
-                file_object.write(log_msg)
-            traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+            # write details to log_txt.txt
+            traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
 
         # clear memory
         try:
@@ -281,11 +288,11 @@ def allocation_result():
                 # Write the log file
                 add_user_log(user=login_user, location='Download', user_action='Share file', summary=str(e))
 
-                # write details to error_log.txt
+                # write details to log_txt.txt
                 log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
                     file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
 
             flash(msg, 'success')
             return redirect(url_for('allocation_result', _external=True, _scheme=http_scheme, viewarg1=1))
@@ -515,11 +522,11 @@ def allocation_admin():
     else:
         http_scheme = 'https'
 
-    if login_user!='kwang2':
+    if login_user!='unknown':
         add_user_log(user=login_user, location='Admin', user_action='Visit - trying', summary='')
         log_msg='\n\n[' + login_user + '] attempting access ADMIN ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
         log_msg=log_msg + '\n' + str(request.headers)
-        with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+        with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
             file_object.write(log_msg)
 
         raise ValueError
@@ -642,11 +649,11 @@ def allocation_datasource():
                 traceback.print_exc()
                 add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-POC', summary='Error: [' + pcba_site_poc + '] ' + str(e))
 
-                # write details to error_log.txt
+                # write details to log_txt.txt
                 log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
                     file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
 
                 return redirect(url_for('allocation_datasource', _external=True, _scheme=http_scheme, viewarg1=1))
         elif submit_download_scdx_prod:
@@ -676,11 +683,11 @@ def allocation_datasource():
                 flash(msg, 'warning')
                 add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-Prod', summary='Error: [' + pcba_site_prod + '] ' + str(e))
 
-                # write details to error_log.txt
+                # write details to log_txt.txt
                 log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
                     file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
 
                 return redirect(url_for('allocation_datasource', _external=True, _scheme=http_scheme, viewarg1=1))
 
@@ -741,11 +748,11 @@ def scdx_api():
                 traceback.print_exc()
                 add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-POC', summary='Error: [' + pcba_site_poc + '] ' + str(e))
 
-                # write details to error_log.txt
+                # write details to log_txt.txt
                 log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
                     file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
 
                 return redirect(url_for('scdx_api', _external=True, _scheme=http_scheme, viewarg1=1))
         elif submit_download_scdx_prod:
@@ -780,11 +787,11 @@ def scdx_api():
                 flash(msg, 'warning')
                 add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-Prod', summary='Error: [' + pcba_site_prod + '] ' + str(e))
 
-                # write details to error_log.txt
+                # write details to log_txt.txt
                 log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+') as file_object:
+                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
                     file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'error_log.txt'), 'a+'))
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
 
                 return redirect(url_for('scdx_api', _external=True, _scheme=http_scheme, viewarg1=1))
 
