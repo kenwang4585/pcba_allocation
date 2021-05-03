@@ -612,7 +612,7 @@ def exceptional_priority():
     login_name = request.headers.get('Oidc-Claim-Fullname')
     login_title = request.headers.get('Oidc-Claim-Title')
     if login_user == None:
-        login_user = 'unknown_'
+        login_user = 'unknown'
         login_name = 'unknown'
         login_title = 'unknown'
         http_scheme = 'http'
@@ -642,7 +642,7 @@ def exceptional_priority():
             if file_upload_3a4 == None:
                 msg = 'Pls select the 3a4 file to upload!'
                 flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority"))
+                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
             else:
                 file_path_3a4 = os.path.join(base_dir_upload,
                                                   login_user + '_' + secure_filename(file_upload_3a4.filename))
@@ -657,14 +657,14 @@ def exceptional_priority():
             except:
                 msg = '3a4 format error! Ensure following columns are included: {}'.format(col_3a4)
                 flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority"),_scheme=http_scheme)
+                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
 
             removed_ss=remove_packed_exceptional_priority_ss(df_3a4,login_user)
 
             msg = '{} SO_SS are removed from the database due to packed/cancelled.'.format(len(removed_ss))
             flash(msg, 'success')
 
-            return redirect(url_for("exceptional_priority"),_scheme=http_scheme)
+            return redirect(url_for("exceptional_priority",_scheme=http_scheme))
         elif submit_upload_template:
             file_upload_template = form.file_upload_template.data
 
@@ -672,7 +672,7 @@ def exceptional_priority():
             if file_upload_template==None:
                 msg='Pls select the file to upload!'
                 flash(msg,'warning')
-                return redirect(url_for("exceptional_priority"))
+                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
             else:
                 file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
                 file_upload_template.save(file_path_template)
@@ -702,7 +702,7 @@ def exceptional_priority():
             except:
                 msg = 'Format error! Ensure following columns are included: {}'.format(col_template)
                 flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority"),_scheme=http_scheme)
+                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
 
             # remove all data for user and write in new data from the template
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
