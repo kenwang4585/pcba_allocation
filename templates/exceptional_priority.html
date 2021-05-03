@@ -1,0 +1,77 @@
+
+<!-- Ken wang, May, 2021 -->
+
+{% extends 'allocation_base.html' %}
+
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        <br>
+
+
+        <table style="border-collapse:collapse; background-color: whitesmoke"   border="0" cellspacing="0px" align="center" width="80%">
+            <tr>
+                <td width="50%" align="center">
+                    <h4>Remove packed/cancelled orders base on 3a4</h4>
+                </td>
+                <td width="50%" align="left">
+                    <br>
+                    {{ form.file_upload_3a4.label }}<br>
+                    {{ form.file_upload_3a4 }}<br>
+                    {{ form.submit_remove_packed }}
+                    <br><br>
+                </td>
+            </tr>
+        </table>
+        <br><br>
+
+        <table style="border-collapse:collapse; background-color: whitesmoke"   border="0" cellspacing="0px" align="center" width="80%">
+            <tr>
+                <td width="50%" align="center">
+                    <h4>Replace my data with this template</h4>
+                </td>
+                <td width="50%" align="left">
+                    <br>
+                    {{ form.file_upload_template.label }}<br>
+                    {{ form.file_upload_template }}<br>
+                    {{ form.submit_upload_template }}
+                    <br><br>
+                </td>
+            </tr>
+        </table>
+        <br><br>
+
+
+        <table style="border-collapse:collapse; "   border="0" cellspacing="0px" align="center" width="80%">
+            <tr>
+                <td align="center">
+                    {{ form.submit_show_all }} &emsp; {{ form.submit_show_me }}  &emsp; {{ form.submit_download }}
+                </td>
+            </tr>
+        </table>
+
+        <br>
+        <table style="border-collapse:collapse"  border="1" cellspacing="0px" align="center" width="80%">
+            <tr>
+                {% for col in db_data_header %}
+                    <td align="center"><span style="font-size: small">&nbsp;&nbsp;&nbsp;<strong>{{col}}</strong></span></td>
+                {% endfor %}
+            </tr>
+            {% if db_data_value|length>0 %}
+                {% for row in db_data_value %}
+                    <tr>
+                        {% for col in row %}
+                            <td align="center"><span style="font-size: small">&nbsp;&nbsp;&nbsp;{{col}}</span></td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </table>
+    </form>
+
+{% endblock %}
+
+
+{% block empty_space %}
+{% endblock %}

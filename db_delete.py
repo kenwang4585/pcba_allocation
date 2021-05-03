@@ -1,6 +1,6 @@
 from flask_settings import *
 
-def delete_email(table_name,id_list):
+def delete_table_data(table_name,id_list):
     '''
     delete a list of records from a defined table
     '''

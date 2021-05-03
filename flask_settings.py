@@ -66,27 +66,16 @@ class ScdxAPIForm(FlaskForm):
                             render_kw={'placeholder':'put in PCBA org name here'})
     submit_download_supply_prod = SubmitField('Download')  # download from db
 
+class ExceptionalPriorityForm(FlaskForm):
+    file_upload_template = FileField('Upload template (.xlsx):')
+    submit_upload_template = SubmitField('UPLOAD')
 
-# dummy form for config - temp
-class ConfigForm(FlaskForm):
-    # Below for ML control panel
-    data_source=RadioField('Choose backlog data source:',
-                           choices=[('db','3A4 backlog from Database(N/A)'),('file','3A4 backlog from file upload')],
-                           validators=[DataRequired()],
-                           default='file')
+    file_upload_3a4 = FileField('Upload 3a4 file (.csv):')
+    submit_remove_packed = SubmitField('Remove packed')
 
-    file=FileField('Upload 3A4 file (.xlsx, .csv)',validators=[FileAllowed(['csv','xlsx']),DataRequired()])
-    org_selection=StringField("Input ORGs (sep by '/'):",validators=[DataRequired()])
-
-    email_to=SelectField('Config result sharing options:',
-                        choices=[('test_run','Test: No email & no DB update'),
-                                ('to_me','Email result to me only'),
-                                ('to_all','Email result to default group')],
-
-                        default='to_all')
-    user_id=StringField('UserID:',validators=[DataRequired()])
-    submit=SubmitField('RUN CONFIG TOOL')
-    to_feedback=SubmitField('Input validation/ Report error') # redirect to the CM feedback page
+    submit_show_me = SubmitField('Show my record')
+    submit_show_all = SubmitField('Show all record')
+    submit_download = SubmitField('Download my record')
 
 
 # Database tables
@@ -111,5 +100,18 @@ class Subscription(db.Model):
     Email=db.Column(db.String(30))
     PCBA_Org=db.Column(db.String())
     BU=db.Column(db.String(17))
+    Added_by=db.Column(db.String(10))
+    Added_on=db.Column(db.Date)
+
+class ExceptionPriority(db.Model):
+    '''
+    Exceptional priority SS db table
+    '''
+    id=db.Column(db.Integer,primary_key=True)
+    SO_SS=db.Column(db.String(30))
+    ORG=db.Column(db.String(3))
+    BU=db.Column(db.String(12))
+    Ranking=db.Column(db.String())
+    Comments=db.Column(db.String(100))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)

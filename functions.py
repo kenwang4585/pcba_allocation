@@ -7,7 +7,8 @@ import math
 from settings import *
 from smartsheet_handler import SmartSheetClient
 from sending_email import *
-from db_read import read_table
+from db_read import *
+from db_delete import *
 import time
 from functools import wraps
 
@@ -56,15 +57,25 @@ def get_packed_or_cancelled_ss_from_3a4(df_3a4):
     """
     Get the fully packed or canceleld SS from 3a4 - for deleting exceptional priority smartsheet purpose.
     """
-    ss_cancelled=df_3a4[df_3a4.ADDRESSABLE_FLAG=='PO_CANCELLED'].SO_SS.unique()
-
+    a=time.time()
+    ss_cancelled=df_3a4[(df_3a4.ORDER_HOLDS.str.contains('Cancellation', case=False)) & (df_3a4.ORDER_HOLDS.notnull())].SO_SS.unique()
+    b=time.time()
+    print('1:', b-a)
     ss_with_po_packed=df_3a4[df_3a4.PACKOUT_QUANTITY=='Packout Completed'].SO_SS.unique()
+    c=time.time()
+    print('2:', c-b)
     ss_wo_po_packed = df_3a4[df_3a4.PACKOUT_QUANTITY != 'Packout Completed'].SO_SS.unique() # some PO may not be packed in one SS
+    d=time.time()
+    print('3:', d-c)
     ss_fully_packed=np.setdiff1d(ss_with_po_packed,ss_wo_po_packed)
-
+    e=time.time()
+    print('4:', e-d)
     ss_packed_not_cancelled=np.setdiff1d(ss_fully_packed,ss_cancelled)
-
+    f=time.time()
+    print('5:', f-e)
     ss_cancelled_or_packed_3a4=ss_cancelled.tolist()+ss_packed_not_cancelled.tolist()
+    g=time.time()
+    print('6:', g-f)
 
     return ss_cancelled_or_packed_3a4
 
@@ -106,38 +117,44 @@ def get_file_info_on_drive(base_path,keep_hours=100):
     return df_file_info
 
 @write_log_time_spent
-def read_backlog_priority_from_smartsheet(df_3a4,login_user):
+def remove_packed_exceptional_priority_ss(df_3a4,login_user):
     '''
-    Read backlog priorities from smartsheet; remove SS showing packed/cancelled, or created by self but disappear from 34(if the org/BU also exist in 3a4.);
-     create and segregate to top priority and mid priority
-    :return:
+    Read backlog priorities from db; remove SS showing packed/cancelled, or created by self but disappear from 34(if the org/BU also exist in 3a4.);
     '''
-    # 从smartsheet读取backlog
-    token = os.getenv('ALLOCATION_TOKEN')
-    sheet_id = os.getenv('PRIORITY_ID')
-    proxies = None  # for proxy server
-    smartsheet_client = SmartSheetClient(token, proxies)
-    df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
+    # read exceptional priority from db
+    df_priority= read_table('exception_priority')
+    df_priority=df_priority[df_priority.Added_by==login_user].copy()
+    df_3a4=df_3a4[(df_3a4.BUSINESS_UNIT.isin(df_priority.BU.unique()))&(df_3a4.ORGANIZATION_CODE.isin(df_priority.ORG.unique()))]
 
-    # Identify SS not in df_3a4 that can be removed - SS created by self and is disappeared from 3a4 - if the 3a4 include the org and BU
-    df_smart_self=df_smart[df_smart['Created By']==login_user+'@cisco.com']
-    df_smart_w_org_bu_in_3a4 = df_smart_self[
-        (df_smart_self.ORG.isin(df_3a4.ORGANIZATION_CODE.unique())) & (df_smart_self.BU.isin(df_3a4.BUSINESS_UNIT.unique()))]
-    ss_not_in_3a4 = np.setdiff1d(df_smart_w_org_bu_in_3a4.SO_SS.values, df_3a4.SO_SS.values)
+    ss_not_in_3a4 = np.setdiff1d(df_priority.SO_SS.values, df_3a4.SO_SS.values)
 
     # SS showing as packed or cancelled in 3a4
     ss_cancelled_or_packed_3a4 = get_packed_or_cancelled_ss_from_3a4(df_3a4)
 
     # total ss to remove
-    df_removal = df_smart[(df_smart.SO_SS.isin(ss_cancelled_or_packed_3a4)) | (df_smart.SO_SS.isin(ss_not_in_3a4))]
+    df_removal = df_priority[(df_priority.SO_SS.isin(ss_cancelled_or_packed_3a4)) | (df_priority.SO_SS.isin(ss_not_in_3a4))]
+
+    # Remove from database
+    remove_priority_ss_from_db_and_email(df_removal, login_user, sender='PCBA allocation tool')
+
+    removed_ss=df_removal.SO_SS.values
+
+    return removed_ss
+
+@write_log_time_spent
+def read_and_create_exceptional_priority_dict():
+    '''
+    Read backlog priorities from db; create and segregate to top priority and mid priority
+    :return:
+    '''
+    # read exceptional priority from db
+    df_priority= read_table('exception_priority')
 
     # create the priority dict
-    df_smart.drop_duplicates('SO_SS', keep='last', inplace=True)
-    df_smart = df_smart[(df_smart.SO_SS.notnull()) & (df_smart.Ranking.notnull())]
     ss_exceptional_priority = {}
     priority_top = {}
     priority_mid = {}
-    for row in df_smart.itertuples():
+    for row in df_priority.itertuples():
         try: # in case error input of non-num ranking
             if float(row.Ranking)<4:
                 priority_top[row.SO_SS] = float(row.Ranking)
@@ -149,29 +166,20 @@ def read_backlog_priority_from_smartsheet(df_3a4,login_user):
         ss_exceptional_priority['priority_top'] = priority_top
         ss_exceptional_priority['priority_mid'] = priority_mid
 
-    return ss_exceptional_priority,df_removal
+    return ss_exceptional_priority
 
 @write_log_time_spent
-def remove_priority_ss_from_smtsheet_and_notify(df_removal,login_user,sender='APJC DFPM'):
+def remove_priority_ss_from_db_and_email(df_removal,login_user,sender='PCBA Allocation tool'):
     """
     Remove the packed/cancelled SS from priority smartsheet and send email to corresponding people for whose SS are removed from the priority smartsheet
     """
     if df_removal.shape[0]>0:
-        token = os.getenv('ALLOCATION_TOKEN')
-        sheet_id = os.getenv('PRIORITY_ID')
-        proxies = None  # for proxy server
-        smartsheet_client = SmartSheetClient(token, proxies)
+        delete_table_data('exception_priority', df_removal.id)
 
-        removal_row_id = df_removal.row_id.values.tolist()
-        removal_ss_email = list(set(df_removal['Created By'].values.tolist()))
-        if len(removal_row_id) > 0:
-            smartsheet_client.delete_row(sheet_id=sheet_id, row_id=removal_row_id)
-
-        to_address = removal_ss_email
-        to_address = to_address + [login_user+'@cisco.com']
-        bcc=['kwang2@cisco.com']
+        to_address = [login_user + '@cisco.com']
+        bcc=[super_user + '@cisco.com']
         html_template='priority_ss_removal_email.html'
-        subject='SS auto removal from exceptional priority smartsheet - by {}'.format(login_user)
+        subject='SS removal from exceptional priority database - by: {}'.format(login_user)
 
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
                                          embeded_filenames=None, sender=sender,bcc=bcc,
@@ -1916,13 +1924,12 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # redefine addressable flag
     df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
 
-
     # read smartsheet priorities
-    ss_exceptional_priority, df_removal = read_backlog_priority_from_smartsheet(df_3a4,login_user)
+    ss_exceptional_priority = read_and_create_exceptional_priority_dict()
 
     # Remove and send email notification for ss removal from exceptional priority smartsheet
-    if login_user not in ['unknown'] + [super_user]:
-        remove_priority_ss_from_smtsheet_and_notify(df_removal, login_user, sender='PCBA allocation tool')
+    #if login_user not in ['unknown'] + [super_user]:
+    #    remove_priority_ss_from_smtsheet_and_notify(df_removal, login_user, sender='PCBA allocation tool')
 
 
     # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)

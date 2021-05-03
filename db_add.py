@@ -37,20 +37,10 @@ def add_email_data(pcba_org, bu, email,login_user):
     #print('User log added')
 
 
-def add_data_from_file_initial():
+def add_exceptional_priority_data_from_template(df,login_user):
     '''
-    Add data from file: initial update
+    Add exceptional data
     '''
-    fname='/users/wangken/downloads/program_lo (2020-01-17).xlsx'
-
-
-    df = pd.read_excel(fname,parse_dates=['Date'])
-
-    print(df.columns)
-    print(df.shape)
-
-    #print(df_summary.LINE_CREATION_DATE)
-    df.loc[:, 'Date'] = df.Date.map(lambda x: x.date())
     df.fillna('',inplace=True)
 
     #df=df[['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PO_NUMBER','LINE_CREATION_DATE', 'OPTION_NUMBER',
@@ -59,16 +49,15 @@ def add_data_from_file_initial():
     df_data = df.values
 
     db.session.bulk_insert_mappings(
-                                    UserLog,
+                                    ExceptionPriority,
                                     [dict(
-                                        USER_NAME=row[0],
-                                        DATE=row[1],
-                                        START_TIME=row[2],
-                                        FINISH_TIME=row[3],
-                                        PROCESSING_TIME=row[4],
-                                        SELECTED_PROGRAMS=row[5],
-                                        EMAIL_TO_ONLY=row[6],
-                                        PROGRAM_LOG=row[7]
+                                        SO_SS=row[0],
+                                        ORG=row[1],
+                                        BU=row[2],
+                                        Ranking=row[3],
+                                        Comments=row[4],
+                                        Added_by=login_user,
+                                        Added_on=pd.Timestamp.now().date()
                                         )
                                      for row in df_data]
                                     )
