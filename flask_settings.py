@@ -68,15 +68,30 @@ class ScdxAPIForm(FlaskForm):
 
 class ExceptionalPriorityForm(FlaskForm):
     file_upload_template = FileField('Upload template (.xlsx):')
-    submit_upload_template = SubmitField('UPLOAD')
+    submit_upload_template = SubmitField('Upload')
 
     file_upload_3a4 = FileField('Upload 3a4 file (.csv):')
     submit_remove_packed = SubmitField('Remove packed')
 
-    submit_show_me = SubmitField('Show my record')
-    submit_show_all = SubmitField('Show all record')
-    submit_download = SubmitField('Download my record')
+    submit_show_me = SubmitField('Show my data')
+    submit_show_all = SubmitField('Show all data')
+    submit_download = SubmitField('Download my data')
 
+class ExceptionalSourcingSplitForm(FlaskForm):
+    file_upload_template = FileField('Upload template (.xlsx):')
+    submit_upload_template = SubmitField('Upload')
+
+    submit_show_me = SubmitField('Show my data')
+    submit_show_all = SubmitField('Show all data')
+    submit_download = SubmitField('Download my data')
+
+class TanGroupingForm(FlaskForm):
+    file_upload_template = FileField('Upload template (.xlsx):')
+    submit_upload_template = SubmitField('Upload')
+
+    submit_show_me = SubmitField('Show my data')
+    submit_show_all = SubmitField('Show all data')
+    submit_download = SubmitField('Download my data')
 
 # Database tables
 
@@ -112,6 +127,33 @@ class ExceptionPriority(db.Model):
     ORG=db.Column(db.String(3))
     BU=db.Column(db.String(12))
     Ranking=db.Column(db.String())
+    Comments=db.Column(db.String(100))
+    Added_by=db.Column(db.String(10))
+    Added_on=db.Column(db.Date)
+
+class ExceptionSourcingSplit(db.Model):
+    '''
+    Exceptional Sourcing split db table
+    '''
+    id=db.Column(db.Integer,primary_key=True)
+    DF_site=db.Column(db.String(3))
+    PCBA_site=db.Column(db.String(3))
+    BU=db.Column(db.String(12))
+    PF=db.Column(db.String(12))
+    TAN=db.Column(db.String(14))
+    Split=db.Column(db.String(3))
+    Comments=db.Column(db.String(100))
+    Added_by=db.Column(db.String(10))
+    Added_on=db.Column(db.Date)
+
+class TanGrouping(db.Model):
+    '''
+    Tan grouping db table
+    '''
+    id=db.Column(db.Integer,primary_key=True)
+    Group_name=db.Column(db.String(20))
+    TAN=db.Column(db.String(14))
+    DF=db.Column(db.String(27))
     Comments=db.Column(db.String(100))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)

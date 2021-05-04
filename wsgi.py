@@ -642,7 +642,7 @@ def exceptional_priority():
             if file_upload_3a4 == None:
                 msg = 'Pls select the 3a4 file to upload!'
                 flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
+                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
             else:
                 file_path_3a4 = os.path.join(base_dir_upload,
                                                   login_user + '_' + secure_filename(file_upload_3a4.filename))
@@ -657,14 +657,14 @@ def exceptional_priority():
             except:
                 msg = '3a4 format error! Ensure following columns are included: {}'.format(col_3a4)
                 flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
+                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
 
             removed_ss=remove_packed_exceptional_priority_ss(df_3a4,login_user)
 
             msg = '{} SO_SS are removed from the database due to packed/cancelled.'.format(len(removed_ss))
             flash(msg, 'success')
 
-            return redirect(url_for("exceptional_priority",_scheme=http_scheme))
+            return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
         elif submit_upload_template:
             file_upload_template = form.file_upload_template.data
 
@@ -672,7 +672,7 @@ def exceptional_priority():
             if file_upload_template==None:
                 msg='Pls select the file to upload!'
                 flash(msg,'warning')
-                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
+                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
             else:
                 file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
                 file_upload_template.save(file_path_template)
@@ -685,10 +685,10 @@ def exceptional_priority():
                 (df_exceptional_priority.SO_SS.isnull()) | (df_exceptional_priority.Ranking.isnull())]
             df_duplicated=df_exceptional_priority[df_exceptional_priority.duplicated('SO_SS')]
             if df_missing_value.shape[0]>0:
-                msg='Check your template! {} record not uploaded due to missing SO_SS or Ranking values!'.format(df_missing_value.shape[0])
+                msg='Check your template! {} record will not uploaded due to missing SO_SS or Ranking values!'.format(df_missing_value.shape[0])
                 flash(msg,'warning')
             if df_duplicated.shape[0] > 0:
-                msg = 'Check your template! Following SO_SS are duplicated and only the last record was uploaded: {}'.format(
+                msg = 'Check your template! Following SO_SS are duplicated and only the last record will be uploaded: {}'.format(
                     df_duplicated.SO_SS.values)
                 flash(msg, 'warning')
 
@@ -700,9 +700,9 @@ def exceptional_priority():
             try:
                 df_exceptional_priority=df_exceptional_priority[col_template]
             except:
-                msg = 'Format error! Ensure following columns are included: {}'.format(col_template)
+                msg = 'Stop - format error! Ensure following columns are included: {}'.format(col_template)
                 flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority",_scheme=http_scheme))
+                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
 
             # remove all data for user and write in new data from the template
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
@@ -767,6 +767,257 @@ def exceptional_priority():
                            form=form,
                            user=login_user,
                            subtitle=' - Exceptional Priority')
+
+
+@app.route('/exceptional_sourcing_split',methods=['GET','POST'])
+def exceptional_sourcing_split():
+    form=ExceptionalSourcingSplitForm()
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    login_title = request.headers.get('Oidc-Claim-Title')
+    if login_user == None:
+        login_user = 'unknown'
+        login_name = 'unknown'
+        login_title = 'unknown'
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
+    if '[C]' in login_title:  # for c-workers
+        return 'Sorry, you are not authorized to access this.'
+
+    df_db_data=read_table('exception_sourcing_split')
+
+    if form.validate_on_submit():
+        submit_upload_template = form.submit_upload_template.data
+        submit_show_all=form.submit_show_all.data
+        submit_show_me=form.submit_show_me.data
+        submit_download=form.submit_download.data
+
+        # define needed columns for the template
+        col_template = ['DF_site', 'PCBA_site', 'BU','PF', 'TAN','Split', 'Comments']
+
+        if submit_upload_template:
+            file_upload_template = form.file_upload_template.data
+
+            # confirm file uploaded and save the file
+            if file_upload_template==None:
+                msg='Pls select the file to upload!'
+                flash(msg,'warning')
+                return redirect(url_for("exceptional_sourcing_split", _external=True,_scheme=http_scheme))
+            else:
+                file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
+                file_upload_template.save(file_path_template)
+
+            # read the file
+            df_exceptional_sourcing_split=pd.read_excel(file_path_template)
+
+            # identify errors in the template
+            df_missing_value = df_exceptional_sourcing_split[
+                (df_exceptional_sourcing_split.DF_site.isnull()) | (df_exceptional_sourcing_split.PCBA_site.isnull()) | (df_exceptional_sourcing_split.TAN.isnull()) | (df_exceptional_sourcing_split.Split.isnull())]
+            df_duplicated=df_exceptional_sourcing_split[df_exceptional_sourcing_split.duplicated(['DF_site','PCBA_site','TAN'])]
+            if df_missing_value.shape[0]>0:
+                msg='Check your template! {} record will not uploaded due to missing DF_site, PCBA_site, TAN or Split values!'.format(df_missing_value.shape[0])
+                flash(msg,'warning')
+            if df_duplicated.shape[0] > 0:
+                msg = 'Check your template! There are {} duplicated rows and only the last record will be uploaded.'.format(
+                    df_duplicated.shape[0])
+                flash(msg, 'warning')
+
+            # remove the error records
+            df_exceptional_sourcing_split.drop_duplicates(['DF_site','PCBA_site','TAN'],keep='last',inplace=True)
+            df_exceptional_sourcing_split=df_exceptional_sourcing_split[(df_exceptional_sourcing_split.DF_site.notnull()) & (df_exceptional_sourcing_split.PCBA_site.notnull()) & (df_exceptional_sourcing_split.TAN.notnull()) & (df_exceptional_sourcing_split.Split.notnull())].copy()
+
+            # limit the needed columns (checking formats)
+            try:
+                df_exceptional_sourcing_split=df_exceptional_sourcing_split[col_template]
+                df_exceptional_sourcing_split.Split=df_exceptional_sourcing_split.Split.astype(int)
+            except:
+                msg = 'Stop - format error! Ensure following columns are included: {}'.format(col_template)
+                flash(msg, 'warning')
+                return redirect(url_for("exceptional_sourcing_split", _external=True,_scheme=http_scheme))
+
+            # remove all data for user and write in new data from the template
+            df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
+            delete_table_data('exception_sourcing_split', df_db_data_user.id)
+            add_exceptional_sourcing_split_data_from_template(df_exceptional_sourcing_split,login_user)
+
+            # read and display data by user
+            df_db_data = read_table('exception_sourcing_split')
+            df_db_data=df_db_data[df_db_data.Added_by==login_user]
+
+            msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
+                .format(df_db_data_user.shape[0],df_exceptional_sourcing_split.shape[0])
+            flash(msg,'success')
+
+            return render_template('exceptional_sourcing_split.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - Exceptional Sourcing Split')
+        elif submit_show_all:
+            df_db_data = read_table('exception_sourcing_split')
+
+            return render_template('exceptional_sourcing_split.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - Exceptional Sourcing Split')
+        elif submit_show_me:
+            df_db_data = read_table('exception_sourcing_split')
+            df_db_data = df_db_data[df_db_data.Added_by == login_user]
+
+            return render_template('exceptional_sourcing_split.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - Exceptional Sourcing Split')
+
+        elif submit_download:
+            df_db_data = read_table('exception_sourcing_split')
+            df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
+            df_db_data.set_index('DF_site',inplace=True)
+            df_db_data.Split=df_db_data.Split.astype(int)
+            f_path=base_dir_supply
+            fname='Exceptional sourcing split ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
+
+            df_db_data.to_excel(os.path.join(f_path,fname))
+
+            return send_from_directory(f_path, filename=fname, as_attachment=True)
+
+    return render_template('exceptional_sourcing_split.html',
+                           db_data_header=df_db_data.columns,
+                           db_data_value=df_db_data.values,
+                           form=form,
+                           user=login_user,
+                           subtitle=' - Exceptional Sourcing Split')
+
+
+@app.route('/tan_grouping',methods=['GET','POST'])
+def tan_grouping():
+    form=TanGroupingForm()
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    login_title = request.headers.get('Oidc-Claim-Title')
+    if login_user == None:
+        login_user = 'unknown'
+        login_name = 'unknown'
+        login_title = 'unknown'
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
+    if '[C]' in login_title:  # for c-workers
+        return 'Sorry, you are not authorized to access this.'
+
+    df_db_data=read_table('tan_grouping')
+    if form.validate_on_submit():
+        submit_upload_template = form.submit_upload_template.data
+        submit_show_all=form.submit_show_all.data
+        submit_show_me=form.submit_show_me.data
+        submit_download=form.submit_download.data
+
+        # define needed columns for the template
+        col_template = ['Group_name', 'TAN', 'DF','Comments']
+
+        if submit_upload_template:
+            file_upload_template = form.file_upload_template.data
+
+            # confirm file uploaded and save the file
+            if file_upload_template==None:
+                msg='Pls select the file to upload!'
+                flash(msg,'warning')
+                return redirect(url_for("tan_grouping", _external=True,_scheme=http_scheme))
+            else:
+                file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
+                file_upload_template.save(file_path_template)
+
+            # read the file
+            df_tan_grouping=pd.read_excel(file_path_template)
+
+            # identify errors in the template
+            df_missing_value = df_tan_grouping[
+                (df_tan_grouping.Group_name.isnull()) | (df_tan_grouping.TAN.isnull()) | (df_tan_grouping.DF.isnull())]
+            df_duplicated=df_tan_grouping[df_tan_grouping.duplicated(['Group_name','TAN','DF'])]
+            if df_missing_value.shape[0]>0:
+                msg='Check your template! {} record will not uploaded due to missing Group_name, TAN or DF values!'.format(df_missing_value.shape[0])
+                flash(msg,'warning')
+            if df_duplicated.shape[0] > 0:
+                msg = 'Check your template! There are {} duplicated rows and only the last record will be uploaded.'.format(
+                    df_duplicated.shape[0])
+                flash(msg, 'warning')
+
+            # remove the error records
+            df_tan_grouping.drop_duplicates(['Group_name','TAN','DF'],keep='last',inplace=True)
+            df_tan_grouping=df_tan_grouping[(df_tan_grouping.Group_name.notnull()) & (df_tan_grouping.TAN.notnull()) & (df_tan_grouping.DF.notnull())].copy()
+
+            # limit the needed columns (checking formats)
+            try:
+                df_tan_grouping=df_tan_grouping[col_template]
+            except:
+                msg = 'Stop - format error! Ensure following columns are included: {}'.format(col_template)
+                flash(msg, 'warning')
+                return redirect(url_for("tan_grouping", _external=True,_scheme=http_scheme))
+
+            # remove all data for user and write in new data from the template
+            df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
+            delete_table_data('tan_grouping', df_db_data_user.id)
+            add_tan_grouping_data_from_template(df_tan_grouping,login_user)
+
+            # read and display data by user
+            df_db_data = read_table('tan_grouping')
+            df_db_data=df_db_data[df_db_data.Added_by==login_user]
+
+            msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
+                .format(df_db_data_user.shape[0],df_tan_grouping.shape[0])
+            flash(msg,'success')
+
+            return render_template('tan_grouping.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN Grouping')
+        elif submit_show_all:
+            df_db_data = read_table('tan_grouping')
+
+            return render_template('tan_grouping.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN Grouping')
+        elif submit_show_me:
+            df_db_data = read_table('tan_grouping')
+            df_db_data = df_db_data[df_db_data.Added_by == login_user]
+
+            return render_template('tan_grouping.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN Grouping')
+
+        elif submit_download:
+            df_db_data = read_table('tan_grouping')
+            df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
+            df_db_data.set_index('Group_name',inplace=True)
+            f_path=base_dir_supply
+            fname='TAN grouping ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
+
+            df_db_data.to_excel(os.path.join(f_path,fname))
+
+            return send_from_directory(f_path, filename=fname, as_attachment=True)
+
+    return render_template('tan_grouping.html',
+                           db_data_header=df_db_data.columns,
+                           db_data_value=df_db_data.values,
+                           form=form,
+                           user=login_user,
+                           subtitle=' - TAN Grouping')
 
 
 @app.route('/scdx-api',methods=['GET','POST'])

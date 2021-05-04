@@ -64,6 +64,60 @@ def add_exceptional_priority_data_from_template(df,login_user):
     db.session.commit()
     print('data added')
 
+def add_exceptional_sourcing_split_data_from_template(df,login_user):
+    '''
+    Add exceptional data
+    '''
+    df.fillna('',inplace=True)
+
+    #df=df[['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PO_NUMBER','LINE_CREATION_DATE', 'OPTION_NUMBER',
+    #   'PRODUCT_ID', 'ORDERED_QUANTITY','LABEL','COMMENTS','REPORT_DATE', 'UPLOAD_BY','ML_COLLECTED']]
+
+    df_data = df.values
+
+    db.session.bulk_insert_mappings(
+                                    ExceptionSourcingSplit,
+                                    [dict(
+                                        DF_site=row[0],
+                                        PCBA_site=row[1],
+                                        BU=row[2],
+                                        PF=row[3],
+                                        TAN=row[4],
+                                        Split=row[5],
+                                        Comments=row[6],
+                                        Added_by=login_user,
+                                        Added_on=pd.Timestamp.now().date()
+                                        )
+                                     for row in df_data]
+                                    )
+    db.session.commit()
+    print('data added')
+
+def add_tan_grouping_data_from_template(df,login_user):
+    '''
+    Add tan grouping data
+    '''
+    df.fillna('',inplace=True)
+
+    #df=df[['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PO_NUMBER','LINE_CREATION_DATE', 'OPTION_NUMBER',
+    #   'PRODUCT_ID', 'ORDERED_QUANTITY','LABEL','COMMENTS','REPORT_DATE', 'UPLOAD_BY','ML_COLLECTED']]
+
+    df_data = df.values
+
+    db.session.bulk_insert_mappings(
+                                    TanGrouping,
+                                    [dict(
+                                        Group_name=row[0],
+                                        TAN=row[1],
+                                        DF=row[2],
+                                        Comments=row[3],
+                                        Added_by=login_user,
+                                        Added_on=pd.Timestamp.now().date()
+                                        )
+                                     for row in df_data]
+                                    )
+    db.session.commit()
+    print('data added')
 
 def roll_back():
     try:
