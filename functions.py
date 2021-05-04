@@ -188,11 +188,12 @@ def remove_priority_ss_from_db_and_email(df_removal,login_user,sender='PCBA Allo
                                          user=login_user)
 
 @write_log_time_spent
-def read_tan_group_mapping_from_smartsheet():
+def read_tan_grouping_from_db():
     '''
     Read TAN group mapping and tan-group sourcing from smartsheet; change to version during processing.
     :return:
     '''
+    """
     # 从smartsheet读取backlog
     token = os.getenv('ALLOCATION_TOKEN')
     sheet_id = os.getenv('TAN_GROUP_ID')
@@ -201,6 +202,8 @@ def read_tan_group_mapping_from_smartsheet():
     df_grouping = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
 
     df_grouping = df_grouping[(df_grouping.Group_name.notnull()) & (df_grouping.TAN.notnull())]
+    """
+    df_grouping=read_table('tan_grouping')
 
     #  chagne to versionless
     df_grouping=change_pn_to_versionless(df_grouping, pn_col='TAN')
@@ -215,7 +218,7 @@ def read_tan_group_mapping_from_smartsheet():
         for org in df_orgs:
             tan_group_sourcing.append(org + '-' + row.Group_name)
 
-    df_grouping.drop(['index','row_id'],axis=1,inplace=True)
+    #df_grouping.drop(['index','row_id'],axis=1,inplace=True)
     df_grouping.set_index('Group_name',inplace=True)
 
     return df_grouping, tan_group, tan_group_sourcing
@@ -1811,24 +1814,29 @@ def update_exceptional_sourcing_split(df_sourcing,pcba_site):
     Read exceptional sourcing split from smartsheet, and update the value into df_sourcing
     This happens as some sourcing split could not be corrected due to impact to scheduling.
     """
-    regex = re.compile(r'\d{2,3}-\d{4,7}')
 
+    """
     # 从smartsheet读取backlog
     token = os.getenv('ALLOCATION_TOKEN')
     sheet_id = os.getenv('SOURCING_SPLIT_ID')
     proxies = None  # for proxy server
     smartsheet_client = SmartSheetClient(token, proxies)
     df_smart = smartsheet_client.get_sheet_as_df(sheet_id, add_row_id=True, add_att_id=False)
+    """
+    regex = re.compile(r'\d{2,3}-\d{4,7}')
 
+    df_exceptional_sourcing_split=read_table('exception_sourcing_split')
     # pickout valid data
-    df_smart = df_smart[(df_smart.PCBA_site==pcba_site) &(df_smart.DF_site.notnull()) &  (df_smart.TAN.notnull())
-                        & (df_smart.Split.notnull())]
+    df_exceptional_sourcing_split = df_exceptional_sourcing_split[(df_exceptional_sourcing_split.PCBA_site==pcba_site)
+                                                                  &(df_exceptional_sourcing_split.DF_site.notnull())
+                                                                  & (df_exceptional_sourcing_split.TAN.notnull())
+                                                                  & (df_exceptional_sourcing_split.Split.notnull())]
 
-    df_smart.loc[:, 'tan_versionless'] = df_smart.TAN.map(lambda x: regex.search(x).group())
-    df_smart.loc[:, 'org_tan'] = df_smart.DF_site + '-' + df_smart.tan_versionless
+    df_exceptional_sourcing_split.loc[:, 'tan_versionless'] = df_exceptional_sourcing_split.TAN.map(lambda x: regex.search(x).group())
+    df_exceptional_sourcing_split.loc[:, 'org_tan'] = df_exceptional_sourcing_split.DF_site + '-' + df_exceptional_sourcing_split.tan_versionless
 
     exceptional_split={}
-    for row in df_smart.itertuples():
+    for row in df_exceptional_sourcing_split.itertuples():
         exceptional_split[row.org_tan]=row.Split
 
     # convert df_sourcing to versionless and add temp col
@@ -1886,8 +1894,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # collect available sourcing rules and calculate split unstage qty(testing: add split in sourcing output)
     sourcing_rule_list, sourcing_rules = collect_available_sourcing(df_sourcing)
 
-    # Read TAN group mapping from smartsheet
-    df_grouping, tan_group,tan_group_sourcing = read_tan_group_mapping_from_smartsheet()
+    # Read TAN group mapping from db
+    df_grouping, tan_group,tan_group_sourcing = read_tan_grouping_from_db()
 
     # read air transit pad from df_sourcing
     transit_time,df_transit_time=read_transit_from_sourcing_rules(df_sourcing,pcba_site)

@@ -644,6 +644,13 @@ def exceptional_priority():
                 flash(msg, 'warning')
                 return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
             else:
+                ext_3a4 = os.path.splitext(file_upload_3a4.filename)[1]
+                if ext_3a4 != '.csv':
+                    msg = '3a4 file only accepts CSV formats here!'
+                    flash(msg, 'warning')
+                    return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
+
+                # save file
                 file_path_3a4 = os.path.join(base_dir_upload,
                                                   login_user + '_' + secure_filename(file_upload_3a4.filename))
                 file_upload_3a4.save(file_path_3a4)
@@ -674,6 +681,13 @@ def exceptional_priority():
                 flash(msg,'warning')
                 return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
             else:
+                ext_template = os.path.splitext(file_upload_template.filename)[1]
+                if ext_template != '.xlsx':
+                    msg = 'The template file only accepts .xlsx formats here!'
+                    flash(msg, 'warning')
+                    return redirect(url_for("exceptional_priority", _external=True, _scheme=http_scheme))
+
+                # save the file
                 file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
                 file_upload_template.save(file_path_template)
 
@@ -806,6 +820,12 @@ def exceptional_sourcing_split():
                 flash(msg,'warning')
                 return redirect(url_for("exceptional_sourcing_split", _external=True,_scheme=http_scheme))
             else:
+                ext_template = os.path.splitext(file_upload_template.filename)[1]
+                if ext_template != '.xlsx':
+                    msg = 'The template file only accepts .xlsx formats here!'
+                    flash(msg, 'warning')
+                    return redirect(url_for("exceptional_sourcing_split", _external=True, _scheme=http_scheme))
+
                 file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
                 file_upload_template.save(file_path_template)
 
@@ -932,6 +952,13 @@ def tan_grouping():
                 flash(msg,'warning')
                 return redirect(url_for("tan_grouping", _external=True,_scheme=http_scheme))
             else:
+                ext_template = os.path.splitext(file_upload_template.filename)[1]
+                if ext_template != '.xlsx':
+                    msg = 'The template file only accepts .xlsx formats here!'
+                    flash(msg, 'warning')
+                    return redirect(url_for("tan_grouping", _external=True, _scheme=http_scheme))
+
+                # save the file
                 file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
                 file_upload_template.save(file_path_template)
 
