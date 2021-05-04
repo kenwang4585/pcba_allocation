@@ -85,14 +85,15 @@ def allocation_run():
         if ext_3a4 != '.csv':
             msg='3a4 file only accepts CSV formats here!'
             flash(msg, 'warning')
-            #summary = 'Wong 3a4 formats: {}'.format(ext_3a4)
-            #add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
-
             return render_template('allocation_run.html', form=form, user=login_name)
 
         # 存储3a4
         file_path_3a4 = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_3a4.filename))
         f_3a4.save(file_path_3a4)
+
+        log_msg='\n{} sec: Time spent till 3a4 file saved'.format(round((pd.Timestamp.now() - start_time).total_seconds() / 60, 1))
+        add_log_txt(msg=log_msg)
+        print(log_msg)
 
         # check and store file size - after file is saved
         size_3a4=os.path.getsize(file_path_3a4)
@@ -127,25 +128,6 @@ def allocation_run():
             flash(msg_3a4_option,'warning')
             return render_template('allocation_run.html', form=form, user=login_name)
 
-        if f_supply!=None:
-            sheet_name_msg, msg_transit, msg_oh, msg_scr=check_supply_input_file_format(file_path_supply,
-                                                                                        col_transit_must_have,
-                                                                                        col_oh_must_have,
-                                                                                        col_scr_must_have,
-                                                                                        'in-transit','df-oh','por')
-            if sheet_name_msg!='':
-                flash(sheet_name_msg,'warning')
-                return render_template('allocation_run.html', form=form, user=login_name)
-            if msg_transit!='':
-                flash(msg_transit,'warning')
-                return render_template('allocation_run.html', form=form, user=login_name)
-            if msg_oh!='':
-                flash(msg_oh,'warning')
-                return render_template('allocation_run.html', form=form, user=login_name)
-            if msg_scr!='':
-                flash(msg_scr,'warning')
-                return render_template('allocation_run.html', form=form, user=login_name)
-
        # 判断并定义ranking_col
         if ranking_logic == 'cus_sat':
             ranking_col = ranking_col_cust
@@ -158,7 +140,26 @@ def allocation_run():
                                  low_memory=False)
 
             if f_supply!=None:
-                df_scr, df_oh, df_transit, df_sourcing=read_supply_data(file_path_supply)
+                try:
+                    df_scr, df_oh, df_transit, df_sourcing=read_supply_data(file_path_supply)
+                except:
+                    msg = 'Sheet name error! Ensure Supply file sheet names are: por, df-oh, in-transit, sourcing-rule.'
+                    flash(msg, 'warning')
+                    return render_template('allocation_run.html', form=form, user=login_name)
+                # check format for each sheet
+                msg_scr, msg_oh, msg_transit, msg_sourcing_rule=check_supply_input_file_format(df_scr,df_oh,df_transit,df_sourcing,
+                                                                                               col_scr_must_have,
+                                                                                               col_oh_must_have,
+                                                                                               col_transit_must_have,
+                                                                                               col_sourcing_rule_must_have)
+
+                for msg in [msg_scr, msg_oh, msg_transit, msg_sourcing_rule]:
+                    if msg!='':
+                        flash(msg,'warning')
+                if msg_scr!='' or msg_oh!='' or msg_transit!='' or msg_sourcing_rule!='':
+                    return render_template('allocation_run.html', form=form, user=login_name)
+
+                # patch to ensure qty col are float number in case wrong due to manual update error
                 df_scr, df_oh, df_transit, df_sourcing=patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit, df_sourcing)
             else:
                 df_scr, df_oh, df_transit, df_sourcing=collect_scr_oh_transit_from_scdx_prod(pcba_site,'*')

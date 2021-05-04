@@ -1260,33 +1260,30 @@ def check_3a4_input_file_format(file_path_3a4,col_3a4_must_have):
     return msg_3a4, msg_3a4_option
 
 @write_log_time_spent
-def check_supply_input_file_format(file_path_supply,col_transit_must_have,col_oh_must_have,col_scr_must_have,sheet_transit,sheet_oh,sheet_scr):
+def check_supply_input_file_format(df_scr,df_oh,df_transit,df_sourcing,col_scr_must_have,col_oh_must_have,col_transit_must_have,col_sourcing_rule_must_have):
     """
     Check if the input files contain the right columns
     """
-    sheet_name_msg,msg_transit, msg_oh, msg_scr = '', '', '', ''
-    try:
-        df_transit=pd.read_excel(file_path_supply,sheet_name='in-transit',nrows=2)
-        df_oh=pd.read_excel(file_path_supply,sheet_name='df-oh',nrows=2)
-        df_scr=pd.read_excel(file_path_supply,sheet_name='por',nrows=2)
+    # 检查文件是否包含需要的列：
+    msg_scr,msg_oh,msg_transit, msg_sourcing_rule='','','',''
 
-        # 检查文件是否包含需要的列：
-        if not np.all(np.in1d(col_transit_must_have, df_transit.columns)):
-            msg_transit = 'In-transit data format error! Following required columns not found in transit data: {}'.format(
+    if not np.all(np.in1d(col_transit_must_have, df_transit.columns)):
+        msg_transit = 'In-transit data format error! Following required columns not found in transit data: {}'.format(
                 str(np.setdiff1d(col_transit_must_have, df_transit.columns)))
 
-        if not np.all(np.in1d(col_oh_must_have, df_oh.columns)):
-            msg_oh = 'OH data format error! Following required columns not found in OH data: {}'.format(
+    if not np.all(np.in1d(col_oh_must_have, df_oh.columns)):
+        msg_oh = 'OH data format error! Following required columns not found in OH data: {}'.format(
                 str(np.setdiff1d(col_oh_must_have, df_oh.columns)))
 
-        if not np.all(np.in1d(col_scr_must_have, df_scr.columns)):
-            msg_scr = 'SCR data format error! Following required columns not found in SCR data: {}'.format(
+    if not np.all(np.in1d(col_scr_must_have, df_scr.columns)):
+        msg_scr = 'SCR data format error! Following required columns not found in SCR data: {}'.format(
                 str(np.setdiff1d(col_scr_must_have, df_scr.columns)))
-    except:
-        print('sheet name error!')
-        sheet_name_msg = 'Supply file format error! Ensure the correct sheet names are: {}, {}, {}'.format(sheet_transit,sheet_oh,sheet_scr)
 
-    return sheet_name_msg, msg_transit,msg_oh,msg_scr
+    if not np.all(np.in1d(col_sourcing_rule_must_have, df_sourcing.columns)):
+        msg_sourcing_rule = 'Sourcing rule data format error! Following required columns not found in Sourcing rule data: {}'.format(
+                str(np.setdiff1d(col_sourcing_rule_must_have, df_sourcing.columns)))
+
+    return msg_scr,msg_oh,msg_transit, msg_sourcing_rule
 
 
 @write_log_time_spent

@@ -41,6 +41,7 @@ col_3a4_must_have=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_S
 col_transit_must_have=['DF_site','TAN','BU','ETA_date','In-transit_quantity']
 col_oh_must_have=['DF_site','TAN','BU','OH']
 col_scr_must_have=['planningOrg','TAN','BU','date','quantity']
+col_sourcing_rule_must_have=['DF_site','BU','PF','TAN','Split','Transit_time']
 
 # rank sequences
 ranking_col_cust = ['priority_rank', 'ossd_offset', 'PROGRAM',
