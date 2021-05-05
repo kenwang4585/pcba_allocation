@@ -157,3 +157,4 @@ class TanGrouping(db.Model):
     Comments=db.Column(db.String(100))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
+

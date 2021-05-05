@@ -28,14 +28,13 @@ else:
     base_dir_db = os.path.join(os.getcwd(), 'database')
 
 output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','distinct_po_filter', 'PRODUCT_ID',
-           'BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
-           'ORIGINAL_FCD_NBD_DATE','ossd_offset', 'CURRENT_FCD_NBD_DATE','C_UNSTAGED_DOLLARS',
-            'ss_unstg_rev','REVENUE_NON_REVENUE',
-            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN','PROGRAM']
+           'BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank',
+           'ORIGINAL_FCD_NBD_DATE','ossd_offset', 'REVENUE_NON_REVENUE',
+            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','PROGRAM']
 
 col_3a4_must_have=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','PRODUCT_ID',
-           'TAN','ADDRESSABLE_FLAG','ORDER_HOLDS','END_CUSTOMER_NAME','SHIP_TO_CUSTOMER_NAME',
-           'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','LT_TARGET_FCD','PROGRAM','C_UNSTAGED_DOLLARS',
+           'TAN','ADDRESSABLE_FLAG','ORDER_HOLDS',
+           'CURRENT_FCD_NBD_DATE','ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD','PROGRAM',
             'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','FLB_TAN','REVENUE_NON_REVENUE']
 
 col_transit_must_have=['DF_site','TAN','BU','ETA_date','In-transit_quantity']

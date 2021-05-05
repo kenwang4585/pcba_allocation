@@ -979,7 +979,7 @@ def ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, ord
     """
     根据priority_cat,OSSD,FCD, REVENUE_NON_REVENUE,C_UNSTAGED_QTY,按照ranking_col的顺序对SS进行排序。最后放MFG_HOLD订单.
     """
-
+    """
     # Below create a rev_rank for reference -  currently not used in overall ranking
     ### change non-rev orders unstaged $ to 0
     df_3a4.loc[:, 'C_UNSTAGED_DOLLARS'] = np.where(df_3a4.REVENUE_NON_REVENUE == 'NO',
@@ -994,7 +994,7 @@ def ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, ord
         ss_unstg_rev[ss] = rev[0]
     df_3a4.loc[:, 'ss_unstg_rev'] = df_3a4.SO_SS.map(lambda x: ss_unstg_rev[x])
 
-    """
+    
     # 计算po_rev_unit - non revenue change to 0
     df_3a4.loc[:, 'po_rev_unit'] = np.where(df_3a4.REVENUE_NON_REVENUE == 'YES',
                                             df_3a4.SOL_REVENUE / df_3a4.ORDERED_QUANTITY,
@@ -1006,7 +1006,7 @@ def ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, ord
     for ss, rev in zip(dfx_rev.index, dfx_rev.values):
         ss_rev_unit[ss] = rev[0]
     df_3a4.loc[:, 'ss_rev_unit'] = df_3a4.SO_SS.map(lambda x: int(ss_rev_unit[x]))
-    """
+    
 
     # create rank#
     rank = {}
@@ -1014,7 +1014,7 @@ def ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, ord
     for order, rk in zip(order_list, range(1, len(order_list) + 1)):
         rank[order] = rk
     df_3a4.loc[:, 'ss_rev_rank'] = df_3a4.SO_SS.map(lambda x: rank[x])
-
+    """
     # below creates overall ranking col
     ### Step1: 重新定义priority order及排序
     df_3a4.loc[:, 'priority_cat'] = np.where(df_3a4.SECONDARY_PRIORITY.isin(['PR1', 'PR2', 'PR3']),
@@ -1840,6 +1840,7 @@ def update_exceptional_sourcing_split(df_sourcing,pcba_site):
     df_sourcing.loc[:, 'tan_versionless'] = df_sourcing.TAN.map(lambda x: regex.search(x).group())
     df_sourcing.loc[:, 'org_tan'] = df_sourcing.DF_site + '-' + df_sourcing.tan_versionless
 
+    # update exceptional sourcing split value into df_sourcing
     df_sourcing.loc[:,'Split']=df_sourcing.apply(lambda x: update_sourcing_split(x.org_tan, x.Split, exceptional_split),axis=1)
 
     return df_sourcing
