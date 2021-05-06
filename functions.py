@@ -1195,29 +1195,6 @@ def fulfill_backlog_by_transit_eta_late(transit_dic_tan, blg_dic_tan):
     return blg_dic_tan, transit_dic_tan
 
 @write_log_time_spent
-def read_supply_data(f_supply):
-    """
-    Read source data from excel files
-    :param f_supply:
-    :return:
-    """
-    # read scr
-    df_scr = pd.read_excel(f_supply, sheet_name='por')
-    df_scr.loc[:,'date']=df_scr.date.map(lambda x: x.date())
-
-    # read oh
-    df_oh = pd.read_excel(f_supply, sheet_name='df-oh')
-
-    # read in-transit
-    df_transit = pd.read_excel(f_supply, sheet_name='in-transit')
-    df_transit.loc[:, 'ETA_date'] = df_transit.ETA_date.map(lambda x: x.date())
-
-    # read sourcing rules
-    df_sourcing=pd.read_excel(f_supply,sheet_name='sourcing-rule')
-
-    return df_scr, df_oh, df_transit, df_sourcing
-
-@write_log_time_spent
 def patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit, df_sourcing):
     """
     This is a patch to ensure the qty/number columns in those data are integer format,
@@ -1244,12 +1221,15 @@ def limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list):
     return df_3a4, df_scr
 
 @write_log_time_spent
-def check_3a4_input_file_format(file_path_3a4,col_3a4_must_have):
+def read_3a4_and_check_columns(file_path_3a4,col_3a4_must_have):
     """
-    Check if the input files contain the right columns
+    Read 3a4 and check if it contains the right columns
     """
+    df_3a4 = pd.read_csv(file_path_3a4, encoding='ISO-8859-1', parse_dates=['ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD'],
+                         low_memory=False)
+
     msg_3a4, msg_3a4_option = '', ''
-    df_3a4=pd.read_csv(file_path_3a4,nrows=2,encoding='iso-8859-1')
+
     # 检查文件是否包含需要的列：
     if not np.all(np.in1d(col_3a4_must_have, df_3a4.columns)):
         msg_3a4='3A4 file format error! Following required columns not found in 3a4 data: {}'.format(
@@ -1257,34 +1237,86 @@ def check_3a4_input_file_format(file_path_3a4,col_3a4_must_have):
     if 'OPTION_NUMBER' in df_3a4.columns:
         msg_3a4_option='3A4 file format error! Pls download 3A4 without option PIDs!'
 
-    return msg_3a4, msg_3a4_option
+    return df_3a4,msg_3a4, msg_3a4_option
+
+
 
 @write_log_time_spent
-def check_supply_input_file_format(df_scr,df_oh,df_transit,df_sourcing,col_scr_must_have,col_oh_must_have,col_transit_must_have,col_sourcing_rule_must_have):
+def read_supply_data(f_supply):
+    """
+    Read source data from excel files
+    :param f_supply:
+    :return:
+    """
+    # read scr
+    df_scr = pd.read_excel(f_supply, sheet_name='por')
+    df_scr.loc[:,'date']=df_scr.date.map(lambda x: x.date())
+
+    # read oh
+    df_oh = pd.read_excel(f_supply, sheet_name='df-oh')
+
+    # read in-transit
+    df_transit = pd.read_excel(f_supply, sheet_name='in-transit')
+    df_transit.loc[:, 'ETA_date'] = df_transit.ETA_date.map(lambda x: x.date())
+
+    # read sourcing rules
+    df_sourcing=pd.read_excel(f_supply,sheet_name='sourcing-rule')
+
+    return df_scr, df_oh, df_transit, df_sourcing
+
+
+@write_log_time_spent
+def read_supply_file_and_check_columns(file_path_supply,col_scr_must_have,col_oh_must_have,col_transit_must_have,col_sourcing_rule_must_have):
     """
     Check if the input files contain the right columns
     """
-    # 检查文件是否包含需要的列：
-    msg_scr,msg_oh,msg_transit, msg_sourcing_rule='','','',''
+    msg_sheetname,msg_scr,msg_oh,msg_transit, msg_sourcing_rule='','','','',''
 
+    error_msg=''
+    try:
+        # read scr
+        df_scr = pd.read_excel(file_path_supply, sheet_name='por')
+
+        # read oh
+        df_oh = pd.read_excel(file_path_supply, sheet_name='df-oh')
+
+        # read in-transit
+        df_transit = pd.read_excel(file_path_supply, sheet_name='in-transit')
+
+        # read sourcing rules
+        df_sourcing=pd.read_excel(file_path_supply,sheet_name='sourcing-rule')
+
+    except:
+        return 'Reading supply data from file error! Ensure Supply file sheet names are: por, df-oh, in-transit, sourcing-rule.'
+
+    try:
+        df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
+    except:
+        return 'Processing supply data error! Ensure the date column in POR is in the correct date format.'
+
+    try:
+        df_transit.loc[:, 'ETA_date'] = df_transit.ETA_date.map(lambda x: x.date())
+    except:
+        return 'Processing supply data error! Ensure the date column in in-transit is in the correct date format.'
+
+    # 检查文件是否包含需要的列：
     if not np.all(np.in1d(col_transit_must_have, df_transit.columns)):
-        msg_transit = 'In-transit data format error! Following required columns not found in transit data: {}'.format(
+        return 'In-transit data format error! Following required columns not found in transit data: {}'.format(
                 str(np.setdiff1d(col_transit_must_have, df_transit.columns)))
 
     if not np.all(np.in1d(col_oh_must_have, df_oh.columns)):
-        msg_oh = 'OH data format error! Following required columns not found in OH data: {}'.format(
+        return 'OH data format error! Following required columns not found in OH data: {}'.format(
                 str(np.setdiff1d(col_oh_must_have, df_oh.columns)))
 
     if not np.all(np.in1d(col_scr_must_have, df_scr.columns)):
-        msg_scr = 'SCR data format error! Following required columns not found in SCR data: {}'.format(
+        return 'SCR data format error! Following required columns not found in SCR data: {}'.format(
                 str(np.setdiff1d(col_scr_must_have, df_scr.columns)))
 
     if not np.all(np.in1d(col_sourcing_rule_must_have, df_sourcing.columns)):
-        msg_sourcing_rule = 'Sourcing rule data format error! Following required columns not found in Sourcing rule data: {}'.format(
+        return 'Sourcing rule data format error! Following required columns not found in Sourcing rule data: {}'.format(
                 str(np.setdiff1d(col_sourcing_rule_must_have, df_sourcing.columns)))
 
-    return msg_scr,msg_oh,msg_transit, msg_sourcing_rule
-
+    return (df_scr,df_oh,df_transit,df_sourcing)
 
 @write_log_time_spent
 def redefine_addressable_flag_main_pid_version(df_3a4):
@@ -1844,6 +1876,30 @@ def update_exceptional_sourcing_split(df_sourcing,pcba_site):
     df_sourcing.loc[:,'Split']=df_sourcing.apply(lambda x: update_sourcing_split(x.org_tan, x.Split, exceptional_split),axis=1)
 
     return df_sourcing
+
+def get_file_size(file_path):
+    """Filezie"""
+    file_size = os.path.getsize(file_path)
+    if file_size / 1024 > 1:
+        file_size = str(round(file_size / (1024 * 1024), 1)) + 'Mb'
+    else:
+        file_size = str(int(file_size / 1024)) + 'Kb'
+
+    return file_size
+
+def check_file_extension(file_name,extension='.csv'):
+    """
+    Check file extension
+    """
+    file_ext = os.path.splitext(file_name.filename)[1]
+
+    if file_ext == extension:
+        ext_correct=True
+    else:
+        ext_correct=False
+
+    return ext_correct
+
 
 @write_log_time_spent
 def collect_available_sourcing(df_sourcing):

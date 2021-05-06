@@ -40,6 +40,8 @@ def allocation_run():
 
     #print(request.headers)
     #print(request.url)
+    if login_user!='kwang2':
+        add_user_log(user=login_user, location='Home-RUN', user_action='Visit', summary='')
 
     if form.validate_on_submit():
         log_msg_main = []
@@ -61,6 +63,22 @@ def allocation_run():
         log_msg = '\n' + pcba_site + ' ' + bu
         add_log_txt(msg=log_msg)
 
+        # 判断并定义ranking_col
+        if ranking_logic == 'cus_sat':
+            ranking_col = ranking_col_cust
+        # elif ranking_logic == 'max_rev':
+        #    ranking_col = ranking_col_rev
+
+        # check input file extension
+        ext_correct_3a4 = check_file_extension(f_3a4, extension='.csv')
+        if f_supply != None:
+            ext_correct_supply = check_file_extension(f_supply, extension='.xlsx')
+        if not np.all([ext_correct_3a4,ext_correct_supply]):
+            msg='File type error! Ensure 3a4 is .csv format and supply file is .xlsx format!'
+            flash(msg,'warning')
+            return render_template('allocation_run.html', form=form, user=login_name)
+
+        # short term check
         if f_supply==None:
             msg = 'Pls upload the supply file! Reading directly from SCDx target to live from 5/5.'
             flash(msg, 'warning')
@@ -75,52 +93,31 @@ def allocation_run():
                 add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
                 return render_template('allocation_run.html', form=form, user=login_name)
-            # save supply file
+
+        # save the files
+        file_path_3a4 = os.path.join(base_dir_upload, login_user + '_' + secure_filename(f_3a4.filename))
+        f_3a4.save(file_path_3a4)
+        if f_supply!=None:
             file_path_supply = os.path.join(base_dir_upload, login_user + '_' + secure_filename(f_supply.filename))
             f_supply.save(file_path_supply)
 
-
-        # 检查文件格式
-        ext_3a4 = os.path.splitext(f_3a4.filename)[1]
-        if ext_3a4 != '.csv':
-            msg='3a4 file only accepts CSV formats here!'
-            flash(msg, 'warning')
-            return render_template('allocation_run.html', form=form, user=login_name)
-
-        # 存储3a4
-        file_path_3a4 = os.path.join(base_dir_upload, login_user+'_'+secure_filename(f_3a4.filename))
-        f_3a4.save(file_path_3a4)
-
-        log_msg='\n{} sec: Time spent till 3a4 file saved'.format(round((pd.Timestamp.now() - start_time).total_seconds() / 60, 1))
+        # get files size and log it
+        file_size_3a4 = get_file_size(file_path_3a4)
+        log_msg_main.append(f_3a4.filename + '(size: ' + file_size_3a4 + ')')
+        log_msg = '\nFile 3a4: ' + f_3a4.filename + '(size: ' + file_size_3a4 + ')'
         add_log_txt(msg=log_msg)
-        print(log_msg)
-
-        # check and store file size - after file is saved
-        size_3a4=os.path.getsize(file_path_3a4)
-        if size_3a4/1024>1:
-            size_3a4=str(round(size_3a4/(1024*1024),1)) + 'Mb'
-        else:
-            size_3a4 = str(int(size_3a4 / 1024)) + 'Kb'
-        log_msg_main.append(f_3a4.filename + '(size: ' + size_3a4 + ')')
-        log_msg = '\nFile 3a4: ' + f_3a4.filename + '(size: ' + size_3a4 + ')'
-        add_log_txt(msg=log_msg)
-
         if f_supply!=None:
-            size_supply=os.path.getsize(file_path_supply)
-            if size_supply/1024>1:
-                size_supply=str(round(size_supply/(1024*1024),1)) + 'Mb'
-            else:
-                size_supply = str(int(size_supply / 1024)) + 'Kb'
-            log_msg_main.append(f_supply.filename + '(size: ' + size_supply + ')')
-            log_msg = '\nFile supply: ' + f_supply.filename + '(size: ' + size_supply + ')'
+            file_size_supply=get_file_size(file_path_supply)
+            log_msg_main.append(f_supply.filename + '(size: ' + file_size_supply + ')')
+            log_msg = '\nFile supply: ' + f_supply.filename + '(size: ' + file_size_supply + ')'
             add_log_txt(msg=log_msg)
         else:
             log_msg_main.append('Supply file directly download through API')
             log_msg = '\nFile supply: directly download through API'
             add_log_txt(msg=log_msg)
 
-        # check data format
-        msg_3a4, msg_3a4_option = check_3a4_input_file_format(file_path_3a4, col_3a4_must_have)
+        # read 3a4 data and check the columns required
+        df_3a4, msg_3a4, msg_3a4_option=read_3a4_and_check_columns(file_path_3a4,col_3a4_must_have)
         if msg_3a4!='':
             flash(msg_3a4,'warning')
             return render_template('allocation_run.html', form=form, user=login_name)
@@ -128,43 +125,27 @@ def allocation_run():
             flash(msg_3a4_option,'warning')
             return render_template('allocation_run.html', form=form, user=login_name)
 
-       # 判断并定义ranking_col
-        if ranking_logic == 'cus_sat':
-            ranking_col = ranking_col_cust
-        #elif ranking_logic == 'max_rev':
-        #    ranking_col = ranking_col_rev
+        # read supply data and check the columns required in each
+        if f_supply==None:
+            df_scr, df_oh, df_transit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site, '*')
+            df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
+        else:
+            result=read_supply_file_and_check_columns(file_path_supply, col_scr_must_have, col_oh_must_have, col_transit_must_have,
+                                               col_sourcing_rule_must_have)
 
-        try:
-            # 读取数据
-            df_3a4 = pd.read_csv(file_path_3a4, encoding='ISO-8859-1', parse_dates=['ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD'],
-                                 low_memory=False)
-
-            if f_supply!=None:
-                try:
-                    df_scr, df_oh, df_transit, df_sourcing=read_supply_data(file_path_supply)
-                except:
-                    msg = 'Sheet name error! Ensure Supply file sheet names are: por, df-oh, in-transit, sourcing-rule.'
-                    flash(msg, 'warning')
-                    return render_template('allocation_run.html', form=form, user=login_name)
-                # check format for each sheet
-                msg_scr, msg_oh, msg_transit, msg_sourcing_rule=check_supply_input_file_format(df_scr,df_oh,df_transit,df_sourcing,
-                                                                                               col_scr_must_have,
-                                                                                               col_oh_must_have,
-                                                                                               col_transit_must_have,
-                                                                                               col_sourcing_rule_must_have)
-
-                for msg in [msg_scr, msg_oh, msg_transit, msg_sourcing_rule]:
-                    if msg!='':
-                        flash(msg,'warning')
-                if msg_scr!='' or msg_oh!='' or msg_transit!='' or msg_sourcing_rule!='':
-                    return render_template('allocation_run.html', form=form, user=login_name)
-
-                # patch to ensure qty col are float number in case wrong due to manual update error
-                df_scr, df_oh, df_transit, df_sourcing=patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit, df_sourcing)
+            if len(result)>4: #refers to the error msg instead of hte df
+                flash(result,'warning')
+                return render_template('allocation_run.html', form=form, user=login_name)
             else:
-                df_scr, df_oh, df_transit, df_sourcing=collect_scr_oh_transit_from_scdx_prod(pcba_site,'*')
-                df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
+                df_scr=result[0]
+                df_oh=result[1]
+                df_transit=result[2]
+                df_sourcing=result[3]
+                df_scr, df_oh, df_transit, df_sourcing = patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit,
+                                                                                                df_sourcing)
 
+        # formally start the program
+        try:
             # limit BU from 3a4 and df_scr for allocation
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
             if df_3a4.shape[0] == 0:
@@ -525,12 +506,7 @@ def allocation_admin():
 
     if login_user!='kwang2':
         add_user_log(user=login_user, location='Admin', user_action='Visit - trying', summary='')
-        log_msg='\n\n[' + login_user + '] attempting access ADMIN ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
-        log_msg=log_msg + '\n' + str(request.headers)
-        with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
-            file_object.write(log_msg)
-
-        raise ValueError
+        return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
         add_user_log(user=login_user, location='Admin', user_action='Visit success', summary='why this happens??')
 
     # get file info
