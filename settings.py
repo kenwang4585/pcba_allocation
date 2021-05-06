@@ -30,7 +30,7 @@ else:
 output_col_3a4=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','distinct_po_filter', 'PRODUCT_ID',
            'BOM_PN','ADDRESSABLE_FLAG','priority_cat','priority_rank','ss_overall_rank',
            'ORIGINAL_FCD_NBD_DATE','ossd_offset', 'REVENUE_NON_REVENUE',
-            'ORDERED_QUANTITY','C_UNSTAGED_QTY','PACKOUT_QUANTITY','PROGRAM']
+            'ORDERED_QUANTITY','C_UNSTAGED_QTY','packed_qty','unpacked_qty','PACKOUT_QUANTITY','PROGRAM']
 
 col_3a4_must_have=['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PRODUCT_FAMILY', 'SO_SS', 'PO_NUMBER','PRODUCT_ID',
            'TAN','ADDRESSABLE_FLAG','ORDER_HOLDS',

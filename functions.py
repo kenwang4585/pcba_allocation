@@ -431,13 +431,29 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
             except:
                 error_pn.append(item)
 
-    print('Error in regex TAN from FLB_TAN for below PN:')
-    print(error_pn)
+    print('Error in regex TAN from FLB_TAN for below PN:',error_pn)
 
     # print(po_list)
     df_order_bom_from_flb = pd.DataFrame({'PO_NUMBER': po_list, 'BOM_PN': pn_list, 'BOM_PN_QTY': usage_list})
 
     return df_order_bom_from_flb
+
+@write_log_time_spent
+def create_unpacked_qty_col_in_3a4(df_3a4):
+    """
+    Generate the unpacked qty col in 3a4 based on "PACKOUT_QUANTITY"
+    """
+    regex = re.compile(r'^\d+')
+    df_3a4.loc[:, 'PACKOUT_QUANTITY_temp']=df_3a4.PACKOUT_QUANTITY
+    df_3a4.PACKOUT_QUANTITY_temp.fillna('',inplace=True)
+    df_3a4.loc[:, 'packed_qty'] = df_3a4.PACKOUT_QUANTITY_temp.map(lambda x: int(regex.search(x).group()) if regex.search(x) != None else 0)
+    df_3a4.loc[:,'unpacked_qty']=df_3a4.ORDERED_QUANTITY-df_3a4.packed_qty
+
+    df_3a4.drop(['PACKOUT_QUANTITY_temp'],axis=1,inplace=True)
+
+    return df_3a4
+
+
 
 @write_log_time_spent
 def update_order_bom_to_3a4(df_3a4, df_order_bom):
@@ -462,6 +478,7 @@ def update_order_bom_to_3a4(df_3a4, df_order_bom):
     """
     # correct the quantity by multiplying BOM Qty
     df_3a4.loc[:, 'C_UNSTAGED_QTY'] = df_3a4.C_UNSTAGED_QTY * (df_3a4.BOM_PN_QTY / df_3a4.ORDERED_QUANTITY)
+    df_3a4.loc[:, 'unpacked_qty'] = df_3a4.unpacked_qty * (df_3a4.BOM_PN_QTY / df_3a4.ORDERED_QUANTITY)
     df_3a4.loc[:, 'ORDERED_QUANTITY'] = df_3a4.BOM_PN_QTY
 
     # add indicator for distinct PO filtering
@@ -1454,8 +1471,8 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     df_scr.loc[:, 'PF'] = df_scr.TAN.map(lambda x: tan_bu_pf[x][1])
 
     # add backlog qty: unstaged
-    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='C_UNSTAGED_QTY', aggfunc=sum)
-    df_3a4_p.columns = ['Unstg_blg']
+    df_3a4_p = df_3a4.pivot_table(index=['ORGANIZATION_CODE', 'BOM_PN'], values='unpacked_qty', aggfunc=sum)
+    df_3a4_p.columns = ['Unpacked_blg']
     df_3a4_p.reset_index(inplace=True)
     df_scr = pd.merge(df_scr, df_3a4_p, left_on=['ORG', 'TAN'], right_on=['ORGANIZATION_CODE', 'BOM_PN'], how='left')
 
@@ -1482,7 +1499,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     df_scr.loc[:, 'oh+transit'] = df_scr.OH.fillna(0) + df_scr['In-transit'].fillna(0)
     df_scr['oh+transit'].fillna(0, inplace=True)
     df_scr.loc[:, 'Blg_gap_total'] = np.where(df_scr.ORG != pcba_site+'-SCR',
-                                           df_scr['oh+transit'] - df_scr.Unstg_blg,
+                                           df_scr['oh+transit'] - df_scr.Unpacked_blg,
                                            None)
     df_scr.drop('oh+transit', axis=1, inplace=True)
 
@@ -1564,7 +1581,7 @@ def process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit,
     # Below is a patch to avoid OH out a max value under the SCR row - unclear why that happens!!!
     df_scr.OH.fillna('',inplace=True)
     df_scr.set_index(
-        ['TAN', 'ORG', 'BU', 'PF', 'Unstg_blg','OH', 'In-transit', 'Blg_gap_total','Sourcing_split','Blg_gap_split', 'Allocation', 'Blg_gap_final',
+        ['TAN', 'ORG', 'BU', 'PF', 'Unpacked_blg','OH', 'In-transit', 'Blg_gap_total','Sourcing_split','Blg_gap_split', 'Allocation', 'Blg_gap_final',
          'Blg_recovery'], inplace=True)
 
     return df_scr
@@ -1591,7 +1608,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     df_group=pd.read_excel(f_path,sheet_name='tan-group')
     df_lt=pd.read_excel(f_path,sheet_name='transit_time_from_sourcing_rule')
     df_allocation.set_index(
-        ['TAN', 'ORG', 'BU', 'PF','Unstg_blg', 'OH', 'In-transit', 'Blg_gap_total', 'Sourcing_split','Blg_gap_split','Allocation', 'Blg_gap_final', 'Blg_recovery'],
+        ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Blg_gap_total', 'Sourcing_split','Blg_gap_split','Allocation', 'Blg_gap_final', 'Blg_recovery'],
         inplace=True)
     df_transit.set_index(['DF_site','TAN','Total'],inplace=True)
     df_sourcing.set_index(['DF_site'], inplace=True)
@@ -1999,6 +2016,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # Rank the orders
     df_3a4 = ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
 
+    # create unpacked qty col based on "PACKOUT_QUANTITY"
+    df_3a4=create_unpacked_qty_col_in_3a4(df_3a4)
 
     # (do below after ranking) Process 3a4 BOM base on FLB_TAN col. BOM_PN refers to tan_group if exist, or SCR Tan if not.
     df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
@@ -2015,7 +2034,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # create backlog dict for Tan exists in SCR
     # - qty_col use C_UNSTAGED_QTY_SPLIT instead if considering sourcing split
     #qty_col = 'C_UNSTAGED_QTY'
-    qty_col = 'C_UNSTAGED_QTY'
+    qty_col = 'unpacked_qty'
     blg_dic_tan = create_blg_dict_per_sorted_3a4_and_selected_tan(df_3a4, supply_dic_tan.keys(),qty_col=qty_col)
     #print(blg_dic_tan[''])
     # pivot df_oh and versionless the TAN
