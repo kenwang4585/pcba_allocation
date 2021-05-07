@@ -6,12 +6,9 @@
 import matplotlib
 matplotlib.use('Agg')
 
-import time
 from werkzeug.utils import secure_filename
 from flask import flash,send_from_directory,render_template, request,redirect,url_for
-from flask_settings import *
 from functions import *
-from SCDx_POC import collect_scr_oh_transit_from_scdx_poc
 from SCDx_PROD_API import collect_scr_oh_transit_from_scdx_prod
 from settings import *
 from sending_email import *
@@ -272,8 +269,7 @@ def allocation_result():
 
                 # write details to log_details.txt
                 log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+') as file_object:
-                    file_object.write(log_msg)
+                add_log_details(log_msg)
                 traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+'))
 
             flash(msg, 'success')
@@ -566,7 +562,7 @@ def document():
         http_scheme = 'https'
 
     if login_user!='kwang2':
-        raise ValueError
+        return redirect(url_for("document", _external=True,_scheme=http_scheme))
         add_log_summary(user=login_user, location='Document', user_action='Visit - trying', summary='why this happens??')
 
     return render_template('allocation_document.html',
@@ -718,7 +714,6 @@ def exceptional_priority():
                                    user=login_user,
                                    subtitle=' - Exceptional Priority')
         elif submit_show_all:
-            print('show all')
             df_db_data = read_table('exception_priority')
             df_db_data.sort_values(by='Ranking', inplace=True)
 
@@ -729,7 +724,6 @@ def exceptional_priority():
                                    user=login_user,
                                    subtitle=' - Exceptional Priority')
         elif submit_show_me:
-            print('show me')
             df_db_data = read_table('exception_priority')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
             df_db_data.sort_values(by='Ranking', inplace=True)
@@ -742,7 +736,6 @@ def exceptional_priority():
                            subtitle=' - Exceptional Priority')
 
         elif submit_download:
-            print('download')
             df_db_data = read_table('exception_priority')
             df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
             df_db_data.set_index('SO_SS',inplace=True)
