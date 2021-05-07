@@ -12,8 +12,8 @@ from db_delete import *
 import time
 from functools import wraps
 
-def add_log_txt(msg=''):
-    with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
+def add_log_details(msg=''):
+    with open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+') as file_object:
         file_object.write(msg)
 
 def write_log_time_spent(f):

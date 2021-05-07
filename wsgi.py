@@ -41,7 +41,7 @@ def allocation_run():
     #print(request.headers)
     #print(request.url)
     if login_user!='kwang2':
-        add_user_log(user=login_user, location='Home-RUN', user_action='Visit', summary='')
+        add_log_summary(user=login_user, location='Home-RUN', user_action='Visit', summary='')
 
     if form.validate_on_submit():
         log_msg_main = []
@@ -49,7 +49,7 @@ def allocation_run():
         print('start to run: {}'.format(start_time.strftime('%Y-%m-%d %H:%M')))
 
         log_msg='\n\n[' + login_user + '] ' + start_time.strftime('%Y-%m-%d %H:%M')
-        add_log_txt(msg=log_msg)
+        add_log_details(msg=log_msg)
         #log_msg.append('User info: ' + request.headers.get('User-agent'))
 
         # 通过条件判断及邮件赋值，开始执行任务
@@ -61,7 +61,7 @@ def allocation_run():
         ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
         log_msg_main.append(pcba_site + ' ' + bu)
         log_msg = '\n' + pcba_site + ' ' + bu
-        add_log_txt(msg=log_msg)
+        add_log_details(msg=log_msg)
 
         # 判断并定义ranking_col
         if ranking_logic == 'cus_sat':
@@ -90,7 +90,7 @@ def allocation_run():
                 flash(msg, 'warning')
                 print(login_user,msg)
                 summary = 'pcba_site ({}) and supply file({}) not matching!'.format(pcba_site,f_supply.filename)
-                add_user_log(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
+                add_log_summary(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
                 return render_template('allocation_run.html', form=form, user=login_name)
 
@@ -105,16 +105,16 @@ def allocation_run():
         file_size_3a4 = get_file_size(file_path_3a4)
         log_msg_main.append(f_3a4.filename + '(size: ' + file_size_3a4 + ')')
         log_msg = '\nFile 3a4: ' + f_3a4.filename + '(size: ' + file_size_3a4 + ')'
-        add_log_txt(msg=log_msg)
+        add_log_details(msg=log_msg)
         if f_supply!=None:
             file_size_supply=get_file_size(file_path_supply)
             log_msg_main.append(f_supply.filename + '(size: ' + file_size_supply + ')')
             log_msg = '\nFile supply: ' + f_supply.filename + '(size: ' + file_size_supply + ')'
-            add_log_txt(msg=log_msg)
+            add_log_details(msg=log_msg)
         else:
             log_msg_main.append('Supply file directly download through API')
             log_msg = '\nFile supply: directly download through API'
-            add_log_txt(msg=log_msg)
+            add_log_details(msg=log_msg)
 
         # read 3a4 data and check the columns required
         df_3a4, msg_3a4, msg_3a4_option=read_3a4_and_check_columns(file_path_3a4,col_3a4_must_have)
@@ -165,11 +165,11 @@ def allocation_run():
             processing_time = round((finish_time - start_time).total_seconds() / 60, 1)
             msg='Total processing time:' + str(processing_time) + ' min'
             log_msg_main.append(msg)
-            add_log_txt(msg)
+            add_log_details(msg)
             print('\n' + msg + '\n')
 
             summary='; '.join(log_msg_main)
-            add_user_log(user=login_user,location='Allocation',user_action='Make allocation',summary=summary)
+            add_log_summary(user=login_user,location='Allocation',user_action='Make allocation',summary=summary)
 
         except Exception as e:
             try:
@@ -183,10 +183,10 @@ def allocation_run():
             flash('Error encountered: {}'.format(str(e)),'warning')
             #Write the log file
             summary = '; '.join(log_msg_main)
-            add_user_log(user=login_user, location='Allocation', user_action='Make allocation - ERROR', summary=summary)
+            add_log_summary(user=login_user, location='Allocation', user_action='Make allocation - ERROR', summary=summary)
 
-            # write details to log_txt.txt
-            traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
+            # write details to log_details.txt
+            traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+'))
 
         # clear memory
         try:
@@ -256,7 +256,7 @@ def allocation_result():
             try:
                 send_allocation_result(email_msg, fname_share, login_user,login_name)
 
-                add_user_log(user=login_user, location='Download', user_action='Share file',
+                add_log_summary(user=login_user, location='Download', user_action='Share file',
                              summary='Success: {}'.format(fname_share))
                 if login_user == 'unknown' or login_user == 'kwang2':
                     msg = 'Testing purpose - {} is sent to KW.'.format(fname_share)
@@ -268,13 +268,13 @@ def allocation_result():
                 msg='Error encountered in sharing result:{}'.format(e)
                 flash(msg, 'warning')
                 # Write the log file
-                add_user_log(user=login_user, location='Download', user_action='Share file', summary=str(e))
+                add_log_summary(user=login_user, location='Download', user_action='Share file', summary=str(e))
 
-                # write details to log_txt.txt
+                # write details to log_details.txt
                 log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
+                with open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+') as file_object:
                     file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+'))
 
             flash(msg, 'success')
             return redirect(url_for('allocation_result', _external=True, _scheme=http_scheme, viewarg1=1))
@@ -383,7 +383,7 @@ def download_file_trash(filename):
     f_path=base_dir_trash
     login_user = request.headers.get('Oidc-Claim-Sub')
 
-    add_user_log(user=login_user, location='Download', user_action='Download file',
+    add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -392,7 +392,7 @@ def download_file_output(filename):
     f_path=base_dir_output
     login_user = request.headers.get('Oidc-Claim-Sub')
 
-    add_user_log(user=login_user, location='Download', user_action='Download file',
+    add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -401,7 +401,7 @@ def download_file_upload(filename):
     f_path=base_dir_upload
     login_user = request.headers.get('Oidc-Claim-Sub')
 
-    add_user_log(user=login_user, location='Download', user_action='Download file',
+    add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -410,7 +410,7 @@ def download_file_supply(filename):
     f_path=base_dir_supply
     login_user = request.headers.get('Oidc-Claim-Sub')
 
-    add_user_log(user=login_user, location='Download', user_action='Download file',
+    add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -419,7 +419,7 @@ def download_file_logs(filename):
     f_path=base_dir_logs
     login_user = request.headers.get('Oidc-Claim-Sub')
 
-    add_user_log(user=login_user, location='Download', user_action='Download file',
+    add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
     return send_from_directory(f_path, filename=filename, as_attachment=True)
 
@@ -505,9 +505,9 @@ def allocation_admin():
         http_scheme = 'https'
 
     if login_user!='kwang2':
-        add_user_log(user=login_user, location='Admin', user_action='Visit - trying', summary='')
+        add_log_summary(user=login_user, location='Admin', user_action='Visit - trying', summary='')
         return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
-        add_user_log(user=login_user, location='Admin', user_action='Visit success', summary='why this happens??')
+        add_log_summary(user=login_user, location='Admin', user_action='Visit success', summary='why this happens??')
 
     # get file info
     df_output=get_file_info_on_drive(base_dir_output,keep_hours=360)
@@ -567,7 +567,7 @@ def document():
 
     if login_user!='kwang2':
         raise ValueError
-        add_user_log(user=login_user, location='Document', user_action='Visit - trying', summary='why this happens??')
+        add_log_summary(user=login_user, location='Document', user_action='Visit - trying', summary='why this happens??')
 
     return render_template('allocation_document.html',
                            user=login_name)
@@ -647,6 +647,7 @@ def exceptional_priority():
 
             msg = '{} SO_SS are removed from the database due to packed/cancelled.'.format(len(removed_ss))
             flash(msg, 'success')
+            add_log_summary(user=login_user, location='Exceptional priority', user_action='Remove packed', summary=msg)
 
             return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
         elif submit_upload_template:
@@ -708,6 +709,7 @@ def exceptional_priority():
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
                 .format(df_db_data_user.shape[0],df_exceptional_priority.shape[0])
             flash(msg,'success')
+            add_log_summary(user=login_user, location='Exceptional priority', user_action='Upload template', summary=msg)
 
             return render_template('exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
@@ -846,6 +848,7 @@ def exceptional_sourcing_split():
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
                 .format(df_db_data_user.shape[0],df_exceptional_sourcing_split.shape[0])
             flash(msg,'success')
+            add_log_summary(user=login_user, location='Exceptional sourcing split', user_action='Upload template', summary=msg)
 
             return render_template('exceptional_sourcing_split.html',
                                    db_data_header=df_db_data.columns,
@@ -978,6 +981,7 @@ def tan_grouping():
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
                 .format(df_db_data_user.shape[0],df_tan_grouping.shape[0])
             flash(msg,'success')
+            add_log_summary(user=login_user, location='TAN grouping', user_action='Upload template', summary=msg)
 
             return render_template('tan_grouping.html',
                                    db_data_header=df_db_data.columns,
@@ -1042,50 +1046,9 @@ def scdx_api():
         return 'Sorry, you are not authorized to access this.'
 
     if form.validate_on_submit():
-        submit_download_scdx_poc=form.submit_download_supply_poc.data
         submit_download_scdx_prod = form.submit_download_supply_prod.data
 
-        if submit_download_scdx_poc:
-            pcba_site_poc=form.pcba_site_poc.data.strip().upper()
-
-            if pcba_site_poc=='':
-                msg = 'Pls put in a PCBA site name to proceed!'
-                flash(msg,'warning')
-                return redirect(url_for('scdx_api', _external=True, _scheme=http_scheme, viewarg1=1))
-
-            log_msg = []
-            log_msg.append('\n\n[Download SCDx-POC] - ' + login_user + ' ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-            now = pd.Timestamp.now()
-            f_path=base_dir_supply
-            fname=pcba_site_poc + ' scr_oh_intransit(scdx-poc) ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
-            log_msg.append('Download supply from SCDx-POC')
-
-            try:
-                df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_poc(pcba_site_poc)
-                data_to_write = {'por': df_scr,
-                                 'df-oh': df_oh,
-                                 'in-transit': df_intransit,
-                                 'sourcing-rule': df_sourcing}
-
-                write_data_to_excel(os.path.join(f_path, fname), data_to_write)
-                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-POC', summary='Success: ' + pcba_site_poc)
-
-                return send_from_directory(f_path, filename=fname, as_attachment=True)
-            except Exception as e:
-                msg = 'Error downloading supply data from SCDx-POC! Maybe SCDx issue, pls try again after a while.'
-                flash(msg, 'warning')
-                traceback.print_exc()
-                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-POC', summary='Error: [' + pcba_site_poc + '] ' + str(e))
-
-                # write details to log_txt.txt
-                log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
-                    file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
-
-                return redirect(url_for('scdx_api', _external=True, _scheme=http_scheme, viewarg1=1))
-        elif submit_download_scdx_prod:
+        if submit_download_scdx_prod:
             pcba_site_prod=form.pcba_site_prod.data.strip().upper()
 
             if pcba_site_prod=='':
@@ -1093,13 +1056,12 @@ def scdx_api():
                 flash(msg,'warning')
                 return redirect(url_for('scdx_api', _external=True, _scheme=http_scheme, viewarg1=1))
 
-            log_msg = []
-            log_msg.append('\n\n[Download SCDx-Production] - ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'))
+            msg='\n\n[Download SCDx-Production] - ' + login_user + ' ' + pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
+            add_log_details(msg=msg)
 
             now = pd.Timestamp.now()
             f_path=base_dir_supply
             fname=pcba_site_prod + ' scr_oh_intransit(scdx-prod) ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
-            log_msg.append('Download supply from SCDx-POC')
 
             try:
                 df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site_prod,'*')
@@ -1109,19 +1071,18 @@ def scdx_api():
                                  'sourcing-rule': df_sourcing}
 
                 write_data_to_excel(os.path.join(f_path, fname), data_to_write)
-                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-Prod', summary='Success: ' + pcba_site_prod)
+
+                add_log_summary(user=login_user, location='SCDx-API', user_action='Download SCDx-Prod', summary=fname)
+                add_log_details(msg=' ' + fname)
 
                 return send_from_directory(f_path, filename=fname, as_attachment=True)
             except Exception as e:
-                msg = 'Error downloading supply data from SCDx-Prod! Pls try again later.'
+                msg = 'Error downloading supply data from SCDx-Prod! Check and ensure you put in the right PCBA org name, or wait and try again later.'
                 flash(msg, 'warning')
-                add_user_log(user=login_user, location='Datasource', user_action='Download SCDx-Prod', summary='Error: [' + pcba_site_prod + '] ' + str(e))
-
-                # write details to log_txt.txt
-                log_msg = '\n'.join(log_msg)
-                with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
-                    file_object.write(log_msg)
-                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+'))
+                flash(str(e),'warning')
+                add_log_summary(user=login_user, location='SCDx-API', user_action='Download SCDx-Prod', summary='Error: [' + pcba_site_prod + '] ' + str(e))
+                add_log_details(msg='\n' + pcba_site_prod + '\n')
+                traceback.print_exc(file=open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+'))
 
                 return redirect(url_for('scdx_api', _external=True, _scheme=http_scheme, viewarg1=1))
 
