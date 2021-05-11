@@ -21,6 +21,10 @@ gunicorn = "*"
 pymysql = "*"
 smartsheet-python-sdk = "*"
 pymongo = "*"
+python-swiftclient = "*"
+keystoneauth1 = "*"
+python-keystoneclient = "*"
+importlib-metadata = "==1.7.0"
 
 [requires]
 python_version = "3.7"

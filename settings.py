@@ -13,6 +13,7 @@ eta_backward_offset_days=10
 if getpass.getuser()=='ubuntu': # if it's on crate server
     base_dir_output = '/home/ubuntu/output_file'
     base_dir_upload='/home/ubuntu/upload_file'
+    #base_dir_upload ='https://cloud-alln-1-storage.cisco.com/swift/v1/c28a56e2e4f84c21bda26bc131e558fb/kw_openstack_sortage_container/allocation_upload_file'
     base_dir_supply='/home/ubuntu/supply_file'
     base_dir_logs = '/home/ubuntu/logs'
     base_dir_trash = '/home/ubuntu/trash_file'
@@ -21,6 +22,7 @@ if getpass.getuser()=='ubuntu': # if it's on crate server
 else:
     base_dir_output = os.path.join(os.getcwd(),'output_file')
     base_dir_upload = os.path.join(os.getcwd(),'upload_file')
+    #base_dir_upload ='https://cloud-alln-1-storage.cisco.com/swift/v1/c28a56e2e4f84c21bda26bc131e558fb/kw_openstack_sortage_container/allocation_upload_file'
     base_dir_supply = os.path.join(os.getcwd(), 'supply_file')
     base_dir_logs = os.path.join(os.getcwd(), 'logs')
     base_dir_trash= os.path.join(os.getcwd(), 'trash_file')
