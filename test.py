@@ -1,11 +1,12 @@
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
 from swiftclient import Connection
+import os
 
 # Create a password auth plugin
 auth = v3.Password(auth_url='https://cloud-alln-1-storage.cisco.com/swift/v1/c28a56e2e4f84c21bda26bc131e558fb/kw_openstack_sortage_container',
                    username='kwang2',
-                   password='ZIYIZIJUNyijun45852892!',
+                   password=os.getenv('CEC_PW'),
                    user_domain_name='Default',
                    project_name='Default',
                    project_domain_name='Default')
