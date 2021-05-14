@@ -381,7 +381,7 @@ def download_file_trash(filename):
 
     add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
-    return send_from_directory(f_path, filename=filename, as_attachment=True)
+    return send_from_directory(f_path, filename, as_attachment=True)
 
 @app.route('/o/<filename>',methods=['GET'])
 def download_file_output(filename):
@@ -390,7 +390,7 @@ def download_file_output(filename):
 
     add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
-    return send_from_directory(f_path, filename=filename, as_attachment=True)
+    return send_from_directory(f_path, filename, as_attachment=True)
 
 @app.route('/u/<filename>',methods=['GET'])
 def download_file_upload(filename):
@@ -399,7 +399,7 @@ def download_file_upload(filename):
 
     add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
-    return send_from_directory(f_path, filename=filename, as_attachment=True)
+    return send_from_directory(f_path, filename, as_attachment=True)
 
 @app.route('/s/<filename>',methods=['GET'])
 def download_file_supply(filename):
@@ -408,7 +408,7 @@ def download_file_supply(filename):
 
     add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
-    return send_from_directory(f_path, filename=filename, as_attachment=True)
+    return send_from_directory(f_path, filename, as_attachment=True)
 
 @app.route('/l/<filename>',methods=['GET'])
 def download_file_logs(filename):
@@ -417,7 +417,7 @@ def download_file_logs(filename):
 
     add_log_summary(user=login_user, location='Download', user_action='Download file',
                  summary=filename)
-    return send_from_directory(f_path, filename=filename, as_attachment=True)
+    return send_from_directory(f_path, filename, as_attachment=True)
 
 @app.route('/subscribe',methods=['GET','POST'])
 def subscribe():
@@ -745,7 +745,7 @@ def exceptional_priority():
 
             df_db_data.to_excel(os.path.join(f_path,fname))
 
-            return send_from_directory(f_path, filename=fname, as_attachment=True)
+            return send_from_directory(f_path, fname, as_attachment=True)
 
     return render_template('exceptional_priority.html',
                            db_data_header=df_db_data.columns,
@@ -879,7 +879,7 @@ def exceptional_sourcing_split():
 
             df_db_data.to_excel(os.path.join(f_path,fname))
 
-            return send_from_directory(f_path, filename=fname, as_attachment=True)
+            return send_from_directory(f_path, fname, as_attachment=True)
 
     return render_template('exceptional_sourcing_split.html',
                            db_data_header=df_db_data.columns,
@@ -1011,7 +1011,7 @@ def tan_grouping():
 
             df_db_data.to_excel(os.path.join(f_path,fname))
 
-            return send_from_directory(f_path, filename=fname, as_attachment=True)
+            return send_from_directory(f_path, fname, as_attachment=True)
 
     return render_template('tan_grouping.html',
                            db_data_header=df_db_data.columns,
@@ -1058,6 +1058,7 @@ def scdx_api():
 
             try:
                 df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site_prod,'*')
+
                 data_to_write = {'por': df_scr,
                                  'df-oh': df_oh,
                                  'in-transit': df_intransit,
@@ -1067,8 +1068,10 @@ def scdx_api():
 
                 add_log_summary(user=login_user, location='SCDx-API', user_action='Download SCDx-Prod', summary=fname)
                 add_log_details(msg=' ' + fname)
+                print(f_path)
+                print(fname)
 
-                return send_from_directory(f_path, filename=fname, as_attachment=True)
+                return send_from_directory(f_path, fname, as_attachment=True)
             except Exception as e:
                 msg = 'Error downloading supply data from SCDx-Prod! Check and ensure you put in the right PCBA org name, or wait and try again later.'
                 flash(msg, 'warning')
