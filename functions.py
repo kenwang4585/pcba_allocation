@@ -30,7 +30,7 @@ def write_log_time_spent(f):
         msg='\n' + str(time_spent_second) + ' sec: ' + func_name
         print(msg)
 
-        with open(os.path.join(base_dir_logs, 'log_txt.txt'), 'a+') as file_object:
+        with open(os.path.join(base_dir_logs, 'log_details.txt'), 'a+') as file_object:
             file_object.write(msg)
 
         return result
@@ -1287,9 +1287,6 @@ def read_supply_file_and_check_columns(file_path_supply,col_scr_must_have,col_oh
     """
     Check if the input files contain the right columns
     """
-    msg_sheetname,msg_scr,msg_oh,msg_transit, msg_sourcing_rule='','','','',''
-
-    error_msg=''
     try:
         # read scr
         df_scr = pd.read_excel(file_path_supply, sheet_name='por')
@@ -1302,7 +1299,6 @@ def read_supply_file_and_check_columns(file_path_supply,col_scr_must_have,col_oh
 
         # read sourcing rules
         df_sourcing=pd.read_excel(file_path_supply,sheet_name='sourcing-rule')
-
     except:
         return 'Reading supply data from file error! Ensure Supply file sheet names are: por, df-oh, in-transit, sourcing-rule.'
 
