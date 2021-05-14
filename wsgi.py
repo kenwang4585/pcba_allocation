@@ -70,18 +70,16 @@ def allocation_run():
         ext_correct_3a4 = check_file_extension(f_3a4, extension='.csv')
         if f_supply != None:
             ext_correct_supply = check_file_extension(f_supply, extension='.xlsx')
+        else:
+            ext_correct_supply=True
+
         if not np.all([ext_correct_3a4,ext_correct_supply]):
             msg='File type error! Ensure 3a4 is .csv format and supply file is .xlsx format!'
             flash(msg,'warning')
             return render_template('allocation_run.html', form=form, user=login_name)
 
-        # short term check
-        if f_supply==None:
-            msg = 'Pls upload the supply file! Reading directly from SCDx target to live from 5/5.'
-            flash(msg, 'warning')
-            return render_template('allocation_run.html', form=form, user=login_name)
-        else:
-            # check input
+        # check input
+        if f_supply!=None:
             if pcba_site not in f_supply.filename.upper():
                 msg = "The supply file used is not a right one to do allocation for {}: {}.".format(pcba_site,f_supply.filename)
                 flash(msg, 'warning')
