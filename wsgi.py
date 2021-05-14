@@ -76,7 +76,7 @@ def allocation_run():
         if not np.all([ext_correct_3a4,ext_correct_supply]):
             msg='File type error! Ensure 3a4 is .csv format and supply file is .xlsx format!'
             flash(msg,'warning')
-            return render_template('allocation_run.html', form=form, user=login_name)
+            return render_template('allocation_run.html', form=form, user=login_user)
 
         # check input
         if f_supply!=None:
@@ -87,7 +87,7 @@ def allocation_run():
                 summary = 'pcba_site ({}) and supply file({}) not matching!'.format(pcba_site,f_supply.filename)
                 add_log_summary(user=login_user, location='Allocation', user_action='Make allocation', summary=summary)
 
-                return render_template('allocation_run.html', form=form, user=login_name)
+                return render_template('allocation_run.html', form=form, user=login_user)
 
         # save the files
         file_path_3a4 = os.path.join(base_dir_upload, login_user + '_' + secure_filename(f_3a4.filename))
@@ -115,10 +115,10 @@ def allocation_run():
         df_3a4, msg_3a4, msg_3a4_option=read_3a4_and_check_columns(file_path_3a4,col_3a4_must_have)
         if msg_3a4!='':
             flash(msg_3a4,'warning')
-            return render_template('allocation_run.html', form=form, user=login_name)
+            return render_template('allocation_run.html', form=form, user=login_user)
         if msg_3a4_option!='':
             flash(msg_3a4_option,'warning')
-            return render_template('allocation_run.html', form=form, user=login_name)
+            return render_template('allocation_run.html', form=form, user=login_user)
 
         # read supply data and check the columns required in each
         if f_supply==None:
@@ -130,7 +130,7 @@ def allocation_run():
 
             if len(result)>4: #refers to the error msg instead of hte df
                 flash(result,'warning')
-                return render_template('allocation_run.html', form=form, user=login_name)
+                return render_template('allocation_run.html', form=form, user=login_user)
             else:
                 df_scr=result[0]
                 df_oh=result[1]
@@ -145,11 +145,11 @@ def allocation_run():
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
             if df_3a4.shape[0] == 0:
                 flash('The 3a4 data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return render_template('allocation_run.html', form=form, user=login_name)
+                return render_template('allocation_run.html', form=form, user=login_user)
 
             if df_scr.shape[0] == 0:
                 flash('The SCR data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
-                return render_template('allocation_run.html', form=form, user=login_name)
+                return render_template('allocation_run.html', form=form, user=login_user)
 
             #### main program
             output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)
@@ -192,7 +192,7 @@ def allocation_run():
 
         return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
 
-    return render_template('allocation_run.html', form=form, user=login_name)
+    return render_template('allocation_run.html', form=form, user=login_user)
 
 @app.route('/result', methods=['GET', 'POST'])
 def allocation_result():
@@ -545,7 +545,7 @@ def allocation_admin():
                            files_supply=df_supply.values,
                            files_log=df_logs.values,
                            log_details=df_log_detail.values,
-                           user=login_name)
+                           user=login_user)
 
 
 @app.route('/document', methods=['GET'])
@@ -564,7 +564,7 @@ def document():
         add_log_summary(user=login_user, location='Document', user_action='Visit - trying', summary='why this happens??')
 
     return render_template('allocation_document.html',
-                           user=login_name)
+                           user=login_user)
 
 @app.route('/user-guide')
 def user_guide():
