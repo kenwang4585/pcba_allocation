@@ -48,18 +48,4 @@ col_sourcing_rule_must_have=['DF_site','BU','PF','TAN','Split','Transit_time']
 ranking_col_cust = ['priority_rank', 'ossd_offset', 'PROGRAM',
                            'C_UNSTAGED_QTY', 'rev_non_rev_rank', 'SO_SS', 'PO_NUMBER']
 
-# email options
-cisco_recipients=['manfan@cisco.com',
-                  'kwang2@cisco.com',
-                  'clarwang@cisco.com',
-                  'seyang@cisco.com',
-                  'jimmyzh@cisco.com',
-                  'lilixiao@cisco.com',
-                  'wibo@cisco.com',
-                  'brigwang@cisco.com',
-                  'pspforum@cisco.com',
-                  'irlee@cisco.com',
-                  'adwilkin@cisco.com',
-                  'scn_pmm@cisco.com',
-                  ]
-
+cec_pw='ZIYIZIJUNyijun45852892!'

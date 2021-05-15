@@ -485,6 +485,11 @@ def update_order_bom_to_3a4(df_3a4, df_order_bom):
     df_3a4.loc[:, 'distinct_po_filter'] = np.where(~df_3a4.duplicated('PO_NUMBER'),
                                                    'YES',
                                                    '')
+    dfx = df_3a4.pivot_table(index='PO_NUMBER', values='PRODUCT_FAMILY', aggfunc=len)
+    dfx = dfx[dfx.PRODUCT_FAMILY == 1]
+    df_3a4.loc[:, 'distinct_po_filter'] = np.where(df_3a4.PO_NUMBER.isin(dfx.index),
+                                                   'YES',
+                                                   df_3a4.distinct_po_filter)
 
     return df_3a4
 

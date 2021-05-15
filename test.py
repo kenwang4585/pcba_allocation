@@ -10,7 +10,7 @@ storageurl='https://cloud-alln-1-storage.cisco.com/swift/v1/c28a56e2e4f84c21bda2
 
 # Create a password auth plugin
 auth = v3.Password(auth_url=authurl_,
-                   username='kwang2.web',
+                   username='kwang2',
                    password='ZIYIZIJUNyijun45852892!',
                    user_domain_name='Default',
                    project_name='Default',
