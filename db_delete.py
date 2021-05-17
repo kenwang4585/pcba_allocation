@@ -1,4 +1,4 @@
-from flask_settings import *
+from flask_settings import db
 
 def delete_table_data(table_name,id_list):
     '''

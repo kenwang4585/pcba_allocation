@@ -26,6 +26,7 @@ keystoneauth1 = "*"
 python-keystoneclient = "*"
 importlib-metadata = "==1.7.0"
 python-openstackclient = "*"
+flask-mysqldb = "*"
 
 [requires]
 python_version = "3.7"

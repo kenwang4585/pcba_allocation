@@ -7,6 +7,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.middleware.proxy_fix import ProxyFix
 from settings import base_dir_db
+from sqlalchemy import create_engine
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app) # usethis inorder for request.remote_addr to show the real user IP
@@ -14,10 +15,12 @@ app.wsgi_app = ProxyFix(app.wsgi_app) # usethis inorder for request.remote_addr 
 app.secret_key = os.getenv('SECRET_KEY', 'secret string')
 #app.config['UPLOAD_PATH'] = os.path.join(app.root_path, 'upload_file')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + base_dir_db + os.getenv('DB_URI')
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + base_dir_db + os.getenv('DB_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.config['MAX_CONTENT_LENGTH']=150*1024*1024
-
+#engine = create_engine('sqlite:///' + base_dir_db + os.getenv('DB_URI'))
+#engine = create_engine(os.getenv('ENGINE'))
 db = SQLAlchemy(app)
 
 # Flask forms
@@ -95,7 +98,7 @@ class TanGroupingForm(FlaskForm):
 
 # Database tables
 
-class UserLog(db.Model):
+class AllcocationUserLog(db.Model):
     '''
     User logs db table
     '''
@@ -107,7 +110,7 @@ class UserLog(db.Model):
     USER_ACTION=db.Column(db.String(20))
     SUMMARY=db.Column(db.Text)
 
-class Subscription(db.Model):
+class AllocationSubscription(db.Model):
     '''
     Email setting db table
     '''
@@ -118,7 +121,7 @@ class Subscription(db.Model):
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class ExceptionPriority(db.Model):
+class AllocationExceptionPriority(db.Model):
     '''
     Exceptional priority SS db table
     '''
@@ -131,7 +134,7 @@ class ExceptionPriority(db.Model):
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class ExceptionSourcingSplit(db.Model):
+class AllocationExceptionSourcingSplit(db.Model):
     '''
     Exceptional Sourcing split db table
     '''
@@ -146,7 +149,7 @@ class ExceptionSourcingSplit(db.Model):
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class TanGrouping(db.Model):
+class AllocationTanGrouping(db.Model):
     '''
     Tan grouping db table
     '''

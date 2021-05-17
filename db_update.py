@@ -5,7 +5,7 @@ def update_email_data(pcba_org,bu,email,login_user):
     '''
     Update table based on user input
     '''
-    records = Subscription.query.filter_by(Email=email).all()
+    records = AllocationSubscription.query.filter_by(Email=email).all()
     for record in records:
         record.PCBA_Org=pcba_org
         record.BU=bu
