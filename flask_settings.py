@@ -19,8 +19,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'secret string')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.config['MAX_CONTENT_LENGTH']=150*1024*1024
-#engine = create_engine('sqlite:///' + base_dir_db + os.getenv('DB_URI'))
-#engine = create_engine(os.getenv('ENGINE'))
+
 db = SQLAlchemy(app)
 
 # Flask forms
@@ -98,7 +97,7 @@ class TanGroupingForm(FlaskForm):
 
 # Database tables
 
-class AllcocationUserLog(db.Model):
+class UserLog(db.Model):
     '''
     User logs db table
     '''
@@ -110,7 +109,7 @@ class AllcocationUserLog(db.Model):
     USER_ACTION=db.Column(db.String(20))
     SUMMARY=db.Column(db.Text)
 
-class AllocationSubscription(db.Model):
+class Subscription(db.Model):
     '''
     Email setting db table
     '''
@@ -121,7 +120,7 @@ class AllocationSubscription(db.Model):
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class AllocationExceptionPriority(db.Model):
+class ExceptionPriority(db.Model):
     '''
     Exceptional priority SS db table
     '''
@@ -134,7 +133,7 @@ class AllocationExceptionPriority(db.Model):
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class AllocationExceptionSourcingSplit(db.Model):
+class ExceptionSourcingSplit(db.Model):
     '''
     Exceptional Sourcing split db table
     '''
@@ -149,7 +148,7 @@ class AllocationExceptionSourcingSplit(db.Model):
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class AllocationTanGrouping(db.Model):
+class TanGrouping(db.Model):
     '''
     Tan grouping db table
     '''
