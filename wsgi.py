@@ -340,7 +340,7 @@ def delete_email_record(login_user,added_by,email,email_id):
 
     if login_user in email or login_user in added_by or login_user==super_user:
         id_list=[str(email_id)]
-        delete_table_data('subscription', id_list)
+        delete_table_data('allocation_subscription', id_list)
         msg = 'Email deleted: {}'.format(email)
         flash(msg, 'success')
     else:
@@ -430,7 +430,7 @@ def subscribe():
         http_scheme = 'https'
 
     # read emails
-    df_email_detail = read_table('subscription')
+    df_email_detail = read_table('allocation_subscription')
     df_email_detail.sort_values(by=['PCBA_Org','BU'],inplace=True)
 
     if form.validate_on_submit():
@@ -498,7 +498,7 @@ def allocation_admin():
     else:
         http_scheme = 'https'
 
-    if login_user!='kwang2':
+    if login_user!='kwang2' and login_user!='unknown':
         add_log_summary(user=login_user, location='Admin', user_action='Visit - trying', summary='')
         return redirect(url_for('allocation_run',_external=True,_scheme=http_scheme,viewarg1=1))
         add_log_summary(user=login_user, location='Admin', user_action='Visit success', summary='why this happens??')
@@ -511,7 +511,7 @@ def allocation_admin():
     df_logs=get_file_info_on_drive(base_dir_logs,keep_hours=10000)
 
     # read logs
-    df_log_detail = read_table('user_log')
+    df_log_detail = read_table('allocation_user_log')
     df_log_detail.sort_values(by=['DATE','TIME'],ascending=False,inplace=True)
 
     if form.validate_on_submit():
@@ -593,7 +593,7 @@ def exceptional_priority():
     if '[C]' in login_title:  # for c-workers
         return 'Sorry, you are not authorized to access this.'
 
-    df_db_data=read_table('exception_priority')
+    df_db_data=read_table('allocation_exception_priority')
     df_db_data.sort_values(by='Ranking', inplace=True)
 
     if form.validate_on_submit():
@@ -641,7 +641,7 @@ def exceptional_priority():
 
             msg = '{} SO_SS are removed from the database due to packed/cancelled.'.format(len(removed_ss))
             flash(msg, 'success')
-            add_log_summary(user=login_user, location='Exceptional priority', user_action='Remove packed', summary=msg)
+            add_log_summary(user=login_user, location='E-priority', user_action='Remove packed', summary=msg)
 
             return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
         elif submit_upload_template:
@@ -692,18 +692,18 @@ def exceptional_priority():
 
             # remove all data for user and write in new data from the template
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
-            delete_table_data('exception_priority', df_db_data_user.id)
+            delete_table_data('allocation_exception_priority', df_db_data_user.id)
             add_exceptional_priority_data_from_template(df_exceptional_priority,login_user)
 
             # read and display data by user
-            df_db_data = read_table('exception_priority')
+            df_db_data = read_table('allocation_exception_priority')
             df_db_data=df_db_data[df_db_data.Added_by==login_user]
             df_db_data.sort_values(by='Ranking',inplace=True)
 
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
                 .format(df_db_data_user.shape[0],df_exceptional_priority.shape[0])
             flash(msg,'success')
-            add_log_summary(user=login_user, location='Exceptional priority', user_action='Upload template', summary=msg)
+            add_log_summary(user=login_user, location='E-priority', user_action='Upload template', summary=msg)
 
             return render_template('exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
@@ -712,7 +712,7 @@ def exceptional_priority():
                                    user=login_user,
                                    subtitle=' - Exceptional Priority')
         elif submit_show_all:
-            df_db_data = read_table('exception_priority')
+            df_db_data = read_table('allocation_exception_priority')
             df_db_data.sort_values(by='Ranking', inplace=True)
 
             return render_template('exceptional_priority.html',
@@ -722,7 +722,7 @@ def exceptional_priority():
                                    user=login_user,
                                    subtitle=' - Exceptional Priority')
         elif submit_show_me:
-            df_db_data = read_table('exception_priority')
+            df_db_data = read_table('allocation_exception_priority')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
             df_db_data.sort_values(by='Ranking', inplace=True)
 
@@ -734,7 +734,7 @@ def exceptional_priority():
                            subtitle=' - Exceptional Priority')
 
         elif submit_download:
-            df_db_data = read_table('exception_priority')
+            df_db_data = read_table('allocation_exception_priority')
             df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
             df_db_data.set_index('SO_SS',inplace=True)
             df_db_data.Ranking=df_db_data.Ranking.astype(float)
@@ -770,7 +770,7 @@ def exceptional_sourcing_split():
     if '[C]' in login_title:  # for c-workers
         return 'Sorry, you are not authorized to access this.'
 
-    df_db_data=read_table('exception_sourcing_split')
+    df_db_data=read_table('allocation_exception_sourcing_split')
 
     if form.validate_on_submit():
         submit_upload_template = form.submit_upload_template.data
@@ -829,17 +829,17 @@ def exceptional_sourcing_split():
 
             # remove all data for user and write in new data from the template
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
-            delete_table_data('exception_sourcing_split', df_db_data_user.id)
+            delete_table_data('allocation_exception_sourcing_split', df_db_data_user.id)
             add_exceptional_sourcing_split_data_from_template(df_exceptional_sourcing_split,login_user)
 
             # read and display data by user
-            df_db_data = read_table('exception_sourcing_split')
+            df_db_data = read_table('allocation_exception_sourcing_split')
             df_db_data=df_db_data[df_db_data.Added_by==login_user]
 
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
                 .format(df_db_data_user.shape[0],df_exceptional_sourcing_split.shape[0])
             flash(msg,'success')
-            add_log_summary(user=login_user, location='Exceptional sourcing split', user_action='Upload template', summary=msg)
+            add_log_summary(user=login_user, location='E-sourcing split', user_action='Upload template', summary=msg)
 
             return render_template('exceptional_sourcing_split.html',
                                    db_data_header=df_db_data.columns,
@@ -848,7 +848,7 @@ def exceptional_sourcing_split():
                                    user=login_user,
                                    subtitle=' - Exceptional Sourcing Split')
         elif submit_show_all:
-            df_db_data = read_table('exception_sourcing_split')
+            df_db_data = read_table('allocation_exception_sourcing_split')
 
             return render_template('exceptional_sourcing_split.html',
                                    db_data_header=df_db_data.columns,
@@ -857,7 +857,7 @@ def exceptional_sourcing_split():
                                    user=login_user,
                                    subtitle=' - Exceptional Sourcing Split')
         elif submit_show_me:
-            df_db_data = read_table('exception_sourcing_split')
+            df_db_data = read_table('allocation_exception_sourcing_split')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
 
             return render_template('exceptional_sourcing_split.html',
@@ -868,7 +868,7 @@ def exceptional_sourcing_split():
                                    subtitle=' - Exceptional Sourcing Split')
 
         elif submit_download:
-            df_db_data = read_table('exception_sourcing_split')
+            df_db_data = read_table('allocation_exception_sourcing_split')
             df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
             df_db_data.set_index('DF_site',inplace=True)
             df_db_data.Split=df_db_data.Split.astype(int)
@@ -904,7 +904,7 @@ def tan_grouping():
     if '[C]' in login_title:  # for c-workers
         return 'Sorry, you are not authorized to access this.'
 
-    df_db_data=read_table('tan_grouping')
+    df_db_data=read_table('allocation_tan_grouping')
     if form.validate_on_submit():
         submit_upload_template = form.submit_upload_template.data
         submit_show_all=form.submit_show_all.data
@@ -962,11 +962,11 @@ def tan_grouping():
 
             # remove all data for user and write in new data from the template
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
-            delete_table_data('tan_grouping', df_db_data_user.id)
+            delete_table_data('allocation_tan_grouping', df_db_data_user.id)
             add_tan_grouping_data_from_template(df_tan_grouping,login_user)
 
             # read and display data by user
-            df_db_data = read_table('tan_grouping')
+            df_db_data = read_table('allocation_tan_grouping')
             df_db_data=df_db_data[df_db_data.Added_by==login_user]
 
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
@@ -981,7 +981,7 @@ def tan_grouping():
                                    user=login_user,
                                    subtitle=' - TAN Grouping')
         elif submit_show_all:
-            df_db_data = read_table('tan_grouping')
+            df_db_data = read_table('allocation_tan_grouping')
 
             return render_template('tan_grouping.html',
                                    db_data_header=df_db_data.columns,
@@ -990,7 +990,7 @@ def tan_grouping():
                                    user=login_user,
                                    subtitle=' - TAN Grouping')
         elif submit_show_me:
-            df_db_data = read_table('tan_grouping')
+            df_db_data = read_table('allocation_tan_grouping')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
 
             return render_template('tan_grouping.html',
@@ -1001,7 +1001,7 @@ def tan_grouping():
                                    subtitle=' - TAN Grouping')
 
         elif submit_download:
-            df_db_data = read_table('tan_grouping')
+            df_db_data = read_table('allocation_tan_grouping')
             df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
             df_db_data.set_index('Group_name',inplace=True)
             f_path=base_dir_supply

@@ -27,6 +27,7 @@ python-keystoneclient = "*"
 importlib-metadata = "==1.7.0"
 python-openstackclient = "*"
 flask-mysqldb = "*"
+openstacksdk = "*"
 
 [requires]
 python_version = "3.7"

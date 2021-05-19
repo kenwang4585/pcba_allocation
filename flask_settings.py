@@ -97,7 +97,7 @@ class TanGroupingForm(FlaskForm):
 
 # Database tables
 
-class UserLog(db.Model):
+class AllocationUserLog(db.Model):
     '''
     User logs db table
     '''
@@ -105,22 +105,22 @@ class UserLog(db.Model):
     USER_NAME=db.Column(db.String(10))
     DATE=db.Column(db.Date)
     TIME=db.Column(db.String(8))
-    LOCATION=db.Column(db.String(10))
-    USER_ACTION=db.Column(db.String(20))
+    LOCATION=db.Column(db.String(25))
+    USER_ACTION=db.Column(db.String(35))
     SUMMARY=db.Column(db.Text)
 
-class Subscription(db.Model):
+class AllocationSubscription(db.Model):
     '''
     Email setting db table
     '''
     id=db.Column(db.Integer,primary_key=True)
     Email=db.Column(db.String(30))
-    PCBA_Org=db.Column(db.String())
-    BU=db.Column(db.String(17))
+    PCBA_Org=db.Column(db.String(30))
+    BU=db.Column(db.String(30))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class ExceptionPriority(db.Model):
+class AllocationExceptionPriority(db.Model):
     '''
     Exceptional priority SS db table
     '''
@@ -128,12 +128,12 @@ class ExceptionPriority(db.Model):
     SO_SS=db.Column(db.String(30))
     ORG=db.Column(db.String(3))
     BU=db.Column(db.String(12))
-    Ranking=db.Column(db.String())
+    Ranking=db.Column(db.FLOAT())
     Comments=db.Column(db.String(100))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class ExceptionSourcingSplit(db.Model):
+class AllocationExceptionSourcingSplit(db.Model):
     '''
     Exceptional Sourcing split db table
     '''
@@ -143,12 +143,12 @@ class ExceptionSourcingSplit(db.Model):
     BU=db.Column(db.String(12))
     PF=db.Column(db.String(12))
     TAN=db.Column(db.String(14))
-    Split=db.Column(db.String(3))
+    Split=db.Column(db.Integer())
     Comments=db.Column(db.String(100))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
 
-class TanGrouping(db.Model):
+class AllocationTanGrouping(db.Model):
     '''
     Tan grouping db table
     '''

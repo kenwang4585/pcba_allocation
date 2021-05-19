@@ -122,7 +122,7 @@ def remove_packed_exceptional_priority_ss(df_3a4,login_user):
     Read backlog priorities from db; remove SS showing packed/cancelled, or created by self but disappear from 34(if the org/BU also exist in 3a4.);
     '''
     # read exceptional priority from db
-    df_priority= read_table('exception_priority')
+    df_priority= read_table('allocation_exception_priority')
     df_priority=df_priority[df_priority.Added_by==login_user].copy()
     df_3a4=df_3a4[(df_3a4.BUSINESS_UNIT.isin(df_priority.BU.unique()))&(df_3a4.ORGANIZATION_CODE.isin(df_priority.ORG.unique()))]
 
@@ -148,23 +148,25 @@ def read_and_create_exceptional_priority_dict():
     :return:
     '''
     # read exceptional priority from db
-    df_priority= read_table('exception_priority')
+    df_priority= read_table('allocation_exception_priority')
 
     # create the priority dict
     ss_exceptional_priority = {}
-    priority_top = {}
-    priority_mid = {}
+    #priority_top = {}
+    #priority_mid = {}
     for row in df_priority.itertuples():
         try: # in case error input of non-num ranking
-            if float(row.Ranking)<4:
-                priority_top[row.SO_SS] = float(row.Ranking)
+            if int(row.Ranking)==9999:
+                ss_exceptional_priority[row.SO_SS] = None  # deprioritize it as no priority order
             else:
-                priority_mid[row.SO_SS] = float(row.Ranking)
+                ss_exceptional_priority[row.SO_SS] = float(row.Ranking)
         except:
             print('{} has a wrong ranking#: {}.'.format(row.SO_SS,row.Ranking) )
 
-        ss_exceptional_priority['priority_top'] = priority_top
-        ss_exceptional_priority['priority_mid'] = priority_mid
+        #ss_exceptional_priority['priority_top'] = priority_top
+        #ss_exceptional_priority['priority_mid'] = priority_mid
+
+    #print(ss_exceptional_priority)
 
     return ss_exceptional_priority
 
@@ -203,7 +205,7 @@ def read_tan_grouping_from_db():
 
     df_grouping = df_grouping[(df_grouping.Group_name.notnull()) & (df_grouping.TAN.notnull())]
     """
-    df_grouping=read_table('tan_grouping')
+    df_grouping=read_table('allocation_tan_grouping')
 
     #  chagne to versionless
     df_grouping=change_pn_to_versionless(df_grouping, pn_col='TAN')
@@ -879,7 +881,7 @@ def extract_bu_pf_from_scr(df_scr,tan_group):
     return tan_bu_pf
 
 
-### Below deprecated on Jan 14
+### Below deprecated on Jan 14!!!!!!!!!!!!!!!!!!!
 def ss_ranking_overall_new_december(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank'):
     """
     根据priority_cat,OSSD,FCD, REVENUE_NON_REVENUE,C_UNSTAGED_QTY,按照ranking_col的顺序对SS进行排序。最后放MFG_HOLD订单.
@@ -1669,7 +1671,7 @@ def read_subscription_data(org,bu_list):
     """
     Read the subscrition db for emails
     """
-    df_subscription = read_table('subscription')
+    df_subscription = read_table('allocation_subscription')
     df_sub=df_subscription[df_subscription.PCBA_Org.str.contains(org)].copy()
 
     if bu_list!=[]:
@@ -1872,7 +1874,7 @@ def update_exceptional_sourcing_split(df_sourcing,pcba_site):
     """
     regex = re.compile(r'\d{2,3}-\d{4,7}')
 
-    df_exceptional_sourcing_split=read_table('exception_sourcing_split')
+    df_exceptional_sourcing_split=read_table('allocation_exception_sourcing_split')
     # pickout valid data
     df_exceptional_sourcing_split = df_exceptional_sourcing_split[(df_exceptional_sourcing_split.PCBA_site==pcba_site)
                                                                   &(df_exceptional_sourcing_split.DF_site.notnull())
