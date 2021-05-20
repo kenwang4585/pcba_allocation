@@ -1617,7 +1617,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     df_transit.set_index(['DF_site','TAN','Total'],inplace=True)
     df_sourcing.set_index(['DF_site'], inplace=True)
     df_group.set_index(['Group_name'], inplace=True)
-    df_lt.set_index(['TAN'], inplace=True)
+    df_lt.set_index(['DF_site'], inplace=True)
 
     data_to_write = {'pcba_allocation': df_allocation,
                      'in-transit': df_transit,
