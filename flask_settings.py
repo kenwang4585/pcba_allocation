@@ -77,7 +77,11 @@ class ExceptionalPriorityForm(FlaskForm):
 
     submit_show_me = SubmitField('Show my data')
     submit_show_all = SubmitField('Show all data')
-    submit_download = SubmitField('Download my data')
+    submit_download_me = SubmitField('Download my data')
+
+    bu_org=StringField('BU/ORG:',render_kw={'placeholder':'ERBU/* or ERBU/FOC'})
+    submit_show_bu_org=SubmitField('Show by BU/ORG')
+    submit_download_bu_org=SubmitField('Download by BU/ORG')
 
 class ExceptionalSourcingSplitForm(FlaskForm):
     file_upload_template = FileField('Upload template (.xlsx):')

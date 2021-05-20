@@ -593,6 +593,9 @@ def exceptional_priority():
     if '[C]' in login_title:  # for c-workers
         return 'Sorry, you are not authorized to access this.'
 
+    if login_user not in ['kwang2','unknown']:
+        add_log_summary(user=login_user, location='E-priority', user_action='visit', summary='')
+
     df_db_data=read_table('allocation_exception_priority')
     df_db_data.sort_values(by='Ranking', inplace=True)
 
@@ -601,7 +604,10 @@ def exceptional_priority():
         submit_upload_template = form.submit_upload_template.data
         submit_show_all=form.submit_show_all.data
         submit_show_me=form.submit_show_me.data
-        submit_download=form.submit_download.data
+        submit_download_me=form.submit_download_me.data
+        bu_org=form.bu_org.data
+        submit_show_bu_org=form.submit_show_bu_org.data
+        submit_download_bu_org=form.submit_download_bu_org.data
 
         # define needed columns for the template and 3a4
         col_template = ['SO_SS', 'ORG', 'BU', 'Ranking', 'Comments']
@@ -698,7 +704,7 @@ def exceptional_priority():
             # read and display data by user
             df_db_data = read_table('allocation_exception_priority')
             df_db_data=df_db_data[df_db_data.Added_by==login_user]
-            df_db_data.sort_values(by='Ranking',inplace=True)
+            #df_db_data.sort_values(by='Ranking',inplace=True)
 
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
                 .format(df_db_data_user.shape[0],df_exceptional_priority.shape[0])
@@ -713,7 +719,7 @@ def exceptional_priority():
                                    subtitle=' - Exceptional Priority')
         elif submit_show_all:
             df_db_data = read_table('allocation_exception_priority')
-            df_db_data.sort_values(by='Ranking', inplace=True)
+            #df_db_data.sort_values(by='Ranking', inplace=True)
 
             return render_template('exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
@@ -724,7 +730,7 @@ def exceptional_priority():
         elif submit_show_me:
             df_db_data = read_table('allocation_exception_priority')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
-            df_db_data.sort_values(by='Ranking', inplace=True)
+            #df_db_data.sort_values(by='Ranking', inplace=True)
 
             return render_template('exceptional_priority.html',
                            db_data_header=df_db_data.columns,
@@ -733,7 +739,7 @@ def exceptional_priority():
                            user=login_user,
                            subtitle=' - Exceptional Priority')
 
-        elif submit_download:
+        elif submit_download_me:
             df_db_data = read_table('allocation_exception_priority')
             df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
             df_db_data.set_index('SO_SS',inplace=True)
@@ -744,6 +750,64 @@ def exceptional_priority():
             df_db_data.to_excel(os.path.join(f_path,fname))
 
             return send_from_directory(f_path, fname, as_attachment=True)
+        elif submit_show_bu_org:
+            if bu_org=='':
+                msg='Pls input BU/ORG'
+                flash(msg,'warning')
+                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
+
+            bu_org=bu_org.strip().split('/')
+            bu=bu_org[0].strip().upper()
+            if len(bu_org)==1:
+                org=''
+            else:
+                org=bu_org[1].strip().upper()
+                if org=='*':
+                    org=''
+
+            df_db_data = read_table('allocation_exception_priority')
+            df_db_data = df_db_data[df_db_data.BU == bu].copy()
+            if org!='':
+                df_db_data = df_db_data[df_db_data.ORG == org]
+            #df_db_data.sort_values(by='Ranking', inplace=True)
+
+            return render_template('exceptional_priority.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - Exceptional Priority')
+        elif submit_download_bu_org:
+            if bu_org == '':
+                msg = 'Pls input BU/ORG'
+                flash(msg, 'warning')
+                return redirect(url_for("exceptional_priority", _external=True, _scheme=http_scheme))
+
+            bu_org = bu_org.strip().split('/')
+            bu = bu_org[0].strip().upper()
+            if len(bu_org) == 1:
+                org = ''
+            else:
+                org = bu_org[1].strip().upper()
+                if org == '*':
+                    org = ''
+
+            df_db_data = read_table('allocation_exception_priority')
+            df_db_data = df_db_data[df_db_data.BU == bu].copy()
+            if org != '':
+                df_db_data = df_db_data[df_db_data.ORG == org]
+            # df_db_data.sort_values(by='Ranking', inplace=True)
+
+            df_db_data.set_index('SO_SS',inplace=True)
+            df_db_data.Ranking=df_db_data.Ranking.astype(float)
+
+            f_path=base_dir_supply
+            fname='Exceptional priority SS ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
+
+            df_db_data.to_excel(os.path.join(f_path,fname))
+
+            return send_from_directory(f_path, fname, as_attachment=True)
+
 
     return render_template('exceptional_priority.html',
                            db_data_header=df_db_data.columns,

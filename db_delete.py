@@ -8,8 +8,7 @@ def delete_table_data(table_name,id_list):
     table_name=table_name.split('_')
     table_name=[x.title() for x in table_name]
     table_name=''.join(table_name)
-    print(table_name)
-    print(eval(table_name))
+    
     table_class=eval(table_name)
 
     for id in id_list:

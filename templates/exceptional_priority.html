@@ -46,10 +46,10 @@
             <tr>
                 <td align="left">
                     <b>Note:</b>
-                    <li>Default priority: PR1:1; PR2:2; PR3:3; L4:4; BUP:5;</li>
-                    <li>Below exceptional ranking will overwrite the default priority. The ranking# can be any integer or float number;</li>
-                    <li>Example: for SO#123456-1, if set ranking as 1.1, it will be ranked after PR1 orders and before PR2 orders;</li>
-                    <li>We can set ranking# to 9999 to make a priority order "normal" order.</li>
+                    <li>Default priority: PR1:1; PR2:2; PR3:3; L4:4; BUP:5; followed with other orders;</li>
+                    <li>Below exceptional ranking will overwrite the default priority. The ranking# can be any integer or float number; smaller number will have higher rank. E.g., for SO#123456-1, if set ranking as 1.1, it will be ranked after PR1 orders and before PR2 orders;</li>
+                    <li>We can set ranking# to 9999 to make a priority order "normal" order;</li>
+                    <li>Below is also integrated with CTB/Production process for FOC/FDO. </li>
                 </td>
             </tr>
         </table>
@@ -58,7 +58,7 @@
         <table style="border-collapse:collapse; "   border="0" cellspacing="0px" align="center" width="80%">
             <tr>
                 <td align="center">
-                    {{ form.submit_show_all }} &emsp; {{ form.submit_show_me }}  &emsp; {{ form.submit_download }}
+                    {{ form.submit_show_all }} &emsp; {{ form.submit_show_me }}  &emsp; {{ form.submit_download_me }} &emsp; {{ form.submit_show_bu_org }}{{ form.bu_org }}{{ form.submit_download_bu_org }}
                 </td>
             </tr>
         </table>
