@@ -363,6 +363,7 @@ def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
 
     df_transit_time=df_sourcing.sort_values(by=['DF_site','Transit_time'],ascending=True)
     df_transit_time.drop_duplicates('DF_site',keep='first',inplace=True)
+    df_transit_time.drop('TAN',axis=1,inplace=True)
     df_transit_time.loc[:,'Transit_time']=df_transit_time.Transit_time.fillna(0)
 
     transit_time={}
@@ -1133,7 +1134,7 @@ def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_
     df_transit.set_index(['DF_site'], inplace=True)
     df_transit.rename(columns={'In-transit':'Total'},inplace=True)
 
-    df_transit_time.set_index('TAN',inplace=True)
+    df_transit_time.set_index('DF_site',inplace=True)
     df_sourcing.set_index('TAN',inplace=True)
 
     #df_scr.reset_index(inplace=True)
