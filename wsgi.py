@@ -431,7 +431,7 @@ def subscribe():
 
     # read emails
     df_email_detail = read_table('allocation_subscription')
-    df_email_detail.sort_values(by=['PCBA_Org','BU'],inplace=True)
+    #df_email_detail.sort_values(by=['PCBA_Org','BU'],inplace=True)
 
     if form.validate_on_submit():
         submit_add=form.submit_add.data
