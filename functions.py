@@ -421,6 +421,7 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
                 usage = regex_usage.search(item).group()
                 usage = float(usage[1:-1])
 
+                # collect the BOM PN if that TAN exist in the supply file or grouping
                 if pn in tan_group.keys():
                     pn = tan_group[pn]
                     po_list.append(po)
@@ -430,11 +431,13 @@ def generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan, tan_group):
                     po_list.append(po)
                     pn_list.append(pn)
                     usage_list.append(usage)
-
             except:
                 error_pn.append(item)
 
-    print('Error in regex TAN from FLB_TAN for below PN:',error_pn)
+    if len(error_pn)>0:
+        print('Error in regex TAN from FLB_TAN for below PN:',error_pn)
+        tan_regex_error='Error in regex TAN from FLB_TAN for below PN:'.format(error_pn)
+        add_log_details(msg=tan_regex_error)
 
     # print(po_list)
     df_order_bom_from_flb = pd.DataFrame({'PO_NUMBER': po_list, 'BOM_PN': pn_list, 'BOM_PN_QTY': usage_list})
@@ -1963,7 +1966,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     :param output_filename:
     :return: None
     """
-    # overwrite sourcing split based on exceptional value in smartsheet
+    # overwrite sourcing split based on exceptional value in db
     df_sourcing=update_exceptional_sourcing_split(df_sourcing,pcba_site)
 
     # collect available sourcing rules and calculate split unstage qty(testing: add split in sourcing output)
@@ -1995,11 +1998,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_scr.set_index('TAN', inplace=True)
     supply_dic_tan = created_supply_dict_per_scr(df_scr)
 
-    # Offset 3A4 OSSD and FCD by transit time
-    #df_3a4.loc[:, 'fcd_offset'] = df_3a4[['ORGANIZATION_CODE', 'CURRENT_FCD_NBD_DATE']].apply(
-    #    lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.CURRENT_FCD_NBD_DATE, transit_time, pcba_site),
-    #    axis=1)
-
+    # Offset 3A4 OSSD by transit time
     df_3a4.loc[:, 'ossd_offset'] = df_3a4.apply(
         lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),
         axis=1)
@@ -2007,13 +2006,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # redefine addressable flag
     df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
 
-    # read smartsheet priorities
+    # read exceptional priorities from db
     ss_exceptional_priority = read_and_create_exceptional_priority_dict()
-
-    # Remove and send email notification for ss removal from exceptional priority smartsheet
-    #if login_user not in ['unknown'] + [super_user]:
-    #    remove_priority_ss_from_smtsheet_and_notify(df_removal, login_user, sender='PCBA allocation tool')
-
 
     # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
@@ -2024,7 +2018,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_3a4=create_unpacked_qty_col_in_3a4(df_3a4)
 
     # (do below after ranking) Process 3a4 BOM base on FLB_TAN col. BOM_PN refers to tan_group if exist, or SCR Tan if not.
-    df_bom = generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
+    df_bom= generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
 
 
