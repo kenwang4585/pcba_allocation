@@ -96,51 +96,51 @@ def allocation_run():
             file_path_supply = os.path.join(base_dir_upload, login_user + '_' + secure_filename(f_supply.filename))
             f_supply.save(file_path_supply)
 
-        # get files size and log it
-        file_size_3a4 = get_file_size(file_path_3a4)
-        log_msg_main.append(f_3a4.filename + '(size: ' + file_size_3a4 + ')')
-        log_msg = '\nFile 3a4: ' + f_3a4.filename + '(size: ' + file_size_3a4 + ')'
-        add_log_details(msg=log_msg)
-        if f_supply!=None:
-            file_size_supply=get_file_size(file_path_supply)
-            log_msg_main.append(f_supply.filename + '(size: ' + file_size_supply + ')')
-            log_msg = '\nFile supply: ' + f_supply.filename + '(size: ' + file_size_supply + ')'
-            add_log_details(msg=log_msg)
-        else:
-            log_msg_main.append('Supply file directly download through API')
-            log_msg = '\nFile supply: directly download through API'
-            add_log_details(msg=log_msg)
-
-        # read 3a4 data and check the columns required
-        df_3a4, msg_3a4, msg_3a4_option=read_3a4_and_check_columns(file_path_3a4,col_3a4_must_have)
-        if msg_3a4!='':
-            flash(msg_3a4,'warning')
-            return render_template('allocation_run.html', form=form, user=login_user)
-        if msg_3a4_option!='':
-            flash(msg_3a4_option,'warning')
-            return render_template('allocation_run.html', form=form, user=login_user)
-
-        # read supply data and check the columns required in each
-        if f_supply==None:
-            df_scr, df_oh, df_transit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site, '*')
-            df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
-        else:
-            result=read_supply_file_and_check_columns(file_path_supply, col_scr_must_have, col_oh_must_have, col_transit_must_have,
-                                               col_sourcing_rule_must_have)
-
-            if len(result)>4: #refers to the error msg instead of hte df
-                flash(result,'warning')
-                return render_template('allocation_run.html', form=form, user=login_user)
-            else:
-                df_scr=result[0]
-                df_oh=result[1]
-                df_transit=result[2]
-                df_sourcing=result[3]
-                df_scr, df_oh, df_transit, df_sourcing = patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit,
-                                                                                                df_sourcing)
-
         # formally start the program
         try:
+            # get files size and log it
+            file_size_3a4 = get_file_size(file_path_3a4)
+            log_msg_main.append(f_3a4.filename + '(size: ' + file_size_3a4 + ')')
+            log_msg = '\nFile 3a4: ' + f_3a4.filename + '(size: ' + file_size_3a4 + ')'
+            add_log_details(msg=log_msg)
+            if f_supply!=None:
+                file_size_supply=get_file_size(file_path_supply)
+                log_msg_main.append(f_supply.filename + '(size: ' + file_size_supply + ')')
+                log_msg = '\nFile supply: ' + f_supply.filename + '(size: ' + file_size_supply + ')'
+                add_log_details(msg=log_msg)
+            else:
+                log_msg_main.append('Supply file directly download through API')
+                log_msg = '\nFile supply: directly download through API'
+                add_log_details(msg=log_msg)
+
+            # read 3a4 data and check the columns required
+            df_3a4, msg_3a4, msg_3a4_option=read_3a4_and_check_columns(file_path_3a4,col_3a4_must_have)
+            if msg_3a4!='':
+                flash(msg_3a4,'warning')
+                return render_template('allocation_run.html', form=form, user=login_user)
+            if msg_3a4_option!='':
+                flash(msg_3a4_option,'warning')
+                return render_template('allocation_run.html', form=form, user=login_user)
+
+            # read supply data and check the columns required in each
+            if f_supply==None:
+                df_scr, df_oh, df_transit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site, '*')
+                df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
+            else:
+                result=read_supply_file_and_check_columns(file_path_supply, col_scr_must_have, col_oh_must_have, col_transit_must_have,
+                                                   col_sourcing_rule_must_have)
+
+                if len(result)>4: #refers to the error msg instead of hte df
+                    flash(result,'warning')
+                    return render_template('allocation_run.html', form=form, user=login_user)
+                else:
+                    df_scr=result[0]
+                    df_oh=result[1]
+                    df_transit=result[2]
+                    df_sourcing=result[3]
+                    df_scr, df_oh, df_transit, df_sourcing = patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit,
+                                                                                                    df_sourcing)
+
             # limit BU from 3a4 and df_scr for allocation
             df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
             if df_3a4.shape[0] == 0:

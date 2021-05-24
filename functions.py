@@ -242,7 +242,7 @@ def read_exceptional_intransit_from_smartsheet(pcba_site):
     df_smart = df_smart[(df_smart.From_Org==pcba_site)&(df_smart.DF_site.notnull()) & (df_smart.TAN.notnull())
                         & (df_smart.ETA_date.notnull()) & (df_smart['In-transit_quantity'].notnull())]
 
-    df_smart.loc[:,'ETA_date']=df_smart.ETA_date.astype('datetime64[ns]')
+    df_smart.loc[:,'ETA_date']=pd.to_datetime(df_smart.ETA_date)
     df_smart.loc[:, 'In-transit_quantity'] = df_smart['In-transit_quantity'].astype(int)
 
     return df_smart
