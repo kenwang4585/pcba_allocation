@@ -42,6 +42,8 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
         porBalance=data['porBalance']
         porBalance.append({'date':pd.Timestamp.now(),'quantity':sm_oh}) # include SM OH
 
+        
+
         # PCBA site POR
         df_por=pd.DataFrame(porBalance)
         df_por.loc[:, 'planningOrg'] = pcba_site
@@ -51,6 +53,7 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
 
         df_por.loc[:,'porPlanDate']=porPlanDate
         por_list.append(df_por)
+
 
         # df sites OH
         dfsite_data=data['df']
@@ -118,24 +121,32 @@ def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
                 oh_tan_list.append(tan)
                 oh_qty_list.append(oh_qty)
 
-    df_por=pd.concat(por_list)
+    df_por=pd.concat(por_list,axis=0, join='outer')
     df_oh=pd.DataFrame({'DF_site':oh_org_list,'TAN':oh_tan_list,'BU':oh_bu_list,'OH':oh_qty_list})
     df_sourcing=pd.DataFrame({'DF_site':sr_org_list,'BU':sr_bu_list,'PF':sr_pf_list,'TAN':sr_tan_list,'Split':sr_split_list,'Transit_time':sr_lt_list})
     df_transit=pd.DataFrame({'DF_site':transit_org_list,'BU':transit_bu_list,'TAN':transit_tan_list,'ETA_date':transit_eta_list,'In-transit_quantity':transit_qty_list})
 
     df_por=df_por[['planningOrg','BU','PF','TAN','date','quantity','porPlanDate']]
-
+    #df_por.loc[:,'date']=df_por.date.astype('datetime64[ns]')
     df_por.loc[:,'date']=pd.to_datetime(df_por.date)
+    #df_transit.loc[:, 'ETA_date'] = df_transit.ETA_date.astype('datetime64[ns]')
     df_transit.loc[:, 'ETA_date'] = pd.to_datetime(df_transit.ETA_date)
+    print(df_por[df_por.date.isnull()])
+    
 
     df_por.sort_values(by=['TAN','planningOrg','date'],inplace=True)
+
+    
 
     return df_por, df_oh, df_transit,df_sourcing
 
 if __name__=='__main__':
-    pcba_site=input('Put in PCBA site:')
+    #pcba_site=input('Put in PCBA site:')
+    pcba_site='FOL'
+    cpn='*'
+    #cpn='74-120333-05'
     start=time.time()
-    df_por, df_oh, df_transit,df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site,'*')
+    df_por, df_oh, df_transit,df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site,cpn)
 
     end=time.time()
     print('Total time: {}'.format(end-start))
