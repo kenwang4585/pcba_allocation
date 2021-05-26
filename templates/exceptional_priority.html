@@ -45,11 +45,22 @@
         <table style="border-collapse:collapse; "   border="0" cellspacing="0px" align="center" width="70%">
             <tr>
                 <td align="left">
-                    <b>Note:</b>
-                    <li>Default priority: PR1:1; PR2:2; PR3:3; L4:4; BUP:5; followed with other orders;</li>
-                    <li>Below exceptional ranking will overwrite the default priority. The ranking# can be any integer or float number; smaller number will have higher rank. E.g., for SO#123456-1, if set ranking as 1.1, it will be ranked after PR1 orders and before PR2 orders;</li>
-                    <li>We can set ranking# to 9999 to make a priority order "normal" order;</li>
-                    <li>Below is also integrated with CTB/Production process for FOC/FDO. </li>
+                    <br>
+                    <details>
+                        <summary><span style="color: #bf002b">====================================> Guidelines (click to view/hide) <====================================</span></summary>
+                            <b>Comments about the priority:</b>
+                                <li>Default priority: PR1:1; PR2:2; PR3:3; L4:4; BUP:5; followed with other orders;</li>
+                                <li>Below exceptional ranking will overwrite the default priority. The ranking# can be any integer or float number; smaller number will have higher rank. E.g., for SO#123456-1, if set ranking as 1.1, it will be ranked after PR1 orders and before PR2 orders;</li>
+                                <li>We can set ranking# to 9999 to make a priority order "normal" order;</li>
+                                <li>The priority will be considered in PCBA allocation. For FOC/FDO, it's also integrated with the CTB/Production process. </li>
+                            <br>
+                            <b>Suggested approaches:</b>
+                                <li>Step 1: Download 3a4 under UOV via view PCBA_ALLOCATION, and take action: "Remove packed/cancelled orders base on 3a4". This will send a notification email to yourself with the packed/cancelled order details, and also remove the orders from below table;</li>
+                                <li>Step 2: Click "Download my data" to get a spreadsheet with remaining and open orders under your name;</li>
+                                <li>Step 3: Update the spreadsheet template as needed: add in new orders, change the ranking, etc.</li>
+                                <li>Step 4: "Replace my data with this template" by uploading the spreadsheet. This will delete all data under your name in the database table and upload the new data through the template.</li>
+                    </details>
+                    <br><br>
                 </td>
             </tr>
         </table>
