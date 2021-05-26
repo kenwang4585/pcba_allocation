@@ -56,6 +56,7 @@ def allocation_run():
         f_supply= form.file_supply.data
         f_3a4 = form.file_3a4.data
         ranking_logic=form.ranking_logic.data # This is not shown on the UI - take the default value set
+        description = form.description.data.strip()
         log_msg_main.append(pcba_site + ' ' + bu)
         log_msg = '\n' + pcba_site + ' ' + bu
         add_log_details(msg=log_msg)
@@ -152,7 +153,7 @@ def allocation_run():
                 return render_template('allocation_run.html', form=form, user=login_user)
 
             #### main program
-            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,login_user)
+            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,description,login_user)
             flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
             # Write the log file

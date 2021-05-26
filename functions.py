@@ -1118,16 +1118,18 @@ def write_data_to_excel(output_file,data_to_write):
     writer.save()
 
 @write_log_time_spent
-def write_allocation_output_file(pcba_site, bu_list,df_scr,df_3a4,df_transit,df_transit_time,df_sourcing,df_grouping,login_user):
+def write_allocation_output_file(pcba_site, bu_list,description,df_scr,df_3a4,df_transit,df_transit_time,df_sourcing,df_grouping,login_user):
     # save the scr output file and 3a4 to excel
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
+    output_filename = pcba_site + ' SCR allocation'
+    if bu_list!=['']:
+        bu = '_'.join(bu_list)
+        output_filename = output_filename + ' (' + bu + ')'
+    if description!='':
+        output_filename = output_filename + ' ' + login_user + ' ' + description
 
-    if bu_list != ['']:
-        bu = ' '.join(bu_list)
-        output_filename = pcba_site + ' SCR allocation (' + bu + ') ' + login_user + ' ' + dt + '.xlsx'
-    else:
-        output_filename = pcba_site + ' SCR allocation (all BU) ' + login_user + ' ' + dt + '.xlsx'
+    output_filename = output_filename  + ' ' + dt + '.xlsx'
     output_path = os.path.join(base_dir_output, output_filename)
 
     df_3a4 = df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
@@ -1954,7 +1956,7 @@ def collect_available_sourcing(df_sourcing):
 
 
 #@write_log_time_spent
-def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,login_user):
+def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,description,login_user):
     """
     Main program to process the data and PCBA allocation.
     :param df_3a4:
@@ -2128,7 +2130,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,blg_summary_before_allocation,blg_summary_after_allocation,sourcing_rules,org_split)
 
     # 存储文件
-    output_filename = write_allocation_output_file(pcba_site, bu_list, df_scr, df_3a4, df_transit,df_transit_time,df_sourcing,df_grouping,login_user)
+    output_filename = write_allocation_output_file(pcba_site, bu_list, description, df_scr, df_3a4, df_transit,df_transit_time,df_sourcing,df_grouping,login_user)
 
     return output_filename
 

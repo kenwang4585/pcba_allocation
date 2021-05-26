@@ -33,9 +33,12 @@ class RunAllocationForm(FlaskForm):
                                       ('max_rev','Revenue maximization: N/A')],
                              default='cus_sat',
                              validators=[DataRequired()])
+    description = StringField('Description:', render_kw={'placeholder': 'Short description show in output file name, e.g., test'})
 
     file_3a4 = FileField('Upload 3A4 file (.csv):',validators=[FileRequired()])
     file_supply=FileField('Upload supply file (.xlsx):')
+
+
     submit_allocation=SubmitField(' Make Allocation ')
 
 
