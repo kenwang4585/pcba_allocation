@@ -640,7 +640,7 @@ def exceptional_priority():
             try:
                 df_3a4=df_3a4[col_3a4]
             except:
-                msg = '3a4 format error! Ensure following columns are included: {}'.format(col_3a4)
+                msg = '3a4 format error! Ensure following columns are included: {}. You can use 3a4 view PCBA_ALLOCATION and select the related ORG/BU to download 3a4.'.format(col_3a4)
                 flash(msg, 'warning')
                 return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
 
