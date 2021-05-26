@@ -1127,9 +1127,9 @@ def write_allocation_output_file(pcba_site, bu_list,description,df_scr,df_3a4,df
         bu = '_'.join(bu_list)
         output_filename = output_filename + ' (' + bu + ')'
     if description!='':
-        output_filename = output_filename + ' ' + login_user + ' ' + description
+        output_filename = output_filename + ' ' + description
 
-    output_filename = output_filename  + ' ' + dt + '.xlsx'
+    output_filename = output_filename + ' ' + login_user + ' ' + dt + '.xlsx'
     output_path = os.path.join(base_dir_output, output_filename)
 
     df_3a4 = df_3a4[df_3a4.BOM_PN.notnull()][output_col_3a4].copy()
