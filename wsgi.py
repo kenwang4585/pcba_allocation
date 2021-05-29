@@ -523,7 +523,7 @@ def allocation_admin():
 
     # read logs
     df_log_detail = read_table('allocation_user_log')
-    df_log_detail.sort_values(by=['DATE','TIME'],ascending=False,inplace=True)
+    df_log_detail.sort_values(by=['id'],ascending=False,inplace=True)
 
     if form.validate_on_submit():
         fname=form.file_name.data
