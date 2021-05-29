@@ -245,10 +245,11 @@ if __name__ == '__main__':
     #df_grouping=pd.read_excel('/Users/wangken/downloads/grouping.xlsx')
     df_email=pd.read_excel('/Users/wangken/downloads/subscription.xlsx')
 
-    print(df_email)
+    #print(df_email)
 
     #from_file_add_tan_grouping_data_from_template(df_grouping)
     #from_file_add_exceptional_sourcing_split_data_from_template(df_split)
     #from_file_add_exceptional_priority_data_from_template(df_priority)
-    from_file_add_email_data(df_email)
+    #from_file_add_email_data(df_email)
+    roll_back()
 
