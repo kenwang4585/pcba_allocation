@@ -478,7 +478,7 @@ def subscribe():
                 try:
                     add_email_data(pcba_org, bu, email_to_add,login_user)
                 except:
-                    msg = 'Adding email data to database error! - contact kwang2 if you can not rootcause.'
+                    msg = 'Adding email data to database error (Org: {},BU: {},Email: {})! - contact kwang2 if you can not rootcause.'.format(pcba_org,bu,email_to_add)
                     flash(msg, 'warning')
                     add_log_summary(user=login_user, location='subscribe', user_action='Add email - error',
                                     summary=msg)
@@ -711,7 +711,7 @@ def exceptional_priority():
             try:
                 add_exceptional_priority_data_from_template(df_exceptional_priority,login_user)
             except:
-                msg='Adding exceptional priority data to database error! - contact kwang2 if you can not rootcause.'
+                msg='Adding exceptional priority data to database error (template: {})! - contact kwang2 if you can not rootcause.'.format(secure_filename(file_upload_template.filename))
                 flash(msg,'warning')
                 add_log_summary(user=login_user, location='E-priority', user_action='Upload template - error', summary=msg)
                 return redirect(url_for("exceptional_priority", _external=True, _scheme=http_scheme))
@@ -1045,7 +1045,7 @@ def tan_grouping():
             try:
                 add_tan_grouping_data_from_template(df_tan_grouping,login_user)
             except:
-                msg='Adding TAN grouping data to database error! - contact kwang2 if you can not rootcause.'
+                msg='Adding TAN grouping data to database error (template: {})! - contact kwang2 if you can not rootcause.'.format(secure_filename(file_upload_template.filename))
                 flash(msg,'warning')
                 add_log_summary(user=login_user, location='TAN grouping', user_action='Upload template - error', summary=msg)
                 return redirect(url_for("tan_grouping", _external=True, _scheme=http_scheme))
