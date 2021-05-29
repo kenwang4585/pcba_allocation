@@ -1,0 +1,89 @@
+
+<!-- Ken wang, Jan, 2020 -->
+<html>
+    <head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+        {% block title %}
+            <title>PCBA allocation</title>
+        {% endblock %}
+
+        {% block style %}
+            <!-- below give the right tab format -->
+            <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+            <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+            <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+            <!-- below can add a line above footer -->
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css">
+       {% endblock %}
+    </head>
+
+    <body>
+        {% block header %}
+            <!-- <div class="container"> -->
+                <table width="100%">
+                    <tr>
+                        <td width="10%"bgcolor="#1B4F72" align="center">
+                            <a href="{{ url_for('allocation_admin') }}" target=''><img src="{{ url_for('static', filename='logo1.png')}}" width="60"></a>
+                        </td>
+                        <td width="60%" bgcolor="#1B4F72" align="left">
+                            <br>
+                            <span style="color: #f5f5f5; font-size: x-large"><strong>&nbsp;&nbsp;</strong> {{ subtitle }}</span>
+                            <br><br>
+                        </td>
+                        <td width="27%" bgcolor="#1B4F72" align="right" valign="middle">
+                            <span style="color: #f5f5f5; font-size: medium">
+                                {{ user }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <a href="{{ url_for('subscribe') }}" target=''>Subscribe</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <a href="{{ url_for('allocation_run') }}" target=''>Home</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <a href="{{ url_for('user_guide') }}" target=''>?</a>
+                            </span>
+                        </td>
+                        <td width="3%" bgcolor="#1B4F72" align="right" valign="middle"></td>
+                    </tr>
+                </table>
+        {% endblock %}
+        <br>
+        {% block flash_message %}
+            <!-- below for flashed messages -->
+            <table style="border-collapse:collapse" border="0" cellspacing="0px" align="center">
+                <tbody>
+                    <tr>
+                      <td width="90%" align="left">
+                          <main class="container">
+                            {% if get_flashed_messages()|length>0 %}
+                              {% for message in get_flashed_messages(with_categories=True) %}
+                                <div class="alert alert-{{ message[0] }}" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    {{ message[1] }}
+                                </div>
+                              {% endfor %}
+                            {% endif %}
+                          </main>
+                      </td>
+                    </tr>
+                </tbody>
+            </table>
+        {% endblock %}
+
+        {% block content %}
+        {% endblock %}
+
+
+
+        {% block empty_space %}
+        {% endblock %}
+
+        <br><br>
+        {% block footer %}
+            <footer>
+                <p align="center" style="font-size: small">
+                    <a href="{{ url_for('scdx_api')}}" target="">SCDx_API</a> |
+                    <a href="{{ url_for('exceptional_priority')}}" target="">Exceptional priority</a> |
+                    <a href="{{ url_for('exceptional_sourcing_split')}}" target="">Exceptional sourcing split</a> |
+                    <a href="{{ url_for('tan_grouping')}}" target="">TAN grouping</a> |
+                    <a href="https://app.smartsheet.com/sheets/3vRm52gg8MMM2h6xH5vv7xjHRV8rH83v5j2w9r91?view=grid" target="_blank">Missing in-transit</a>
+               </p>
+            </footer>
+        {% endblock %}
+
+    </body>
+</html>

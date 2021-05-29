@@ -160,7 +160,7 @@ class AllocationTanGrouping(db.Model):
     Tan grouping db table
     '''
     id=db.Column(db.Integer,primary_key=True)
-    Group_name=db.Column(db.String(20))
+    Group_name=db.Column(db.String(50))
     TAN=db.Column(db.String(14))
     DF=db.Column(db.String(27))
     Comments=db.Column(db.String(100))

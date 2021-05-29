@@ -1120,7 +1120,7 @@ def write_data_to_excel(output_file,data_to_write):
 @write_log_time_spent
 def write_allocation_output_file(pcba_site, bu_list,description,df_scr,df_3a4,df_transit,df_transit_time,df_sourcing,df_grouping,login_user):
     # save the scr output file and 3a4 to excel
-    #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%m-%d %Hh%Mm')  # convert from server time to local
+    #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8))if qty > 0:.strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
     output_filename = pcba_site + ' SCR allocation'
     if bu_list!=['']:
