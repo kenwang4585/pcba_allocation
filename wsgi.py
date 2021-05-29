@@ -475,7 +475,15 @@ def subscribe():
                 flash(msg,'success')
                 return redirect(url_for('subscribe', _external=True, _scheme=http_scheme, viewarg1=1))
             else:
-                add_email_data(pcba_org, bu, email_to_add,login_user)
+                try:
+                    add_email_data(pcba_org, bu, email_to_add,login_user)
+                except:
+                    msg = 'Adding email data to database error! - contact kwang2 if you can not rootcause.'
+                    flash(msg, 'warning')
+                    add_log_summary(user=login_user, location='subscribe', user_action='Add email - error',
+                                    summary=msg)
+                    return redirect(url_for("subscribe", _external=True, _scheme=http_scheme))
+
                 msg='This email is added: {}'.format(email_to_add)
                 flash(msg,'success')
                 return redirect(url_for('subscribe', _external=True, _scheme=http_scheme, viewarg1=1))
@@ -700,7 +708,13 @@ def exceptional_priority():
             # remove all data for user and write in new data from the template
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
             delete_table_data('allocation_exception_priority', df_db_data_user.id)
-            add_exceptional_priority_data_from_template(df_exceptional_priority,login_user)
+            try:
+                add_exceptional_priority_data_from_template(df_exceptional_priority,login_user)
+            except:
+                msg='Adding exceptional priority data to database error! - contact kwang2 if you can not rootcause.'
+                flash(msg,'warning')
+                add_log_summary(user=login_user, location='E-priority', user_action='Upload template - error', summary=msg)
+                return redirect(url_for("exceptional_priority", _external=True, _scheme=http_scheme))
 
             # read and display data by user
             df_db_data = read_table('allocation_exception_priority')
@@ -1028,7 +1042,13 @@ def tan_grouping():
             # remove all data for user and write in new data from the template
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
             delete_table_data('allocation_tan_grouping', df_db_data_user.id)
-            add_tan_grouping_data_from_template(df_tan_grouping,login_user)
+            try:
+                add_tan_grouping_data_from_template(df_tan_grouping,login_user)
+            except:
+                msg='Adding TAN grouping data to database error! - contact kwang2 if you can not rootcause.'
+                flash(msg,'warning')
+                add_log_summary(user=login_user, location='TAN grouping', user_action='Upload template - error', summary=msg)
+                return redirect(url_for("tan_grouping", _external=True, _scheme=http_scheme))
 
             # read and display data by user
             df_db_data = read_table('allocation_tan_grouping')
