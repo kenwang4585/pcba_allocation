@@ -127,6 +127,15 @@ def allocation_run():
             if f_supply==None:
                 df_scr, df_oh, df_transit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site, '*')
                 df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
+                # also save the file in case needed afterwards
+                fname = pcba_site + ' scr_oh_intransit(scdx-prod - directly retrieved) ' + pd.Timestamp.now().strftime(
+                    '%m-%d %Hh%Mm ') + login_user + '.xlsx'
+                output_path = os.path.join(base_dir_upload,fname)
+                data_to_write = {'por': df_scr,
+                                 'oh': df_oh,
+                                 'in-transit': df_transit,
+                                 'sourcing-rule': df_sourcing}
+                write_data_to_excel(output_path, data_to_write)
             else:
                 result=read_supply_file_and_check_columns(file_path_supply, col_scr_must_have, col_oh_must_have, col_transit_must_have,
                                                    col_sourcing_rule_must_have)

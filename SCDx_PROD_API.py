@@ -6,6 +6,7 @@ import pandas as pd
 import pprint
 import time
 import os
+from settings import base_dir_supply
 
 def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
     """
@@ -140,7 +141,7 @@ if __name__=='__main__':
     end=time.time()
     print('Total time: {}'.format(end-start))
 
-    outPath = os.path.join(os.getcwd() + '/supply_file', pcba_site + '_por_oh_intransit_SCDx_Prod ' + pd.Timestamp.now().strftime('%m%d %Hh%Mm') + '.xlsx')
+    outPath = os.path.join(base_dir_supply, pcba_site + '_por_oh_intransit_SCDx_Prod ' + pd.Timestamp.now().strftime('%m%d %Hh%Mm') + '.xlsx')
     writer = pd.ExcelWriter(outPath, engine='xlsxwriter')
 
     df_por.to_excel(writer, sheet_name='por', index=False)
