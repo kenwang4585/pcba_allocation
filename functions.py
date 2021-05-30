@@ -360,10 +360,10 @@ def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
     """
     Read the transit pad from the sourcing rules. Only pick the shortest LT which is air. For 0 transit, change it to 1.
     """
-
+    df_sourcing.loc[:,'Transit_time']=df_sourcing.Transit_time.astype(int)
     df_transit_time=df_sourcing.sort_values(by=['DF_site','Transit_time'],ascending=True)
     df_transit_time.drop_duplicates('DF_site',keep='first',inplace=True)
-    df_transit_time.drop('TAN',axis=1,inplace=True)
+    df_transit_time.drop(['TAN','BU','PF','Split'],axis=1,inplace=True)
     df_transit_time.loc[:,'Transit_time']=df_transit_time.Transit_time.fillna(0)
 
     transit_time={}
@@ -371,6 +371,8 @@ def read_transit_from_sourcing_rules(df_sourcing,pcba_site):
     for row in df_transit_time.itertuples():
         if row.Transit_time==0:
             transit_time_by_org[row.DF_site] = 1
+        elif row.Transit_time>20:  # in case no air shipment in sourcing
+            transit_time_by_org[row.DF_site] = 10
         else:
             transit_time_by_org[row.DF_site]=int(row.Transit_time)
 
