@@ -1660,17 +1660,16 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
 
 
 @write_log_time_spent
-def remove_unavailable_sourcing (df_3a4,sourcing_rule_list, tan_group_sourcing):
+def remove_unavailable_sourcing (df_3a4,sourcing_rule_list):
     """
     Removed the unavaialble sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
-    Need to consider tan_group_sourcing as well.
     """
 
     # Note:tan_group_sourcing may introduce unneeded 3a4 remain here if certain site does not have those groupting
-    sourcing_rules_combined=sourcing_rule_list.tolist()+tan_group_sourcing
+    #sourcing_rules_combined=sourcing_rule_list.tolist()+tan_group_sourcing
 
     df_3a4.loc[:, 'org_pn'] = df_3a4.ORGANIZATION_CODE + '-' + df_3a4.BOM_PN
-    df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rules_combined)].copy()
+    df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rule_list)].copy()
 
     return df_3a4
 
@@ -1930,11 +1929,19 @@ def check_file_extension(file_name,extension='.csv'):
 
 
 @write_log_time_spent
-def collect_available_sourcing(df_sourcing):
+def collect_available_sourcing(df_sourcing,tan_group):
     """
     Generate a list that contains all the available sourcings: [DF_org-TAN(verionless)].
     """
+    # change tan to group name
+    df_sourcing.loc[:,'TAN']=np.where(df_sourcing.TAN.isin(tan_group.keys()),
+                                      tan_group[x].group(),
+                                      df_sourcing.TAN)
 
+    # update the org_tan if there is a group name
+    df_sourcing.loc[:, 'org_tan'] = np.where(df_sourcing.TAN.isin(tan_group.keys()),
+                                             df_sourcing.DF_site + '-' + df_sourcing.TAN,
+                                             df_sourcing.org_tan)
     # create a simple list of the available sourcing rules and a dict
     sourcing_rule_list=df_sourcing.org_tan.values
 
@@ -1973,11 +1980,11 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     # overwrite sourcing split based on exceptional value in db
     df_sourcing=update_exceptional_sourcing_split(df_sourcing,pcba_site)
 
-    # collect available sourcing rules and calculate split unstage qty(testing: add split in sourcing output)
-    sourcing_rule_list, sourcing_rules = collect_available_sourcing(df_sourcing)
-
     # Read TAN group mapping from db
-    df_grouping, tan_group,tan_group_sourcing = read_tan_grouping_from_db()
+    df_grouping, tan_group, tan_group_sourcing = read_tan_grouping_from_db()
+
+    # collect available sourcing rules and calculate split unstage qty(also convert pn to group pn in sourcing)
+    sourcing_rule_list, sourcing_rules = collect_available_sourcing(df_sourcing,tan_group)
 
     # read air transit pad from df_sourcing
     transit_time,df_transit_time=read_transit_from_sourcing_rules(df_sourcing,pcba_site)
@@ -2031,7 +2038,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     #df_3a4=create_unstage_qty_per_sourcing_split(df_3a4,sourcing_rules)
 
     # Remove unneeded TAN from df_3a4
-    df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rule_list,tan_group_sourcing) # consider tan group sourcing too
+    #df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rule_list,tan_group_sourcing) # consider tan group sourcing too
+    df_3a4 = remove_unavailable_sourcing(df_3a4, sourcing_rule_list)
 
     # create backlog dict for Tan exists in SCR
     # - qty_col use C_UNSTAGED_QTY_SPLIT instead if considering sourcing split

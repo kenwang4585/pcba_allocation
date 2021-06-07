@@ -843,7 +843,7 @@ def exceptional_priority():
                            db_data_value=df_db_data.values,
                            form=form,
                            user=login_user,
-                           subtitle=' - Exceptional Priority')
+                           subtitle='PCBA Allocation & AutoCTB - Exceptional Priority')
 
 
 @app.route('/exceptional_sourcing_split',methods=['GET','POST'])
