@@ -1942,6 +1942,9 @@ def collect_available_sourcing(df_sourcing,tan_group):
                                              df_sourcing.org_tan)
     # create a simple list of the available sourcing rules and a dict
     sourcing_rule_list=df_sourcing.org_tan.values
+    df_sourcing.to_excel(os.path.join(base_dir_output,'test'))
+    raise ValueError
+
 
     sourcing_rules = {}
     sourcing = {}
