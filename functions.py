@@ -1934,7 +1934,7 @@ def collect_available_sourcing(df_sourcing,tan_group):
     Generate a list that contains all the available sourcings: [DF_org-TAN(verionless)].
     """
     # change tan to group name and also make the tan versionless - same as tan_versionless
-    df_sourcing.loc[:,'TAN']=df_sourcing.tan_versionless.map(lambda x: tan_group[x].group() if x in tan_group.keys() else x)
+    df_sourcing.loc[:,'TAN']=df_sourcing.tan_versionless.map(lambda x: tan_group[x] if x in tan_group.keys() else x)
 
     # update the org_tan if there is a group name
     df_sourcing.loc[:, 'org_tan'] = np.where(df_sourcing.TAN.isin(tan_group.keys()),
