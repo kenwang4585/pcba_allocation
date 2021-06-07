@@ -2130,7 +2130,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     df_scr = process_final_allocated_output(df_scr, tan_bu_pf, df_3a4, df_oh, df_transit, pcba_site,allocation_summary_dict,blg_summary_before_allocation,blg_summary_after_allocation,sourcing_rules,org_split)
 
     # 存储文件
-    output_filename = write_allocation_output_file(pcba_site, bu_list, description, df_scr, df_3a4, df_transit,df_transit_time,df_sourcing,df_grouping,login_user)
+    output_filename = write_allocation_output_file(pcba_site, bu_list, description, df_scr, df_por,df_3a4, df_transit,df_transit_time,df_sourcing,df_grouping,login_user)
 
     return output_filename
 
