@@ -1120,7 +1120,7 @@ def write_data_to_excel(output_file,data_to_write):
     writer.save()
 
 @write_log_time_spent
-def write_allocation_output_file(pcba_site, bu_list,description,df_scr,df_3a4,df_transit,df_transit_time,df_sourcing,df_grouping,login_user):
+def write_allocation_output_file(pcba_site, bu_list,description,df_scr,df_por,df_3a4,df_transit,df_transit_time,df_sourcing,df_grouping,login_user):
     # save the scr output file and 3a4 to excel
     #dt = (pd.Timestamp.now() + pd.Timedelta(hours=8))if qty > 0:.strftime('%m-%d %Hh%Mm')  # convert from server time to local
     dt = pd.Timestamp.now().strftime('%m-%d %Hh%Mm')
@@ -1147,7 +1147,8 @@ def write_allocation_output_file(pcba_site, bu_list,description,df_scr,df_3a4,df
     #df_scr.reset_index(inplace=True)
 
     data_to_write = {'pcba_allocation': df_scr,
-                     'backlog-ranked': df_3a4,
+                     '3a4-ranked': df_3a4,
+                     'por':df_por,
                      'in-transit': df_transit,
                      'sourcing-rule':df_sourcing,
                      'tan-group':df_grouping,
@@ -1962,17 +1963,9 @@ def collect_available_sourcing(df_sourcing,tan_group):
 
 
 #@write_log_time_spent
-def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site,bu_list,ranking_col,description,login_user):
+def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing, pcba_site,bu_list,ranking_col,description,login_user):
     """
     Main program to process the data and PCBA allocation.
-    :param df_3a4:
-    :param df_oh:
-    :param df_transit:
-    :param df_scr:
-    :param pcba_site:
-    :param ranking_col:
-    :param output_filename:
-    :return: None
     """
     # overwrite sourcing split based on exceptional value in db
     df_sourcing=update_exceptional_sourcing_split(df_sourcing,pcba_site)
@@ -1987,10 +1980,10 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing,
     transit_time,df_transit_time=read_transit_from_sourcing_rules(df_sourcing,pcba_site)
 
     # extract BU info for TAN from SCR for final report processing use
-    tan_bu_pf = extract_bu_pf_from_scr(df_scr,tan_group)
+    tan_bu_pf = extract_bu_pf_from_scr(df_por,tan_group)
 
-    # Pivot df_scr 并处理日期格式; change to versionless
-    df_scr = df_scr.pivot_table(index=['planningOrg', 'TAN'], columns='date', values='quantity', aggfunc=sum)
+    # Pivot df_por, change name to df_scr 并处理日期格式; change to versionless
+    df_scr = df_por.pivot_table(index=['planningOrg', 'TAN'], columns='date', values='quantity', aggfunc=sum)
     #df_scr.columns = df_scr.columns.map(lambda x: x.date()) # already processed to date
     df_scr=change_pn_to_versionless(df_scr,pn_col='TAN')
 

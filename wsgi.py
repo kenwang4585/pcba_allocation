@@ -125,13 +125,13 @@ def allocation_run():
 
             # read supply data and check the columns required in each
             if f_supply==None:
-                df_scr, df_oh, df_transit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site, '*')
-                df_scr.loc[:, 'date'] = df_scr.date.map(lambda x: x.date())
+                df_por, df_oh, df_transit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site, '*')
+                df_por.loc[:, 'date'] = df_por.date.map(lambda x: x.date())
                 # also save the file in case needed afterwards
                 fname = pcba_site + ' scr_oh_intransit(scdx-prod - directly retrieved) ' + pd.Timestamp.now().strftime(
                     '%m-%d %Hh%Mm ') + login_user + '.xlsx'
                 output_path = os.path.join(base_dir_upload,fname)
-                data_to_write = {'por': df_scr,
+                data_to_write = {'por': df_por,
                                  'oh': df_oh,
                                  'in-transit': df_transit,
                                  'sourcing-rule': df_sourcing}
@@ -144,25 +144,25 @@ def allocation_run():
                     flash(result,'warning')
                     return render_template('allocation_run.html', form=form, user=login_user)
                 else:
-                    df_scr=result[0]
+                    df_por=result[0]
                     df_oh=result[1]
                     df_transit=result[2]
                     df_sourcing=result[3]
-                    df_scr, df_oh, df_transit, df_sourcing = patch_make_sure_supply_data_int_format(df_scr, df_oh, df_transit,
+                    df_por, df_oh, df_transit, df_sourcing = patch_make_sure_supply_data_int_format(df_por, df_oh, df_transit,
                                                                                                     df_sourcing)
 
-            # limit BU from 3a4 and df_scr for allocation
-            df_3a4, df_scr=limit_bu_from_3a4_and_scr(df_3a4,df_scr,bu_list)
+            # limit BU from 3a4 and df_por for allocation
+            df_3a4, df_por=limit_bu_from_3a4_and_scr(df_3a4,df_por,bu_list)
             if df_3a4.shape[0] == 0:
                 flash('The 3a4 data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
                 return render_template('allocation_run.html', form=form, user=login_user)
 
-            if df_scr.shape[0] == 0:
+            if df_por.shape[0] == 0:
                 flash('The SCR data is empty, check data source, or check if you put in a BU that does not exist!', 'warning')
                 return render_template('allocation_run.html', form=form, user=login_user)
 
             #### main program
-            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_scr, df_sourcing, pcba_site, bu_list, ranking_col,description,login_user)
+            output_filename=pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing, pcba_site, bu_list, ranking_col,description,login_user)
             flash('Allocation file created for downloading: {} '.format(output_filename), 'success')
 
             # Write the log file
@@ -178,7 +178,7 @@ def allocation_run():
 
         except Exception as e:
             try:
-                del df_scr, df_3a4, df_oh, df_transit, df_sourcing
+                del df_por, df_3a4, df_oh, df_transit, df_sourcing
                 gc.collect()
             except:
                 print('')
@@ -195,7 +195,7 @@ def allocation_run():
 
         # clear memory
         try:
-            del df_scr, df_3a4, df_oh, df_transit, df_sourcing
+            del df_por, df_3a4, df_oh, df_transit, df_sourcing
             gc.collect()
         except:
             print('')
@@ -1156,9 +1156,9 @@ def scdx_api():
             fname=pcba_site_prod + ' scr_oh_intransit(scdx-prod) ' + now.strftime('%m-%d %Hh%Mm ') + login_user + '.xlsx'
 
             try:
-                df_scr, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site_prod,'*')
+                df_por, df_oh, df_intransit, df_sourcing = collect_scr_oh_transit_from_scdx_prod(pcba_site_prod,'*')
 
-                data_to_write = {'por': df_scr,
+                data_to_write = {'por': df_por,
                                  'df-oh': df_oh,
                                  'in-transit': df_intransit,
                                  'sourcing-rule': df_sourcing}
