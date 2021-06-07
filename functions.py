@@ -1936,15 +1936,11 @@ def collect_available_sourcing(df_sourcing,tan_group):
     # change tan to group name and also make the tan versionless - same as tan_versionless
     df_sourcing.loc[:,'TAN']=df_sourcing.tan_versionless.map(lambda x: tan_group[x] if x in tan_group.keys() else x)
 
-    # update the org_tan if there is a group name
-    df_sourcing.loc[:, 'org_tan'] = np.where(df_sourcing.TAN.isin(tan_group.keys()),
-                                             df_sourcing.DF_site + '-' + df_sourcing.TAN,
-                                             df_sourcing.org_tan)
+    # update the org_tan to reflect the group name PN
+    df_sourcing.loc[:, 'org_tan'] = df_sourcing.DF_site + '-' + df_sourcing.TAN
+
     # create a simple list of the available sourcing rules and a dict
     sourcing_rule_list=df_sourcing.org_tan.values
-    df_sourcing.to_excel(os.path.join(base_dir_output,'test.xlsx'))
-    raise ValueError
-
 
     sourcing_rules = {}
     sourcing = {}
