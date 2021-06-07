@@ -1144,7 +1144,7 @@ def write_allocation_output_file(pcba_site, bu_list,description,df_scr,df_por,df
     df_transit_time.set_index('DF_site',inplace=True)
     df_sourcing.set_index('TAN',inplace=True)
 
-    #df_scr.reset_index(inplace=True)
+    df_por.set_index('planningOrg',inplace=True)
 
     data_to_write = {'pcba_allocation': df_scr,
                      '3a4-ranked': df_3a4,
