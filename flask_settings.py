@@ -129,7 +129,7 @@ class AllocationSubscription(db.Model):
 
 class AllocationExceptionPriority(db.Model):
     '''
-    Exceptional priority SS db table
+    Exceptional priority SS db table. This is also set under both the PCBA allocation tool and DFPM auto tools as it's commonly used.
     '''
     id=db.Column(db.Integer,primary_key=True)
     SO_SS=db.Column(db.String(30))
@@ -166,4 +166,3 @@ class AllocationTanGrouping(db.Model):
     Comments=db.Column(db.String(100))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
-

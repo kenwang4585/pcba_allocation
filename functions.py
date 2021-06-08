@@ -135,11 +135,11 @@ def remove_packed_exceptional_priority_ss(df_3a4,login_user):
     df_removal = df_priority[(df_priority.SO_SS.isin(ss_cancelled_or_packed_3a4)) | (df_priority.SO_SS.isin(ss_not_in_3a4))]
 
     # Remove from database
-    remove_priority_ss_from_db_and_email(df_removal, login_user, sender='PCBA allocation tool')
+    remove_priority_ss_from_db_and_email(df_removal, login_user)
 
-    removed_ss=df_removal.SO_SS.values
+    ss_removed=df_removal.SO_SS.unique()
 
-    return removed_ss
+    return ss_removed
 
 @write_log_time_spent
 def read_and_create_exceptional_priority_dict():
@@ -171,12 +171,12 @@ def read_and_create_exceptional_priority_dict():
     return ss_exceptional_priority
 
 @write_log_time_spent
-def remove_priority_ss_from_db_and_email(df_removal,login_user,sender='PCBA Allocation tool'):
+def remove_priority_ss_from_db_and_email(df_removal,login_user):
     """
     Remove the packed/cancelled SS from priority smartsheet and send email to corresponding people for whose SS are removed from the priority smartsheet
     """
     if df_removal.shape[0]>0:
-        delete_table_data('exception_priority', df_removal.id)
+        delete_table_data('allocation_exception_priority', df_removal.id.unique())
 
         to_address = [login_user + '@cisco.com']
         bcc=[super_user + '@cisco.com']
@@ -184,7 +184,9 @@ def remove_priority_ss_from_db_and_email(df_removal,login_user,sender='PCBA Allo
         subject='SS removal from exceptional priority database - by: {}'.format(login_user)
 
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
-                                         embeded_filenames=None, sender=sender,bcc=bcc,
+                                         embeded_filenames=None,
+                                         sender=login_user + ' via PCBA allocation tool',
+                                         bcc=bcc,
                                          removal_ss_header=df_removal.columns,
                                          removal_ss_details=df_removal.values,
                                          user=login_user)

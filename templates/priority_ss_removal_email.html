@@ -1,9 +1,9 @@
 <!-- saved from url=(0057)file:///Users/wangken/py/html/templates/config_result.htm -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"></head>
 <body>
-	    <span style="font-size: large">
-            <strong>Below orders were removed from the Exceptional priority database due to packed/cancelled:</strong>
-                <br>
+            <strong>Below orders were removed from the Exceptional priority database due to packed/cancelled/closed:</strong><br>
+            Note: Order not in the 3a4 you uploaded is considered as packed and closed.
+                <br><br>
                 <table style="border-collapse:collapse; word-break:break-all; word-wrap: break-word " border="1" cellspacing="0px" align="left">
                     <tr>
                         {% for col in removal_ss_header %}
@@ -21,6 +21,5 @@
 
                 </table>
             <br><br>
-        </span>
 </body>
 </html>
