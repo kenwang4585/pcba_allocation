@@ -469,9 +469,6 @@ def create_unpacked_qty_col_in_3a4(df_3a4):
 def update_order_bom_to_3a4(df_3a4, df_order_bom):
     """
     Add PN into 3a4 based on BOM
-    :param df_3a4:
-    :param df_bom:
-    :return: df_3a4, df_missing_bom_pid
     """
     # add the BOM PN through merge method
     df_3a4 = pd.merge(df_3a4, df_order_bom, left_on='PO_NUMBER', right_on='PO_NUMBER', how='left')
@@ -1663,7 +1660,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
 
 
 @write_log_time_spent
-def remove_unavailable_sourcing (df_3a4,sourcing_rule_list):
+def remove_unavailable_sourcing (df_3a4,sourcing_rule_list, tan_group_sourcing):
     """
     Removed the unavaialble sourcing from the 3a4 - based on df ORGANIZATION_CODE and BOM_PN.
     """
@@ -1672,7 +1669,7 @@ def remove_unavailable_sourcing (df_3a4,sourcing_rule_list):
     #sourcing_rules_combined=sourcing_rule_list.tolist()+tan_group_sourcing
 
     df_3a4.loc[:, 'org_pn'] = df_3a4.ORGANIZATION_CODE + '-' + df_3a4.BOM_PN
-    df_3a4=df_3a4[df_3a4.org_pn.isin(sourcing_rule_list)].copy()
+    df_3a4=df_3a4[(df_3a4.org_pn.isin(sourcing_rule_list)) | (df_3a4.org_pn.isin(tan_group_sourcing))].copy()
 
     return df_3a4
 
@@ -1945,6 +1942,11 @@ def collect_available_sourcing(df_sourcing,tan_group):
     # create a simple list of the available sourcing rules and a dict
     sourcing_rule_list=df_sourcing.org_tan.values
 
+
+
+
+
+
     sourcing_rules = {}
     sourcing = {}
     for row in df_sourcing.itertuples():
@@ -2024,14 +2026,13 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     df_bom= generate_df_order_bom_from_flb_tan_col(df_3a4, supply_dic_tan,tan_group)
     df_3a4 = update_order_bom_to_3a4(df_3a4, df_bom)
 
-
     # apply sourcing to unstaged qty and create C_UNSTAGED_QTY_SPLIT - for grouped TAN (WNBU), assume split=1
     # Discard below and do this instead in the blg_dic_tan instead (after fulfilled with OH and intransit)
     #df_3a4=create_unstage_qty_per_sourcing_split(df_3a4,sourcing_rules)
 
     # Remove unneeded TAN from df_3a4
     #df_3a4 = remove_unavailable_sourcing (df_3a4,sourcing_rule_list,tan_group_sourcing) # consider tan group sourcing too
-    df_3a4 = remove_unavailable_sourcing(df_3a4, sourcing_rule_list)
+    df_3a4 = remove_unavailable_sourcing(df_3a4, sourcing_rule_list, tan_group_sourcing)
 
     # create backlog dict for Tan exists in SCR
     # - qty_col use C_UNSTAGED_QTY_SPLIT instead if considering sourcing split
