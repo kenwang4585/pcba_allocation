@@ -2133,12 +2133,15 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
 
 
     # apply MPQ into the allocation
-    org_mpq_dict = {'FOL': {'68-100910': 10}}
+    org_mpq_dict = {'FOL': {'68-100910': 10,
+                            '68-101798': 100}
+                    }
     tan_mpq_dict = org_mpq_dict['FOL']
     #supply_dic_tan_allocated_agg_mpq = apply_mpq_to_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg,
     #
 
     print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-100910'])
+    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101798'])
 
     for tan in tan_mpq_dict.keys():
         if tan in supply_dic_tan_allocated_agg_edi_allocated_agg.keys():
@@ -2180,17 +2183,19 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
                         # update the new org_qty
                         new_date_allocation_detail.append((org, qty_w_mpq))
 
-                        print(new_date_allocation_detail)
+                        #print(new_date_allocation_detail)
 
-                # Update
+                # Update and add for each date allocation detail
                 new_date_allocation_dict[date] = (total_qty, new_date_allocation_detail)
-                print(new_date_allocation_dict)
-            # update
-            new_tan_allocation_list.append(new_date_allocation_dict)
-            print(new_tan_allocation_list)
+                #print(new_date_allocation_dict)
+                # update and add for each date
+                new_tan_allocation_list.append(new_date_allocation_dict)
+                #print(new_tan_allocation_list)
+            # update tan
             supply_dic_tan_allocated_agg_edi_allocated_agg[tan] = new_tan_allocation_list
 
     print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-100910'])
+    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101798'])
 
 
     raise ValueError
