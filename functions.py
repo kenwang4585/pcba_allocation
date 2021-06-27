@@ -1304,6 +1304,7 @@ def read_supply_file_and_check_columns(file_path_supply,col_scr_must_have,col_oh
     """
     try:
         # read scr
+        print(file_path_supply)
         df_scr = pd.read_excel(file_path_supply, sheet_name='por')
 
         # read oh
@@ -1700,7 +1701,7 @@ def read_subscription_data(org,bu_list):
 @write_log_time_spent
 def summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg):
     """
-    Summarize by site the total allocation qty by TAN, by DF site
+    Summarize by site the total allocation qty by TAN, by DF site, and recovery date
     """
     allocation_summary_dict={}
     for tan,allocation_dict in supply_dic_tan_allocated_agg.items():
@@ -1727,7 +1728,7 @@ def summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg):
 
     return allocation_summary_dict
 
-# BELOW NOT USED!!
+# BELOW currently NOT USED!! -- to be enabled
 def allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg,org_split):
     """
     Further allocate the remaining SCR per org split as long as it exist
@@ -2117,13 +2118,92 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     #根据以上聚合结果汇总每一个TAN by ORG 的allocation总数以及recovery date（用于allocation report中）
     allocation_summary_dict=summarize_total_backlog_allocation_by_site(supply_dic_tan_allocated_agg)
 
-    #根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org - 暂时不用
+    #TODO: 根据以上聚合结果把每一个日期剩余的SCR按照org split分配给每个Org - 暂时不用
     #org_split={'68-4908':{'FOC':0.4,'FJZ':0.6}}
     org_split={}
     #supply_dic_tan_allocated_agg_edi_allocated=allocate_remaining_scr_per_org_split(supply_dic_tan_allocated_agg, org_split)
     #Do aggregation again to combine backlog allocation and EDI allocation for each date
     #supply_dic_tan_allocated_agg_edi_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated_agg_edi_allocated)
-    supply_dic_tan_allocated_agg_edi_allocated_agg=supply_dic_tan_allocated_agg
+    supply_dic_tan_allocated_agg_edi_allocated_agg=supply_dic_tan_allocated_agg # EDI split not used
+
+
+
+
+
+
+
+    # apply MPQ into the allocation
+    org_mpq_dict = {'FOL': {'68-100910': 10}}
+    tan_mpq_dict = org_mpq_dict['FOL']
+    #supply_dic_tan_allocated_agg_mpq = apply_mpq_to_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg,
+    #
+
+    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-100910'])
+
+    for tan in tan_mpq_dict.keys():
+        if tan in supply_dic_tan_allocated_agg_edi_allocated_agg.keys():
+            remaining_qty_dict = {}
+            mpq = tan_mpq_dict[tan]
+            tan_allocation_list = supply_dic_tan_allocated_agg_edi_allocated_agg[tan]
+
+            # create a new list to store the updated allocation list
+            new_tan_allocation_list = []
+            for date_allocation_dict in tan_allocation_list:
+                # create a new dict to store the updated allocation for a date
+                new_date_allocation_dict = {}
+
+                date = list(date_allocation_dict.keys())[0]
+                total_qty = list(date_allocation_dict.values())[0][0]
+                date_allocation_detail = list(date_allocation_dict.values())[0][1]
+
+                # create a new list to store the updated org_qty
+                new_date_allocation_detail = []
+                if date_allocation_detail != []:
+                    for org_qty in date_allocation_detail:
+                        org = org_qty[0]
+                        qty = org_qty[1]
+                        #print(org, qty)
+                        #print(date, total_qty)
+
+                        if org in remaining_qty_dict.keys():
+                            carry_over_qty = remaining_qty_dict[org]
+                        else:
+                            carry_over_qty = 0
+                        # calculate based on previous remaining qty and new qty
+                        qty_w_mpq = (qty + carry_over_qty)//mpq * mpq
+                        qty_remaining = (qty + carry_over_qty)%mpq
+                        #print(qty_remaining)
+
+                        # put the new remaining (0 or >0) to the dict
+                        remaining_qty_dict[org] = qty_remaining
+
+                        # update the new org_qty
+                        new_date_allocation_detail.append((org, qty_w_mpq))
+
+                        print(new_date_allocation_detail)
+
+                # Update
+                new_date_allocation_dict[date] = (total_qty, new_date_allocation_detail)
+                print(new_date_allocation_dict)
+            # update
+            new_tan_allocation_list.append(new_date_allocation_dict)
+            print(new_tan_allocation_list)
+            supply_dic_tan_allocated_agg_edi_allocated_agg[tan] = new_tan_allocation_list
+
+    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-100910'])
+
+
+    raise ValueError
+
+
+
+
+
+
+
+
+
+
 
 
     # 在df_scr中加入allocation结果

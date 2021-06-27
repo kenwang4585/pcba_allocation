@@ -11,6 +11,7 @@ from settings import base_dir_supply
 def collect_scr_oh_transit_from_scdx_prod(pcba_site,item):
     """
     Extract data from the SCDX production db API built up by Eli Rothbart, for the purpose of PCBA allocation.
+    example: http://10.154.120.58:6543/SCDxScrData/FOL/68-100465-04
     :param pcba_site: must be a valid pcba org name
     :param item: can be '*' for all materials
     :return: por, df_oh, transit,sourcing rules in dataframe

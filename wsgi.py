@@ -132,7 +132,7 @@ def allocation_run():
                     '%m-%d %Hh%Mm ') + login_user + '.xlsx'
                 output_path = os.path.join(base_dir_upload,fname)
                 data_to_write = {'por': df_por,
-                                 'oh': df_oh,
+                                 'df-oh': df_oh,
                                  'in-transit': df_transit,
                                  'sourcing-rule': df_sourcing}
                 write_data_to_excel(output_path, data_to_write)
