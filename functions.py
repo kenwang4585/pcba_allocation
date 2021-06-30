@@ -1615,6 +1615,7 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     # save the file into share folder without the backlog tab data
     f_path=os.path.join(base_dir_output,share_filename)
     df_allocation=pd.read_excel(f_path,sheet_name='pcba_allocation')
+    df_por=pd.read_excel(f_path,sheet_name='por')
     df_transit=pd.read_excel(f_path,sheet_name='in-transit')
     df_sourcing=pd.read_excel(f_path,sheet_name='sourcing-rule')
     df_group=pd.read_excel(f_path,sheet_name='tan-group')
@@ -1622,16 +1623,18 @@ def send_allocation_result(email_msg,share_filename,login_user,login_name):
     df_allocation.set_index(
         ['TAN', 'ORG', 'BU', 'PF','Unpacked_blg', 'OH', 'In-transit', 'Blg_gap_total', 'Sourcing_split','Blg_gap_split','Allocation', 'Blg_gap_final', 'Blg_recovery'],
         inplace=True)
-    df_transit.set_index(['DF_site','TAN','Total'],inplace=True)
+    df_por.set_index('planningOrg', inplace=True)
+    df_transit.set_index(['DF_site'], inplace=True)
     df_sourcing.set_index(['DF_site'], inplace=True)
     df_group.set_index(['Group_name'], inplace=True)
     df_lt.set_index(['DF_site'], inplace=True)
 
     data_to_write = {'pcba_allocation': df_allocation,
+                     'por': df_por,
                      'in-transit': df_transit,
-                     'sourcing-rule':df_sourcing,
-                     'tan-group':df_group,
-                     'transit_time_from_sourcing_rule':df_lt}
+                     'sourcing-rule': df_sourcing,
+                     'tan-group': df_group,
+                     'transit_time_from_sourcing_rule': df_lt}
 
     output_name=os.path.join(base_dir_share,share_filename)
     write_data_to_excel(output_name, data_to_write)
@@ -1967,6 +1970,84 @@ def collect_available_sourcing(df_sourcing,tan_group):
     return sourcing_rule_list,sourcing_rules
 
 
+def apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, org_mpq_dict, pcba_site):
+    """
+    Apply MPQ on the allocation result; for remaining qty put on the last allocation for specific org
+    without considering MPQ to ensure total allocation qty unchanged
+    """
+    tan_mpq_dict = org_mpq_dict[pcba_site]
+    #print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
+    #print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101202'])
+
+    for tan in tan_mpq_dict.keys():
+        if tan in supply_dic_tan_allocated_agg_edi_allocated_agg.keys():
+            remaining_qty_dict = {}
+            mpq = tan_mpq_dict[tan]
+            tan_allocation_list = supply_dic_tan_allocated_agg_edi_allocated_agg[tan]
+
+            # identify last allocation date for each org
+            org_last_alloc_date = {}
+            for date_allocation_dict in tan_allocation_list:
+                date = list(date_allocation_dict.keys())[0]
+                date_allocation_detail = list(date_allocation_dict.values())[0][1]
+                if date_allocation_detail == []:
+                    break
+
+                for org_qty in date_allocation_detail:
+                    org = org_qty[0]
+                    org_last_alloc_date[org] = date
+
+            # create a new list to store the updated allocation list
+            new_tan_allocation_list = []
+            for date_allocation_dict in tan_allocation_list:
+                # create a new dict to store the updated allocation for a date
+                new_date_allocation_dict = {}
+
+                date = list(date_allocation_dict.keys())[0]
+                total_qty = list(date_allocation_dict.values())[0][0]
+                date_allocation_detail = list(date_allocation_dict.values())[0][1]
+
+                # create a new list to store the updated org_qty for single date
+                new_date_allocation_detail = []
+                if date_allocation_detail != []:
+                    for org_qty in date_allocation_detail:
+                        org = org_qty[0]
+                        qty = org_qty[1]
+
+                        if org in remaining_qty_dict.keys():
+                            carry_over_qty = remaining_qty_dict[org]
+                        else:
+                            carry_over_qty = 0
+
+                        if date == org_last_alloc_date[org]:
+                            total_remaining_qty = qty + carry_over_qty
+                            new_date_allocation_detail.append((org, total_remaining_qty))
+                        elif date < org_last_alloc_date[org]:
+                            # calculate based on previous remaining qty and new qty
+                            qty_w_mpq = (qty + carry_over_qty)//mpq * mpq
+                            qty_remaining = (qty + carry_over_qty)%mpq
+                            #print(qty_remaining)
+                            # put the new remaining (0 or >0) to the dict
+                            remaining_qty_dict[org] = qty_remaining
+                            # update the new org_qty
+                            new_date_allocation_detail.append((org, qty_w_mpq))
+
+                        #print(new_date_allocation_detail)
+
+                # Update and add for each date allocation detail
+                new_date_allocation_dict[date] = (total_qty, new_date_allocation_detail)
+                #print(new_date_allocation_dict)
+                # update and add for each date
+                new_tan_allocation_list.append(new_date_allocation_dict)
+                #print(new_tan_allocation_list)
+            # update tan
+            supply_dic_tan_allocated_agg_edi_allocated_agg[tan] = new_tan_allocation_list
+
+    #print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
+    #print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101202'])
+
+    return supply_dic_tan_allocated_agg_edi_allocated_agg
+
 #@write_log_time_spent
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing, pcba_site,bu_list,ranking_col,description,login_user):
     """
@@ -2133,83 +2214,15 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
 
 
     # apply MPQ into the allocation
-    org_mpq_dict = {'FOL': {'68-100910': 10,
-                            '68-101798': 100}
+    org_mpq_dict = {'FOL': {'68-101194/ 68-102376': 30,
+                            '68-101195/ 68-102377': 30,
+                            '68-101215':20}
                     }
-    tan_mpq_dict = org_mpq_dict['FOL']
-    #supply_dic_tan_allocated_agg_mpq = apply_mpq_to_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg,
-    #
+    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
 
-    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-100910'])
-    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101798'])
+    supply_dic_tan_allocated_agg_edi_allocated_agg = apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, org_mpq_dict, pcba_site)
 
-    for tan in tan_mpq_dict.keys():
-        if tan in supply_dic_tan_allocated_agg_edi_allocated_agg.keys():
-            remaining_qty_dict = {}
-            mpq = tan_mpq_dict[tan]
-            tan_allocation_list = supply_dic_tan_allocated_agg_edi_allocated_agg[tan]
-
-            # create a new list to store the updated allocation list
-            new_tan_allocation_list = []
-            for date_allocation_dict in tan_allocation_list:
-                # create a new dict to store the updated allocation for a date
-                new_date_allocation_dict = {}
-
-                date = list(date_allocation_dict.keys())[0]
-                total_qty = list(date_allocation_dict.values())[0][0]
-                date_allocation_detail = list(date_allocation_dict.values())[0][1]
-
-                # create a new list to store the updated org_qty
-                new_date_allocation_detail = []
-                if date_allocation_detail != []:
-                    for org_qty in date_allocation_detail:
-                        org = org_qty[0]
-                        qty = org_qty[1]
-                        #print(org, qty)
-                        #print(date, total_qty)
-
-                        if org in remaining_qty_dict.keys():
-                            carry_over_qty = remaining_qty_dict[org]
-                        else:
-                            carry_over_qty = 0
-                        # calculate based on previous remaining qty and new qty
-                        qty_w_mpq = (qty + carry_over_qty)//mpq * mpq
-                        qty_remaining = (qty + carry_over_qty)%mpq
-                        #print(qty_remaining)
-
-                        # put the new remaining (0 or >0) to the dict
-                        remaining_qty_dict[org] = qty_remaining
-
-                        # update the new org_qty
-                        new_date_allocation_detail.append((org, qty_w_mpq))
-
-                        #print(new_date_allocation_detail)
-
-                # Update and add for each date allocation detail
-                new_date_allocation_dict[date] = (total_qty, new_date_allocation_detail)
-                #print(new_date_allocation_dict)
-                # update and add for each date
-                new_tan_allocation_list.append(new_date_allocation_dict)
-                #print(new_tan_allocation_list)
-            # update tan
-            supply_dic_tan_allocated_agg_edi_allocated_agg[tan] = new_tan_allocation_list
-
-    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-100910'])
-    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101798'])
-
-
-    raise ValueError
-
-
-
-
-
-
-
-
-
-
-
+    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
 
     # 在df_scr中加入allocation结果
     df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_allocated_agg, pcba_site)
