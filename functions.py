@@ -2207,20 +2207,14 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     #supply_dic_tan_allocated_agg_edi_allocated_agg = aggregate_supply_dic_tan_allocated(supply_dic_tan_allocated_agg_edi_allocated)
     supply_dic_tan_allocated_agg_edi_allocated_agg=supply_dic_tan_allocated_agg # EDI split not used
 
-
-
-
-
-
-
     # apply MPQ into the allocation
     org_mpq_dict = {'FOL': {'68-101194/ 68-102376': 30,
                             '68-101195/ 68-102377': 30,
                             '68-101215':20}
                     }
     print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
-
-    supply_dic_tan_allocated_agg_edi_allocated_agg = apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, org_mpq_dict, pcba_site)
+    if len(org_mpq_dict[pcba_site]) > 0:
+        supply_dic_tan_allocated_agg_edi_allocated_agg = apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, org_mpq_dict, pcba_site)
 
     print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
 

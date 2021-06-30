@@ -1120,6 +1120,163 @@ def tan_grouping():
                            subtitle=' - TAN Grouping')
 
 
+@app.route('/mpq',methods=['GET','POST'])
+def mpq():
+    form=MpqForm()
+    login_user = request.headers.get('Oidc-Claim-Sub')
+    login_name = request.headers.get('Oidc-Claim-Fullname')
+    login_title = request.headers.get('Oidc-Claim-Title')
+    if login_user == None:
+        login_user = 'unknown'
+        login_name = 'unknown'
+        login_title = 'unknown'
+        http_scheme = 'http'
+    else:
+        http_scheme = 'https'
+
+    if '[C]' in login_title:  # for c-workers
+        return 'Sorry, you are not authorized to access this.'
+
+    df_db_data=read_table('mpq')
+    if form.validate_on_submit():
+        upload_option = form.upload_option.data
+        submit_upload_template = form.submit_upload_template.data
+        submit_show_all=form.submit_show_all.data
+        submit_show_me=form.submit_show_me.data
+        submit_download=form.submit_download.data
+
+        # define needed columns for the template
+        col_template = ['PCBA_ORG', 'TAN', 'MPQ','Comments']
+
+        if submit_upload_template:
+            file_upload_template = form.file_upload_template.data
+
+            # confirm file uploaded and save the file
+            if file_upload_template == None:
+                msg = 'Pls select the file to upload!'
+                flash(msg, 'warning')
+                return redirect(url_for("mpq", _external=True, _scheme=http_scheme))
+            else:
+                ext_template = os.path.splitext(file_upload_template.filename)[1]
+                if ext_template != '.xlsx':
+                    msg = 'The template file only accepts .xlsx formats here!'
+                    flash(msg, 'warning')
+                    return redirect(url_for("mpq", _external=True, _scheme=http_scheme))
+
+            # save the file
+            file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
+            file_upload_template.save(file_path_template)
+
+            # read the file
+            df_mpq=pd.read_excel(file_path_template)
+
+            # identify errors in the template
+            df_missing_value = df_mpq[
+                (df_mpq.PCBA_ORG.isnull()) | (df_mpq.TAN.isnull()) | (df_mpq.MPQ.isnull())]
+            df_duplicated=df_mpq[df_mpq.duplicated(['PCBA_ORG', 'TAN'])]
+            if df_missing_value.shape[0]>0:
+                msg='Check your template! {} record will not be uploaded due to missing Group_name, TAN or DF values!'.format(df_missing_value.shape[0])
+                flash(msg,'warning')
+            if df_duplicated.shape[0] > 0:
+                msg = 'Check your template! There are {} duplicated rows and only the last record will be uploaded.'.format(
+                    df_duplicated.shape[0])
+                flash(msg, 'warning')
+
+            # remove the error records
+            df_mpq.drop_duplicates(['PCBA_ORG','TAN'],keep='last',inplace=True)
+            df_mpq=df_mpq[(df_mpq.PCBA_ORG.notnull()) & (df_mpq.TAN.notnull())].copy()
+
+            # limit the needed columns (checking formats)
+            try:
+                df_mpq=df_mpq[col_template]
+            except:
+                msg = 'Stop - format error! Ensure following columns are included: {}'.format(col_template)
+                flash(msg, 'warning')
+                return redirect(url_for("mpq", _external=True,_scheme=http_scheme))
+
+            if upload_option == 'replace_all':
+                # remove all data for user and write in new data from the template
+                df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
+                delete_table_data('mpq', df_db_data_user.id)
+
+
+
+
+
+
+
+                try:
+                    add_tan_grouping_data_from_template(df_tan_grouping,login_user)
+                except Exception as e:
+                    roll_back()
+                    msg='Adding TAN grouping data to database error (template: {}; error message: {})! - contact kwang2 if you can not rootcause.'.format(secure_filename(file_upload_template.filename),str(e)[:200])
+                    flash(msg,'warning')
+                    add_log_summary(user=login_user, location='TAN grouping', user_action='Upload - error', summary=msg)
+                    #add_log_details(msg='\n' + login_user + '\n' + msg)
+                    return redirect(url_for("tan_grouping", _external=True, _scheme=http_scheme))
+            elif upload_option == 'add_update':
+
+
+
+
+
+
+
+
+            # read and display data by user
+            df_db_data = read_table('allocation_tan_grouping')
+            df_db_data=df_db_data[df_db_data.Added_by==login_user]
+
+            msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
+                .format(df_db_data_user.shape[0],df_tan_grouping.shape[0])
+            flash(msg,'success')
+            add_log_summary(user=login_user, location='TAN grouping', user_action='Upload template', summary=msg)
+
+            return render_template('tan_grouping.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN Grouping')
+        elif submit_show_all:
+            df_db_data = read_table('allocation_tan_grouping')
+
+            return render_template('tan_grouping.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN Grouping')
+        elif submit_show_me:
+            df_db_data = read_table('allocation_tan_grouping')
+            df_db_data = df_db_data[df_db_data.Added_by == login_user]
+
+            return render_template('tan_grouping.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN Grouping')
+
+        elif submit_download:
+            df_db_data = read_table('allocation_tan_grouping')
+            df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
+            df_db_data.set_index('Group_name',inplace=True)
+            f_path=base_dir_supply
+            fname='TAN grouping ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
+
+            df_db_data.to_excel(os.path.join(f_path,fname))
+
+            return send_from_directory(f_path, fname, as_attachment=True)
+
+    return render_template('tan_grouping.html',
+                           db_data_header=df_db_data.columns,
+                           db_data_value=df_db_data.values,
+                           form=form,
+                           user=login_user,
+                           subtitle=' - TAN Grouping')
+
+
 @app.route('/scdx-api',methods=['GET','POST'])
 def scdx_api():
     form=ScdxAPIForm()

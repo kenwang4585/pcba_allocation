@@ -102,6 +102,21 @@ class TanGroupingForm(FlaskForm):
     submit_show_all = SubmitField('Show all data')
     submit_download = SubmitField('Download my data')
 
+class MpqForm(FlaskForm):
+    upload_option = SelectField('Upload option:',
+                                choices=[('replace_all', 'Remove all under my name and replace with template'),
+                                         ('add_update', 'Add or update based on template')],
+                                default='add_update',
+                                validators=[DataRequired()]
+                                )
+    file_upload_template = FileField('Upload template (.xlsx):')
+    submit_upload_template = SubmitField('Upload')
+
+    submit_show_me = SubmitField('Show my data')
+    submit_show_all = SubmitField('Show all data')
+    submit_download = SubmitField('Download my data')
+
+
 # Database tables
 
 class AllocationUserLog(db.Model):
@@ -166,3 +181,15 @@ class AllocationTanGrouping(db.Model):
     Comments=db.Column(db.String(100))
     Added_by=db.Column(db.String(10))
     Added_on=db.Column(db.Date)
+
+class Mpq(db.Model):
+    """
+    For MPQ data
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    PCBA_ORG = db.Column(db.String(3))
+    TAN = db.Column(db.String(14))
+    MPQ = db.Column(db.Integer)
+    Comments = db.Column(db.String(100))
+    Added_by = db.Column(db.String(15))
+    Added_on = db.Column(db.Date)
