@@ -123,7 +123,8 @@ def remove_packed_exceptional_priority_ss(df_3a4,login_user):
     '''
     # read exceptional priority from db
     df_priority= read_table('allocation_exception_priority')
-    df_priority=df_priority[df_priority.Added_by==login_user].copy()
+    if login_user != super_user:
+        df_priority=df_priority[df_priority.Added_by==login_user].copy()
     df_3a4=df_3a4[(df_3a4.BUSINESS_UNIT.isin(df_priority.BU.unique()))&(df_3a4.ORGANIZATION_CODE.isin(df_priority.ORG.unique()))]
 
     ss_not_in_3a4 = np.setdiff1d(df_priority.SO_SS.values, df_3a4.SO_SS.values)
@@ -1970,19 +1971,15 @@ def collect_available_sourcing(df_sourcing,tan_group):
     return sourcing_rule_list,sourcing_rules
 
 
-def apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, org_mpq_dict, pcba_site):
+def apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, mpq_dict):
     """
     Apply MPQ on the allocation result; for remaining qty put on the last allocation for specific org
     without considering MPQ to ensure total allocation qty unchanged
     """
-    tan_mpq_dict = org_mpq_dict[pcba_site]
-    #print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
-    #print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101202'])
-
-    for tan in tan_mpq_dict.keys():
+    for tan in mpq_dict.keys():
         if tan in supply_dic_tan_allocated_agg_edi_allocated_agg.keys():
             remaining_qty_dict = {}
-            mpq = tan_mpq_dict[tan]
+            mpq = mpq_dict[tan]
             tan_allocation_list = supply_dic_tan_allocated_agg_edi_allocated_agg[tan]
 
             # identify last allocation date for each org
@@ -2047,6 +2044,24 @@ def apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_ag
     #print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101202'])
 
     return supply_dic_tan_allocated_agg_edi_allocated_agg
+
+
+def read_mpq_from_db(pcba_site, tan_group):
+    """
+    Read MPQ data from db and create mpq_dict per pcba_site
+    """
+    df_mpq = read_table('mpq')
+    df_mpq = df_mpq[df_mpq.PCBA_ORG == pcba_site].copy()
+    df_mpq = change_pn_to_versionless(df_mpq, pn_col='TAN')
+    df_mpq = change_pn_to_group_number(df_mpq, tan_group, pn_col='TAN')
+    df_mpq.drop_duplicates(['PCBA_ORG', 'TAN'], keep='last', inplace=True)
+    mpq_dict = {}
+    for row in df_mpq.itertuples():
+        tan = row.TAN
+        mpq = row.MPQ
+        mpq_dict[tan] = mpq
+
+    return mpq_dict
 
 #@write_log_time_spent
 def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing, pcba_site,bu_list,ranking_col,description,login_user):
@@ -2208,15 +2223,9 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     supply_dic_tan_allocated_agg_edi_allocated_agg=supply_dic_tan_allocated_agg # EDI split not used
 
     # apply MPQ into the allocation
-    org_mpq_dict = {'FOL': {'68-101194/ 68-102376': 30,
-                            '68-101195/ 68-102377': 30,
-                            '68-101215':20}
-                    }
-    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
-    if len(org_mpq_dict[pcba_site]) > 0:
-        supply_dic_tan_allocated_agg_edi_allocated_agg = apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, org_mpq_dict, pcba_site)
-
-    print(supply_dic_tan_allocated_agg_edi_allocated_agg['68-101194/ 68-102376'])
+    mpq_dict = read_mpq_from_db(pcba_site, tan_group)
+    if len(mpq_dict) > 0:
+        supply_dic_tan_allocated_agg_edi_allocated_agg = apply_mpq_on_allocation_result(supply_dic_tan_allocated_agg_edi_allocated_agg, mpq_dict)
 
     # 在df_scr中加入allocation结果
     df_scr = add_allocation_to_scr(df_scr, df_3a4, supply_dic_tan_allocated_agg_edi_allocated_agg, pcba_site)

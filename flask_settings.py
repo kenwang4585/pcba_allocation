@@ -103,9 +103,9 @@ class TanGroupingForm(FlaskForm):
     submit_download = SubmitField('Download my data')
 
 class MpqForm(FlaskForm):
-    upload_option = SelectField('Upload option:',
+    upload_option = RadioField('Upload option:',
                                 choices=[('replace_all', 'Remove all under my name and replace with template'),
-                                         ('add_update', 'Add or update based on template')],
+                                         ('add_update', 'Add new or update existing based on template')],
                                 default='add_update',
                                 validators=[DataRequired()]
                                 )

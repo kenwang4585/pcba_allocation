@@ -662,8 +662,8 @@ def exceptional_priority():
                 msg = '3a4 format error! Ensure following columns are included: {}. You can use 3a4 view PCBA_ALLOCATION and select the related ORG/BU to download 3a4.'.format(col_3a4)
                 flash(msg, 'warning')
                 return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
-
-            removed_ss=remove_packed_exceptional_priority_ss(df_3a4,login_user)
+            # if login_user == super_user, then all records are in scope
+            removed_ss=remove_packed_exceptional_priority_ss(df_3a4, login_user)
 
             msg = '{} SO_SS are removed from the database due to packed/cancelled.'.format(len(removed_ss))
             flash(msg, 'success')
@@ -1194,87 +1194,81 @@ def mpq():
                 flash(msg, 'warning')
                 return redirect(url_for("mpq", _external=True,_scheme=http_scheme))
 
+            df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
             if upload_option == 'replace_all':
-                # remove all data for user and write in new data from the template
-                df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
+                # remove all data for user
                 delete_table_data('mpq', df_db_data_user.id)
-
-
-
-
-
-
-
-                try:
-                    add_tan_grouping_data_from_template(df_tan_grouping,login_user)
-                except Exception as e:
-                    roll_back()
-                    msg='Adding TAN grouping data to database error (template: {}; error message: {})! - contact kwang2 if you can not rootcause.'.format(secure_filename(file_upload_template.filename),str(e)[:200])
-                    flash(msg,'warning')
-                    add_log_summary(user=login_user, location='TAN grouping', user_action='Upload - error', summary=msg)
-                    #add_log_details(msg='\n' + login_user + '\n' + msg)
-                    return redirect(url_for("tan_grouping", _external=True, _scheme=http_scheme))
             elif upload_option == 'add_update':
+                # remove existing org_tan data for user
+                df_mpq.loc[:, 'org_tan'] = df_mpq.PCBA_ORG + df_mpq.TAN
+                df_db_data_user.loc[:, 'org_tan'] = df_db_data_user.PCBA_ORG + df_db_data_user.TAN
 
+                df_db_data_user_existing = df_db_data_user[df_db_data_user.org_tan.isin(df_mpq.org_tan)]
+                delete_table_data('mpq', df_db_data_user_existing.id)
 
-
-
-
-
-
+            # add in all data in the template
+            try:
+                add_tan_mpq_from_template(df_mpq,login_user)
+            except Exception as e:
+                roll_back()
+                msg='Adding TAN MPQ data to database error (template: {}; error message: {})! - contact kwang2 if you can not rootcause.'.format(secure_filename(file_upload_template.filename),str(e)[:200])
+                flash(msg,'warning')
+                add_log_summary(user=login_user, location='MPQ', user_action='Upload - error', summary=msg)
+                #add_log_details(msg='\n' + login_user + '\n' + msg)
+                return redirect(url_for("mpq", _external=True, _scheme=http_scheme))
 
             # read and display data by user
-            df_db_data = read_table('allocation_tan_grouping')
-            df_db_data=df_db_data[df_db_data.Added_by==login_user]
-
-            msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
-                .format(df_db_data_user.shape[0],df_tan_grouping.shape[0])
-            flash(msg,'success')
-            add_log_summary(user=login_user, location='TAN grouping', user_action='Upload template', summary=msg)
-
-            return render_template('tan_grouping.html',
-                                   db_data_header=df_db_data.columns,
-                                   db_data_value=df_db_data.values,
-                                   form=form,
-                                   user=login_user,
-                                   subtitle=' - TAN Grouping')
-        elif submit_show_all:
-            df_db_data = read_table('allocation_tan_grouping')
-
-            return render_template('tan_grouping.html',
-                                   db_data_header=df_db_data.columns,
-                                   db_data_value=df_db_data.values,
-                                   form=form,
-                                   user=login_user,
-                                   subtitle=' - TAN Grouping')
-        elif submit_show_me:
-            df_db_data = read_table('allocation_tan_grouping')
+            df_db_data = read_table('mpq')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
 
-            return render_template('tan_grouping.html',
+            msg = '{} records added or updated based on the template.'\
+                .format(df_mpq.shape[0])
+            flash(msg, 'success')
+            add_log_summary(user=login_user, location='MPQ', user_action='Upload template', summary=msg)
+
+            return render_template('mpq.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
                                    form=form,
                                    user=login_user,
-                                   subtitle=' - TAN Grouping')
+                                   subtitle=' - TAN MPQ')
+        elif submit_show_all:
+            df_db_data = read_table('mpq')
+
+            return render_template('mpq.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN MPQ')
+        elif submit_show_me:
+            df_db_data = read_table('mpq')
+            df_db_data = df_db_data[df_db_data.Added_by == login_user]
+
+            return render_template('mpq.html',
+                                   db_data_header=df_db_data.columns,
+                                   db_data_value=df_db_data.values,
+                                   form=form,
+                                   user=login_user,
+                                   subtitle=' - TAN MPQ')
 
         elif submit_download:
-            df_db_data = read_table('allocation_tan_grouping')
+            df_db_data = read_table('mpq')
             df_db_data = df_db_data[df_db_data.Added_by == login_user][col_template]
-            df_db_data.set_index('Group_name',inplace=True)
+            df_db_data.set_index('PCBA_ORG',inplace=True)
             f_path=base_dir_supply
-            fname='TAN grouping ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
+            fname='TAN MPQ ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
 
             df_db_data.to_excel(os.path.join(f_path,fname))
 
             return send_from_directory(f_path, fname, as_attachment=True)
 
-    return render_template('tan_grouping.html',
+    return render_template('mpq.html',
                            db_data_header=df_db_data.columns,
                            db_data_value=df_db_data.values,
                            form=form,
                            user=login_user,
-                           subtitle=' - TAN Grouping')
+                           subtitle=' - TAN MPQ')
 
 
 @app.route('/scdx-api',methods=['GET','POST'])

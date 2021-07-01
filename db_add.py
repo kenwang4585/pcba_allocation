@@ -119,6 +119,34 @@ def add_tan_grouping_data_from_template(df,login_user):
     db.session.commit()
     print('data added')
 
+
+def add_tan_mpq_from_template(df, login_user):
+    '''
+    Add tan MPQ data
+    '''
+    df.fillna('',inplace=True)
+
+    #df=df[['ORGANIZATION_CODE', 'BUSINESS_UNIT', 'PO_NUMBER','LINE_CREATION_DATE', 'OPTION_NUMBER',
+    #   'PRODUCT_ID', 'ORDERED_QUANTITY','LABEL','COMMENTS','REPORT_DATE', 'UPLOAD_BY','ML_COLLECTED']]
+
+    df_data = df.values
+
+    db.session.bulk_insert_mappings(
+                                    Mpq,
+                                    [dict(
+                                        PCBA_ORG=row[0],
+                                        TAN=row[1],
+                                        MPQ=row[2],
+                                        Comments=row[3],
+                                        Added_by=login_user,
+                                        Added_on=pd.Timestamp.now().date()
+                                        )
+                                     for row in df_data]
+                                    )
+    db.session.commit()
+    print('data added')
+
+
 def roll_back():
     try:
         db.session.commit()
