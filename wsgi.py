@@ -613,11 +613,16 @@ def exceptional_priority():
     if '[C]' in login_title:  # for c-workers
         return 'Sorry, you are not authorized to access this.'
 
-    if login_user not in ['kwang2','unknown']:
+    if login_user not in ['kwang2', 'unknown']:
         add_log_summary(user=login_user, location='E-priority', user_action='visit', summary='')
 
     df_db_data=read_table('allocation_exception_priority')
-    df_db_data.sort_values(by='Ranking', inplace=True)
+    df_db_data.sort_values(by='Added_on', ascending=False, inplace=True)
+    summary_info = []
+    summary_info.append('Total records: {}'.format(df_db_data.shape[0]))
+    for user in df_db_data.Added_by.unique():
+        summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
+    summary_info = '; '.join(summary_info)
 
     if form.validate_on_submit():
         submit_remove_packed = form.submit_remove_packed.data
@@ -733,7 +738,7 @@ def exceptional_priority():
             # read and display data by user
             df_db_data = read_table('allocation_exception_priority')
             df_db_data=df_db_data[df_db_data.Added_by==login_user]
-            #df_db_data.sort_values(by='Ranking',inplace=True)
+            df_db_data.sort_values(by='Added_on', ascending=False, inplace=True)
 
             msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
                 .format(df_db_data_user.shape[0],df_exceptional_priority.shape[0])
@@ -748,22 +753,34 @@ def exceptional_priority():
                                    subtitle=' - Exceptional Priority')
         elif submit_show_all:
             df_db_data = read_table('allocation_exception_priority')
-            #df_db_data.sort_values(by='Ranking', inplace=True)
+            df_db_data.sort_values(by='Added_on', ascending=False, inplace=True)
+            summary_info = []
+            summary_info.append('Total records: {}'.format(df_db_data.shape[0]))
+            for user in df_db_data.Added_by.unique():
+                summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
+            summary_info = '; '.join(summary_info)
 
             return render_template('exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
+                                   summary_info=summary_info,
                                    form=form,
                                    user=login_user,
                                    subtitle=' - Exceptional Priority')
         elif submit_show_me:
             df_db_data = read_table('allocation_exception_priority')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
-            #df_db_data.sort_values(by='Ranking', inplace=True)
+            df_db_data.sort_values(by='Added_on', ascending=False, inplace=True)
+            summary_info = []
+            summary_info.append('Total records: {}'.format(df_db_data.shape[0]))
+            for user in df_db_data.Added_by.unique():
+                summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
+            summary_info = '; '.join(summary_info)
 
             return render_template('exceptional_priority.html',
                            db_data_header=df_db_data.columns,
                            db_data_value=df_db_data.values,
+                           summary_info=summary_info,
                            form=form,
                            user=login_user,
                            subtitle=' - Exceptional Priority')
@@ -779,6 +796,7 @@ def exceptional_priority():
             df_db_data.to_excel(os.path.join(f_path,fname))
 
             return send_from_directory(f_path, fname, as_attachment=True)
+
         elif submit_show_bu_org:
             if bu_org=='':
                 msg='Pls input BU/ORG'
@@ -798,11 +816,17 @@ def exceptional_priority():
             df_db_data = df_db_data[df_db_data.BU == bu].copy()
             if org!='':
                 df_db_data = df_db_data[df_db_data.ORG == org]
-            #df_db_data.sort_values(by='Ranking', inplace=True)
+            df_db_data.sort_values(by='Added_on', ascending=False, inplace=True)
+            summary_info = []
+            summary_info.append('Total records: {}'.format(df_db_data.shape[0]))
+            for user in df_db_data.Added_by.unique():
+                summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
+            summary_info = '; '.join(summary_info)
 
             return render_template('exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
+                                   summary_info=summary_info,
                                    form=form,
                                    user=login_user,
                                    subtitle=' - Exceptional Priority')
@@ -837,10 +861,10 @@ def exceptional_priority():
 
             return send_from_directory(f_path, fname, as_attachment=True)
 
-
     return render_template('exceptional_priority.html',
                            db_data_header=df_db_data.columns,
                            db_data_value=df_db_data.values,
+                           summary_info = summary_info,
                            form=form,
                            user=login_user,
                            subtitle='PCBA Allocation & AutoCTB - Exceptional Priority')
@@ -1221,8 +1245,7 @@ def mpq():
             df_db_data = read_table('mpq')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
 
-            msg = '{} records added or updated based on the template.'\
-                .format(df_mpq.shape[0])
+            msg = '{} records added or updated based on the template.'.format(df_mpq.shape[0])
             flash(msg, 'success')
             add_log_summary(user=login_user, location='MPQ', user_action='Upload template', summary=msg)
 
