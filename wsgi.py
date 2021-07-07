@@ -1193,6 +1193,9 @@ def mpq():
 
             # read the file
             df_mpq=pd.read_excel(file_path_template)
+            col = df_mpq.columns
+            col = [c.strip() for c in col]
+            df_mpq.columns=col
 
             # identify errors in the template
             df_missing_value = df_mpq[

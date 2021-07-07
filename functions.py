@@ -117,13 +117,13 @@ def get_file_info_on_drive(base_path,keep_hours=100):
     return df_file_info
 
 @write_log_time_spent
-def create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user):
+def create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user, db_name='allocation_exception_priority'):
     '''
     Read backlog priorities from db; create priority dict;
     Removed the packed/cancelled SS and notify users
     '''
     # read exceptional priority from db
-    df_priority= read_table('allocation_exception_priority')
+    df_priority = read_table(db_name)
 
     # create the priority dict
     ss_exceptional_priority = {}
@@ -2094,7 +2094,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
 
     # read exceptional priorities from db; remove and packed/cancelled and notify users
-    ss_exceptional_priority, ss_removed = create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user)
+    ss_exceptional_priority, ss_removed = create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user,
+                                                                                                         db_name='allocation_exception_priority')
 
     # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
