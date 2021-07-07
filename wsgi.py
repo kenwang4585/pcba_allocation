@@ -745,7 +745,7 @@ def exceptional_priority():
             flash(msg,'success')
             add_log_summary(user=login_user, location='E-priority', user_action='Upload template', summary=msg)
 
-            return render_template('exceptional_priority.html',
+            return render_template('allocation_exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
                                    form=form,
@@ -760,7 +760,7 @@ def exceptional_priority():
                 summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
             summary_info = '; '.join(summary_info)
 
-            return render_template('exceptional_priority.html',
+            return render_template('allocation_exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
                                    summary_info=summary_info,
@@ -777,7 +777,7 @@ def exceptional_priority():
                 summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
             summary_info = '; '.join(summary_info)
 
-            return render_template('exceptional_priority.html',
+            return render_template('allocation_exceptional_priority.html',
                            db_data_header=df_db_data.columns,
                            db_data_value=df_db_data.values,
                            summary_info=summary_info,
@@ -823,7 +823,7 @@ def exceptional_priority():
                 summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
             summary_info = '; '.join(summary_info)
 
-            return render_template('exceptional_priority.html',
+            return render_template('allocation_exceptional_priority.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
                                    summary_info=summary_info,
@@ -857,17 +857,17 @@ def exceptional_priority():
             f_path=base_dir_supply
             fname='Exceptional priority SS ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
 
-            df_db_data.to_excel(os.path.join(f_path,fname))
+            df_db_data.to_excel(os.path.join(f_path, fname))
 
             return send_from_directory(f_path, fname, as_attachment=True)
 
-    return render_template('exceptional_priority.html',
+    return render_template('allocation_exceptional_priority.html',
                            db_data_header=df_db_data.columns,
                            db_data_value=df_db_data.values,
-                           summary_info = summary_info,
+                           summary_info=summary_info,
                            form=form,
                            user=login_user,
-                           subtitle='PCBA Allocation & AutoCTB - Exceptional Priority')
+                           subtitle=' - Exceptional Priority')
 
 
 @app.route('/exceptional_sourcing_split',methods=['GET','POST'])
@@ -1249,7 +1249,7 @@ def mpq():
             flash(msg, 'success')
             add_log_summary(user=login_user, location='MPQ', user_action='Upload template', summary=msg)
 
-            return render_template('mpq.html',
+            return render_template('allocation_mpq.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
                                    form=form,
@@ -1258,7 +1258,7 @@ def mpq():
         elif submit_show_all:
             df_db_data = read_table('mpq')
 
-            return render_template('mpq.html',
+            return render_template('allocation_mpq.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
                                    form=form,
@@ -1268,7 +1268,7 @@ def mpq():
             df_db_data = read_table('mpq')
             df_db_data = df_db_data[df_db_data.Added_by == login_user]
 
-            return render_template('mpq.html',
+            return render_template('allocation_mpq.html',
                                    db_data_header=df_db_data.columns,
                                    db_data_value=df_db_data.values,
                                    form=form,
@@ -1286,7 +1286,7 @@ def mpq():
 
             return send_from_directory(f_path, fname, as_attachment=True)
 
-    return render_template('mpq.html',
+    return render_template('allocation_mpq.html',
                            db_data_header=df_db_data.columns,
                            db_data_value=df_db_data.values,
                            form=form,

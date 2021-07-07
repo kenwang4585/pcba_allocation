@@ -1,30 +1,12 @@
 
 <!-- Ken wang, May, 2021 -->
 
-{% extends 'allocation_base_general.html' %}
+{% extends 'allocation_base.html' %}
 
 {% block content %}
     <form method="post" enctype="multipart/form-data">
         {{ form.csrf_token }}
-        <br>
 
-
-        <table style="border-collapse:collapse; background-color: whitesmoke"   border="0" cellspacing="0px" align="center" width="80%">
-            <tr>
-                <td width="50%" align="center">
-                    <h4>Remove packed/cancelled orders base on 3a4</h4>
-                </td>
-                <td width="50%" align="left">
-                    <br>
-                    {{ form.file_upload_3a4.label }}<br>
-                    {{ form.file_upload_3a4 }}<br>
-                    {{ form.submit_remove_packed }}
-                    <br><br>
-                </td>
-            </tr>
-        </table>
-        <br><br>
-        <!--
         <table style="border-collapse:collapse; background-color: whitesmoke"   border="0" cellspacing="0px" align="center" width="80%">
             <tr>
                 <td width="50%" align="center">
@@ -32,13 +14,15 @@
                 </td>
                 <td width="50%" align="left">
                     <br>
+                    {{ form.file_upload_template.label }}<br>
+                    {{ form.file_upload_template }}<br>
+                    {{ form.submit_upload_template }}
 
                     <br><br>
                 </td>
             </tr>
         </table>
         <br>
-        -->
 
         <table style="border-collapse:collapse; "   border="0" cellspacing="0px" align="center" width="70%">
             <tr>
@@ -50,7 +34,6 @@
                                 <li>Default priority: PR1:1; PR2:2; PR3:3; L4:4; BUP:5; followed with other orders;</li>
                                 <li>Below exceptional ranking will overwrite the default priority. The ranking# can be any integer or float number; smaller number will have higher rank. E.g., for SO#123456-1, if set ranking as 1.1, it will be ranked after PR1 orders and before PR2 orders;</li>
                                 <li>We can set ranking# to 9999 to make a priority order "normal" order;</li>
-                                <li>The priority will be considered in PCBA allocation. For FOC/FDO, it's also integrated with the CTB/Production process. </li>
                             <br>
                             <b>Suggested approaches:</b>
                                 <li>Step 1: Click "Download my data" to get a spreadsheet with orders under your name;</li>

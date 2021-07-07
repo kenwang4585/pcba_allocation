@@ -117,38 +117,10 @@ def get_file_info_on_drive(base_path,keep_hours=100):
     return df_file_info
 
 @write_log_time_spent
-def remove_packed_exceptional_priority_ss(df_3a4,login_user):
+def create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user):
     '''
-    Read backlog priorities from db; remove SS showing packed/cancelled, or created by self but disappear from 34(if the org/BU also exist in 3a4.);
-    '''
-    # read exceptional priority from db
-    df_priority= read_table('allocation_exception_priority')
-    if login_user != super_user:
-        df_priority=df_priority[df_priority.Added_by==login_user].copy()
-
-    # ss not in 3a4 - limit 3a4 scope for same ORG/BU in case 3a4 is not global
-    df_3a4_common_scope = df_3a4[(df_3a4.BUSINESS_UNIT.isin(df_priority.BU.unique())) & (
-        df_3a4.ORGANIZATION_CODE.isin(df_priority.ORG.unique()))]
-    ss_not_in_3a4 = np.setdiff1d(df_priority.SO_SS.values, df_3a4_common_scope.SO_SS.values)
-
-    # SS showing as packed or cancelled in 3a4
-    ss_cancelled_or_packed_3a4 = get_packed_or_cancelled_ss_from_3a4(df_3a4)
-
-    # total ss to remove
-    df_removal = df_priority[(df_priority.SO_SS.isin(ss_cancelled_or_packed_3a4)) | (df_priority.SO_SS.isin(ss_not_in_3a4))]
-
-    # Remove from database
-    remove_priority_ss_from_db_and_email(df_removal, login_user)
-
-    ss_removed=df_removal.SO_SS.unique()
-
-    return ss_removed
-
-@write_log_time_spent
-def read_and_create_exceptional_priority_dict():
-    '''
-    Read backlog priorities from db; create and segregate to top priority and mid priority
-    :return:
+    Read backlog priorities from db; create priority dict;
+    Removed the packed/cancelled SS and notify users
     '''
     # read exceptional priority from db
     df_priority= read_table('allocation_exception_priority')
@@ -171,13 +143,20 @@ def read_and_create_exceptional_priority_dict():
 
     #print(ss_exceptional_priority)
 
-    return ss_exceptional_priority
+    # remove the packed/cancelled SS from the db
+    # ss not in 3a4 - limit 3a4 scope for same ORG/BU in case 3a4 is not global
+    df_3a4_common_scope = df_3a4[(df_3a4.BUSINESS_UNIT.isin(df_priority.BU.unique())) & (
+        df_3a4.ORGANIZATION_CODE.isin(df_priority.ORG.unique()))]
+    ss_not_in_3a4 = np.setdiff1d(df_priority.SO_SS.values, df_3a4_common_scope.SO_SS.values)
 
-@write_log_time_spent
-def remove_priority_ss_from_db_and_email(df_removal, login_user):
-    """
-    Remove the packed/cancelled SS from priority smartsheet and send email to corresponding people for whose SS are removed from the priority smartsheet
-    """
+    # SS showing as packed or cancelled in 3a4
+    ss_cancelled_or_packed_3a4 = get_packed_or_cancelled_ss_from_3a4(df_3a4)
+
+    # total ss to remove
+    df_removal = df_priority[(df_priority.SO_SS.isin(ss_cancelled_or_packed_3a4)) | (df_priority.SO_SS.isin(ss_not_in_3a4))]
+    ss_removed = df_removal.SO_SS.unique()
+
+    # Remove from database and notify users
     if df_removal.shape[0] > 0:
         delete_table_data('allocation_exception_priority', df_removal.id.unique())
 
@@ -194,6 +173,9 @@ def remove_priority_ss_from_db_and_email(df_removal, login_user):
                                          removal_ss_header=df_removal.columns,
                                          removal_ss_details=df_removal.values,
                                          user=login_user)
+
+
+    return ss_exceptional_priority, ss_removed
 
 @write_log_time_spent
 def read_tan_grouping_from_db():
@@ -2111,8 +2093,8 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     # redefine addressable flag
     df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
 
-    # read exceptional priorities from db
-    ss_exceptional_priority = read_and_create_exceptional_priority_dict()
+    # read exceptional priorities from db; remove and packed/cancelled and notify users
+    ss_exceptional_priority, ss_removed = create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user)
 
     # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
