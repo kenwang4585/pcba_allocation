@@ -1211,7 +1211,7 @@ def mpq():
 
             # remove the error records
             df_mpq.drop_duplicates(['PCBA_ORG','TAN'],keep='last',inplace=True)
-            df_mpq=df_mpq[(df_mpq.PCBA_ORG.notnull()) & (df_mpq.TAN.notnull())].copy()
+            df_mpq=df_mpq[(df_mpq.PCBA_ORG.notnull()) & (df_mpq.TAN.notnull()) & (df_mpq.MPQ > 1)].copy()
 
             # limit the needed columns (checking formats)
             try:
