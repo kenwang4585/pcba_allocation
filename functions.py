@@ -159,7 +159,7 @@ def create_exceptional_priority_top_mid_dict(db_name='ctb_exceptional_priority',
     return ss_exceptional_priority, df_priority
 
 @write_log_time_spent
-def remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, login_user):
+def remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, login_user, db_name='allocation_exception_priority'):
     """
     remove the packed/cancelled SS from the db
     """
@@ -2115,7 +2115,7 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     # read exceptional priorities from db; remove and packed/cancelled and notify users
     ss_exceptional_priority, df_priority = create_exceptional_priority_top_mid_dict(db_name='allocation_exception_priority',
                                                                                     sep_top_mid_priority=False)
-    ss_removed = remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, login_user)
+    ss_removed = remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, login_user, db_name='allocation_exception_priority')
 
     # exclude cancelled/packed orders from 3a4- remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
