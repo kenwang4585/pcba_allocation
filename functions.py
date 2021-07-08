@@ -117,7 +117,7 @@ def get_file_info_on_drive(base_path,keep_hours=100):
     return df_file_info
 
 @write_log_time_spent
-def create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user, db_name='allocation_exception_priority'):
+def create_exceptional_priority_top_mid_dict(login_user, db_name='allocation_exception_priority'):
     '''
     Read backlog priorities from db; create priority dict;
     Removed the packed/cancelled SS and notify users
@@ -143,7 +143,13 @@ def create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user, d
 
     #print(ss_exceptional_priority)
 
-    # remove the packed/cancelled SS from the db
+    return ss_exceptional_priority, df_priority
+
+@write_log_time_spent
+def remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, login_user):
+    """
+    remove the packed/cancelled SS from the db
+    """
     # ss not in 3a4 - limit 3a4 scope for same ORG/BU in case 3a4 is not global
     df_3a4_common_scope = df_3a4[(df_3a4.BUSINESS_UNIT.isin(df_priority.BU.unique())) & (
         df_3a4.ORGANIZATION_CODE.isin(df_priority.ORG.unique()))]
@@ -158,13 +164,13 @@ def create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user, d
 
     # Remove from database and notify users
     if df_removal.shape[0] > 0:
-        delete_table_data('allocation_exception_priority', df_removal.id.unique())
+        delete_table_data(db_name, df_removal.id.unique())
 
         email_address = [x + '.cisco.com' for x in df_removal.Added_by.unique()]
         to_address = email_address + [login_user + '.cisco.com']
         bcc = [super_user + '@cisco.com']
         html_template = 'priority_ss_removal_email.html'
-        subject = 'SS removal from exceptional priority database - by: {}'.format(login_user)
+        subject = 'SS removal from CTB exceptional priority database - by: {}'.format(login_user)
 
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
                                          embeded_filenames=None,
@@ -174,8 +180,8 @@ def create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user, d
                                          removal_ss_details=df_removal.values,
                                          user=login_user)
 
+    return ss_removed
 
-    return ss_exceptional_priority, ss_removed
 
 @write_log_time_spent
 def read_tan_grouping_from_db():
@@ -2094,10 +2100,11 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
 
     # read exceptional priorities from db; remove and packed/cancelled and notify users
-    ss_exceptional_priority, ss_removed = create_exceptional_priority_dict_and_removed_packed_ss_from_db(login_user,
-                                                                                                         db_name='allocation_exception_priority')
+    ss_exceptional_priority, df_priority = create_exceptional_priority_top_mid_dict(db_name='allocation_exception_priority',
+                                                                                    sep_top_mid_priority=False)
+    ss_removed = remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, login_user)
 
-    # remove cancelled/packed orders - remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
+    # exclude cancelled/packed orders from 3a4- remove the record from 3a4 (in creating blg dict it's double removed - together with packed orders)
     df_3a4 = df_3a4[(df_3a4.ADDRESSABLE_FLAG != 'PO_CANCELLED')&(df_3a4.PACKOUT_QUANTITY!='Packout Completed')].copy()
     # Rank the orders
     df_3a4 = ss_ranking_overall_new_jan(df_3a4, ss_exceptional_priority, ranking_col, order_col='SO_SS', new_col='ss_overall_rank')
