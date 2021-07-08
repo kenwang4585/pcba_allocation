@@ -179,8 +179,8 @@ def remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, lo
     if df_removal.shape[0] > 0:
         delete_table_data(db_name, df_removal.id.unique())
 
-        email_address = [x + '.cisco.com' for x in df_removal.Added_by.unique()]
-        to_address = email_address + [login_user + '.cisco.com']
+        email_address = [x + '@cisco.com' for x in df_removal.Added_by.unique()]
+        to_address = email_address + [login_user + '@cisco.com']
         bcc = [super_user + '@cisco.com']
         html_template = 'priority_ss_removal_email.html'
         subject = 'SS removal from CTB exceptional priority database - by: {}'.format(login_user)
