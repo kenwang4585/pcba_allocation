@@ -117,31 +117,44 @@ def get_file_info_on_drive(base_path,keep_hours=100):
     return df_file_info
 
 @write_log_time_spent
-def create_exceptional_priority_top_mid_dict(login_user, db_name='allocation_exception_priority'):
-    '''
-    Read backlog priorities from db; create priority dict;
-    Removed the packed/cancelled SS and notify users
-    '''
+def create_exceptional_priority_top_mid_dict(db_name='ctb_exceptional_priority', sep_top_mid_priority=False):
+    """
+    Read backlog priorities from db; create and segregate to top priority and mid priority
+    """
     # read exceptional priority from db
     df_priority = read_table(db_name)
+    df_priority.drop_duplicates('SO_SS', keep='last', inplace=True)
+    df_priority = df_priority[(df_priority.SO_SS.notnull()) & (df_priority.Ranking.notnull())]
 
     # create the priority dict
     ss_exceptional_priority = {}
-    #priority_top = {}
-    #priority_mid = {}
-    for row in df_priority.itertuples():
-        try: # in case error input of non-num ranking
-            if int(row.Ranking)==9999:
-                ss_exceptional_priority[row.SO_SS] = None  # deprioritize it as no priority order
-            else:
-                ss_exceptional_priority[row.SO_SS] = float(row.Ranking)
-        except:
-            print('{} has a wrong ranking#: {}.'.format(row.SO_SS,row.Ranking) )
 
-        #ss_exceptional_priority['priority_top'] = priority_top
-        #ss_exceptional_priority['priority_mid'] = priority_mid
+    if sep_top_mid_priority == False:
+        for row in df_priority.itertuples():
+            try:  # in case error input of non-num ranking
+                if int(row.Ranking) == 9999:
+                    ss_exceptional_priority[row.SO_SS] = None  # deprioritize it to be a normal order without priority
+                else:
+                    ss_exceptional_priority[row.SO_SS] = float(row.Ranking)
+            except:
+                print('{} has a wrong ranking#: {}.'.format(row.SO_SS, row.Ranking))
+    else:
+        # refresh it if exist
+        priority_top = {}
+        priority_mid = {}
+        for row in df_priority.itertuples():
+            try:  # in case error input of non-num ranking
+                if float(row.Ranking) < 4:
+                    priority_top[row.SO_SS] = float(row.Ranking)
+                elif float(row.Ranking) == 9999:
+                    priority_mid[row.SO_SS] = None
+                else:
+                    priority_mid[row.SO_SS] = float(row.Ranking)
+            except:
+                print('{} has a wrong ranking#: {}.'.format(row.SO_SS, row.Ranking))
 
-    #print(ss_exceptional_priority)
+        ss_exceptional_priority['priority_top'] = priority_top
+        ss_exceptional_priority['priority_mid'] = priority_mid
 
     return ss_exceptional_priority, df_priority
 
