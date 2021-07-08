@@ -163,10 +163,10 @@ def remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, lo
     """
     remove the packed/cancelled SS from the db
     """
-    # ss not in 3a4 - limit 3a4 scope for same ORG/BU in case 3a4 is not global
-    df_3a4_common_scope = df_3a4[(df_3a4.BUSINESS_UNIT.isin(df_priority.BU.unique())) & (
-        df_3a4.ORGANIZATION_CODE.isin(df_priority.ORG.unique()))]
-    ss_not_in_3a4 = np.setdiff1d(df_priority.SO_SS.values, df_3a4_common_scope.SO_SS.values)
+    # ss not in 3a4 - limit df_priority scope for same ORG/BU in case 3a4 is not global
+    df_priority_common_scope = df_priority[(df_priority.BU.isin(df_3a4.BUSINESS_UNIT.unique())) & (
+        df_priority.ORG.isin(df_3a4.ORGANIZATION_CODE.unique()))]
+    ss_not_in_3a4 = np.setdiff1d(df_priority_common_scope.SO_SS.values, df_3a4.SO_SS.values)
 
     # SS showing as packed or cancelled in 3a4
     ss_cancelled_or_packed_3a4 = get_packed_or_cancelled_ss_from_3a4(df_3a4)
