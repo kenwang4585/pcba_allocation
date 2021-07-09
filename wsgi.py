@@ -625,57 +625,17 @@ def exceptional_priority():
     summary_info = '; '.join(summary_info)
 
     if form.validate_on_submit():
-        submit_remove_packed = form.submit_remove_packed.data
+        upload_option = form.upload_option.data
         submit_upload_template = form.submit_upload_template.data
-        submit_show_all=form.submit_show_all.data
-        submit_show_me=form.submit_show_me.data
-        submit_download_me=form.submit_download_me.data
-        bu_org=form.bu_org.data
-        submit_show_bu_org=form.submit_show_bu_org.data
-        submit_download_bu_org=form.submit_download_bu_org.data
+        submit_show_all = form.submit_show_all.data
+        submit_show_me = form.submit_show_me.data
+        submit_download_me = form.submit_download_me.data
+        submit_download_all = form.submit_download_all.data
 
         # define needed columns for the template and 3a4
         col_template = ['SO_SS', 'ORG', 'BU', 'Ranking', 'Comments']
-        col_3a4 = ['SO_SS', 'ORGANIZATION_CODE', 'BUSINESS_UNIT', 'ORDER_HOLDS', 'PACKOUT_QUANTITY']
 
-        if submit_remove_packed:
-            file_upload_3a4 = form.file_upload_3a4.data
-            # confirm file uploaded and save the file
-            if file_upload_3a4 == None:
-                msg = 'Pls select the 3a4 file to upload!'
-                flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
-            else:
-                ext_3a4 = os.path.splitext(file_upload_3a4.filename)[1]
-                if ext_3a4 != '.csv':
-                    msg = '3a4 file only accepts CSV formats here!'
-                    flash(msg, 'warning')
-                    return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
-
-                # save file
-                file_path_3a4 = os.path.join(base_dir_upload,
-                                                  login_user + '_' + secure_filename(file_upload_3a4.filename))
-                file_upload_3a4.save(file_path_3a4)
-
-            # read the file
-            df_3a4 = pd.read_csv(file_path_3a4,encoding='iso-8859-1')
-
-            # Limit the needed columns and check 3a4 formats
-            try:
-                df_3a4=df_3a4[col_3a4]
-            except:
-                msg = '3a4 format error! Ensure following columns are included: {}. You can use 3a4 view PCBA_ALLOCATION and select the related ORG/BU to download 3a4.'.format(col_3a4)
-                flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
-            # if login_user == super_user, then all records are in scope
-            removed_ss=remove_packed_exceptional_priority_ss(df_3a4, login_user)
-
-            msg = '{} SO_SS are removed from the database due to packed/cancelled.'.format(len(removed_ss))
-            flash(msg, 'success')
-            add_log_summary(user=login_user, location='E-priority', user_action='Remove packed', summary=msg)
-
-            return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
-        elif submit_upload_template:
+        if submit_upload_template:
             file_upload_template = form.file_upload_template.data
 
             # confirm file uploaded and save the file
@@ -695,35 +655,48 @@ def exceptional_priority():
                 file_upload_template.save(file_path_template)
 
             # read the file
-            df_exceptional_priority=pd.read_excel(file_path_template)
+            df_exceptional_priority = pd.read_excel(file_path_template)
+            col = df_exceptional_priority.columns
+            col = [c.strip() for c in col]
+            df_exceptional_priority.columns = col
+
+            # limit the needed columns (checking formats)
+            try:
+                df_exceptional_priority = df_exceptional_priority[col_template]
+            except:
+                msg = 'Stop - format error! Ensure following columns are included: {}'.format(col_template)
+                flash(msg, 'warning')
+                return redirect(url_for("exceptional_priority", _external=True, _scheme=http_scheme))
 
             # identify errors in the template
-            df_missing_value = df_exceptional_priority[
-                (df_exceptional_priority.SO_SS.isnull()) | (df_exceptional_priority.Ranking.isnull())]
-            df_duplicated=df_exceptional_priority[df_exceptional_priority.duplicated('SO_SS')]
+            df_missing_value = df_exceptional_priority[(df_exceptional_priority.ORG.isnull()) |
+                                                       (df_exceptional_priority.SO_SS.isnull()) |
+                                                       (df_exceptional_priority.Ranking.isnull())]
+            df_duplicated = df_exceptional_priority[df_exceptional_priority.duplicated('SO_SS')]
             if df_missing_value.shape[0]>0:
-                msg='Check your template! {} record will not uploaded due to missing SO_SS or Ranking values!'.format(df_missing_value.shape[0])
-                flash(msg,'warning')
+                msg = 'Check your template! {} record will not be uploaded due to missing SO_SS, ORG, or Ranking values!'.format(df_missing_value.shape[0])
+                flash(msg, 'warning')
             if df_duplicated.shape[0] > 0:
                 msg = 'Check your template! Following SO_SS are duplicated and only the last record will be uploaded: {}'.format(
                     df_duplicated.SO_SS.values)
                 flash(msg, 'warning')
 
             # remove the error records
-            df_exceptional_priority.drop_duplicates('SO_SS',keep='last',inplace=True)
-            df_exceptional_priority=df_exceptional_priority[(df_exceptional_priority.SO_SS.notnull())&(df_exceptional_priority.Ranking.notnull())].copy()
+            df_exceptional_priority.drop_duplicates('SO_SS', keep='last', inplace=True)
+            df_exceptional_priority = df_exceptional_priority[(df_exceptional_priority.ORG.notnull()) &
+                                                              (df_exceptional_priority.SO_SS.notnull()) &
+                                                              (df_exceptional_priority.Ranking.notnull())].copy()
 
-            # limit the needed columns (checking formats)
-            try:
-                df_exceptional_priority=df_exceptional_priority[col_template]
-            except:
-                msg = 'Stop - format error! Ensure following columns are included: {}'.format(col_template)
-                flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
-
-            # remove all data for user and write in new data from the template
+            # remove data for user
             df_db_data_user = df_db_data[df_db_data.Added_by == login_user]
-            delete_table_data('allocation_exception_priority', df_db_data_user.id)
+            if upload_option == 'replace_all':
+                # remove all data for user
+                delete_table_data('allocation_exception_priority', df_db_data_user.id)
+            elif upload_option == 'add_update':
+                # remove existing SO_SS data for user
+                df_db_data_user_existing = df_db_data_user[df_db_data_user.SO_SS.isin(df_exceptional_priority.SO_SS)]
+                delete_table_data('allocation_exception_priority', df_db_data_user_existing.id)
+            # add in all data from the template
             try:
                 add_exceptional_priority_data_from_template(df_exceptional_priority,login_user)
             except Exception as e:
@@ -740,8 +713,7 @@ def exceptional_priority():
             df_db_data=df_db_data[df_db_data.Added_by==login_user]
             df_db_data.sort_values(by='Added_on', ascending=False, inplace=True)
 
-            msg='{} records in db deleted, and replaced with {} records uploaded through the template.'\
-                .format(df_db_data_user.shape[0],df_exceptional_priority.shape[0])
+            msg = 'Upload option: {}; {} records added or updated based on the template.'.format(upload_option, df_exceptional_priority.shape[0])
             flash(msg,'success')
             add_log_summary(user=login_user, location='E-priority', user_action='Upload template', summary=msg)
 
@@ -796,68 +768,15 @@ def exceptional_priority():
             df_db_data.to_excel(os.path.join(f_path,fname))
 
             return send_from_directory(f_path, fname, as_attachment=True)
-
-        elif submit_show_bu_org:
-            if bu_org=='':
-                msg='Pls input BU/ORG'
-                flash(msg,'warning')
-                return redirect(url_for("exceptional_priority", _external=True,_scheme=http_scheme))
-
-            bu_org=bu_org.strip().split('/')
-            bu=bu_org[0].strip().upper()
-            if len(bu_org)==1:
-                org=''
-            else:
-                org=bu_org[1].strip().upper()
-                if org=='*':
-                    org=''
-
+        elif submit_download_all:
             df_db_data = read_table('allocation_exception_priority')
-            df_db_data = df_db_data[df_db_data.BU == bu].copy()
-            if org!='':
-                df_db_data = df_db_data[df_db_data.ORG == org]
-            df_db_data.sort_values(by='Added_on', ascending=False, inplace=True)
-            summary_info = []
-            summary_info.append('Total records: {}'.format(df_db_data.shape[0]))
-            for user in df_db_data.Added_by.unique():
-                summary_info.append('{}: {}'.format(user, df_db_data[df_db_data.Added_by == user].shape[0]))
-            summary_info = '; '.join(summary_info)
-
-            return render_template('allocation_exceptional_priority.html',
-                                   db_data_header=df_db_data.columns,
-                                   db_data_value=df_db_data.values,
-                                   summary_info=summary_info,
-                                   form=form,
-                                   user=login_user,
-                                   subtitle=' - Exceptional Priority')
-        elif submit_download_bu_org:
-            if bu_org == '':
-                msg = 'Pls input BU/ORG'
-                flash(msg, 'warning')
-                return redirect(url_for("exceptional_priority", _external=True, _scheme=http_scheme))
-
-            bu_org = bu_org.strip().split('/')
-            bu = bu_org[0].strip().upper()
-            if len(bu_org) == 1:
-                org = ''
-            else:
-                org = bu_org[1].strip().upper()
-                if org == '*':
-                    org = ''
-
-            df_db_data = read_table('allocation_exception_priority')
-            df_db_data = df_db_data[df_db_data.BU == bu].copy()
-            if org != '':
-                df_db_data = df_db_data[df_db_data.ORG == org]
-            # df_db_data.sort_values(by='Ranking', inplace=True)
-
+            df_db_data = df_db_data[col_template]
             df_db_data.set_index('SO_SS',inplace=True)
-            df_db_data.Ranking=df_db_data.Ranking.astype(float)
-
-            f_path=base_dir_supply
+            df_db_data.Ranking = df_db_data.Ranking.astype(float)
+            f_path = base_dir_supply
             fname='Exceptional priority SS ' + login_user + ' ' + pd.Timestamp.now().strftime('%m-%d') + '.xlsx'
 
-            df_db_data.to_excel(os.path.join(f_path, fname))
+            df_db_data.to_excel(os.path.join(f_path,fname))
 
             return send_from_directory(f_path, fname, as_attachment=True)
 
@@ -1158,9 +1077,6 @@ def mpq():
     else:
         http_scheme = 'https'
 
-    if '[C]' in login_title:  # for c-workers
-        return 'Sorry, you are not authorized to access this.'
-
     df_db_data=read_table('mpq')
     if form.validate_on_submit():
         upload_option = form.upload_option.data
@@ -1191,11 +1107,11 @@ def mpq():
             file_path_template = os.path.join(base_dir_upload, login_user + '_' + secure_filename(file_upload_template.filename))
             file_upload_template.save(file_path_template)
 
-            # read the file
-            df_mpq=pd.read_excel(file_path_template)
+            # read the file and remove the blank in column names (in case any)
+            df_mpq = pd.read_excel(file_path_template)
             col = df_mpq.columns
             col = [c.strip() for c in col]
-            df_mpq.columns=col
+            df_mpq.columns = col
 
             # identify errors in the template
             df_missing_value = df_mpq[

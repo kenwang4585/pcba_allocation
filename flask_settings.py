@@ -72,19 +72,19 @@ class ScdxAPIForm(FlaskForm):
     submit_download_supply_prod = SubmitField('Download')  # download from db
 
 class ExceptionalPriorityForm(FlaskForm):
+    upload_option = RadioField('Upload option:',
+                               choices=[('replace_all', 'Remove all under my name and replace with template'),
+                                        ('add_update', 'Add new or update existing based on template')],
+                               default='add_update',
+                               validators=[DataRequired()]
+                               )
     file_upload_template = FileField('Upload template (.xlsx):')
     submit_upload_template = SubmitField('Upload')
-
-    file_upload_3a4 = FileField('Upload 3a4 file (.csv):')
-    submit_remove_packed = SubmitField('Remove packed')
 
     submit_show_me = SubmitField('Show my data')
     submit_show_all = SubmitField('Show all data')
     submit_download_me = SubmitField('Download my data')
-
-    bu_org=StringField('BU/ORG:',render_kw={'placeholder':'ERBU/* or ERBU/FOC'})
-    submit_show_bu_org=SubmitField('Show by BU/ORG')
-    submit_download_bu_org=SubmitField('Download by BU/ORG')
+    submit_download_all = SubmitField('Download all data')
 
 class ExceptionalSourcingSplitForm(FlaskForm):
     file_upload_template = FileField('Upload template (.xlsx):')

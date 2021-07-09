@@ -183,7 +183,7 @@ def remove_packed_cancelled_exceptional_priority_from_db(df_3a4, df_priority, lo
         to_address = email_address + [login_user + '@cisco.com']
         bcc = [super_user + '@cisco.com']
         html_template = 'priority_ss_removal_email.html'
-        subject = 'SS removal from CTB exceptional priority database - by: {}'.format(login_user)
+        subject = 'SS removal from Allocation exceptional priority database - by: {}'.format(login_user)
 
         send_attachment_and_embded_image(to_address, subject, html_template, att_filenames=None,
                                          embeded_filenames=None,

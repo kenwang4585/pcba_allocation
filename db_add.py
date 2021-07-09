@@ -268,16 +268,14 @@ if __name__ == '__main__':
     #add_user_log(user='kwang2', location='Admin', user_action='Visit',
     #             summary='Warning')
 
-    df_priority=pd.read_excel('/Users/wangken/downloads/Exceptional priority SS.xlsx')
-    df_split=pd.read_excel('/Users/wangken/downloads/exceptional split.xlsx')
+    df_priority=pd.read_excel('/Users/kwang2/downloads/exception upload.xlsx')
+    #df_split=pd.read_excel('/Users/wangken/downloads/exceptional split.xlsx')
     #df_grouping=pd.read_excel('/Users/wangken/downloads/grouping.xlsx')
-    df_email=pd.read_excel('/Users/wangken/downloads/subscription.xlsx')
-
-    #print(df_email)
+    #df_email=pd.read_excel('/Users/wangken/downloads/subscription.xlsx')
 
     #from_file_add_tan_grouping_data_from_template(df_grouping)
     #from_file_add_exceptional_sourcing_split_data_from_template(df_split)
-    #from_file_add_exceptional_priority_data_from_template(df_priority)
+    from_file_add_exceptional_priority_data_from_template(df_priority)
     #from_file_add_email_data(df_email)
-    roll_back()
+    #roll_back()
 
