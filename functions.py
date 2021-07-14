@@ -1262,7 +1262,8 @@ def read_3a4_and_check_columns(file_path_3a4,col_3a4_must_have):
     """
     Read 3a4 and check if it contains the right columns
     """
-    df_3a4 = pd.read_csv(file_path_3a4, encoding='ISO-8859-1', parse_dates=['ORIGINAL_FCD_NBD_DATE', 'TARGET_SSD'],
+    df_3a4 = pd.read_csv(file_path_3a4, encoding='ISO-8859-1', parse_dates=['ORIGINAL_FCD_NBD_DATE',
+                                                                            'TARGET_SSD', 'CURRENT_FCD_NBD_DATE'],
                          low_memory=False)
 
     msg_3a4, msg_3a4_option = '', ''
@@ -2104,10 +2105,16 @@ def pcba_allocation_main_program(df_3a4, df_oh, df_transit, df_por, df_sourcing,
     df_scr.set_index('TAN', inplace=True)
     supply_dic_tan = created_supply_dict_per_scr(df_scr)
 
-    # Offset 3A4 OSSD by transit time
-    df_3a4.loc[:, 'ossd_offset'] = df_3a4.apply(
-        lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE, x.ORIGINAL_FCD_NBD_DATE, transit_time, pcba_site),
-        axis=1)
+    # Offset 3A4 OSSD by transit time - Non-rev orders follow FCD
+    df_3a4.loc[:, 'ossd_offset'] = np.where(df_3a4.REVENUE_NON_REVENUE=='YES',
+                                            df_3a4.apply(lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE,
+                                                                                                x.ORIGINAL_FCD_NBD_DATE,
+                                                                                                transit_time,
+                                                                                                pcba_site),axis=1),
+                                            df_3a4.apply(lambda x: update_date_with_transit_pad(x.ORGANIZATION_CODE,
+                                                                                                x.CURRENT_FCD_NBD_DATE,
+                                                                                                transit_time,
+                                                                                                pcba_site), axis=1))
 
     # redefine addressable flag
     df_3a4 = redefine_addressable_flag_main_pid_version(df_3a4)
